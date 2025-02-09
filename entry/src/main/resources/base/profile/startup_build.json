@@ -1,0 +1,12 @@
+{
+  "startupTasks": [
+    {
+      "name": "HotKeyTask",
+      "srcEntry": "./ets/startup/HotKeyTask.ets",
+      "excludeFromAutoStart": false,
+      "runOnThread": "taskPool",
+      "waitOnMainThread": true
+    }
+  ],
+  "configEntry": "./ets/startup/StartupCustomConfig.ets"
+}

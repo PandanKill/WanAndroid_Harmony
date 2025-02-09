@@ -1,0 +1,64 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "module description"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "description"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "label"
+    },
+    {
+      "name": "tab_home",
+      "value": "首页"
+    },
+    {
+      "name": "tab_nav",
+      "value": "导航"
+    },
+    {
+      "name": "tab_ans",
+      "value": "问答"
+    },
+    {
+      "name": "tab_project",
+      "value": "项目"
+    },
+    {
+      "name": "tab_mine",
+      "value": "我的"
+    },
+    {
+      "name": "please_input_username",
+      "value": "请输入用户名"
+    },
+    {
+      "name": "please_input_pwd",
+      "value": "请输入密码"
+    },
+    {
+      "name": "to_register",
+      "value": "去注册"
+    },
+    {
+      "name": "to_login",
+      "value": "登录"
+    },
+    {
+      "name": "login_succ",
+      "value": "登录成功"
+    },
+    {
+      "name": "press_again",
+      "value": "再按一次返回桌面"
+    },
+    {
+      "name": "wx_gongzhonghao",
+      "value": "公众号"
+    }
+  ]
+}
