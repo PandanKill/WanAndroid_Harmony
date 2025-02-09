@@ -1,9 +1,0 @@
-{
-  "routerMap": [
-    {
-      "name": "avaterPage",
-      "pageSourceFile": "src/main/ets/component/PersonAvaterView.ets",
-      "buildFunction": "buildPersonAvaterView"
-    }
-  ]
-}
