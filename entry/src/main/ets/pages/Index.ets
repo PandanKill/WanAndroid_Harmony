@@ -35,6 +35,12 @@ struct Index {
   private lastPressMill: number = 0
   //热词
   @StorageProp('hotKey') hotKeys: HotKeyBean[] = []
+  //透明度
+  @State private alphaValue: number = 1
+  //是否显示搜索界面
+  @State private isSearchShow: boolean = false
+  //轮播位置
+  @State private nowSwiperIndex: number = 0
 
   @Builder
   tabBuilder(item: FooterTab, index: number) {
@@ -70,15 +76,36 @@ struct Index {
       }
     }).catch((err: BusinessError) => {
 
-    }).finally(()=>{
+    }).finally(() => {
       session.close()
+    })
+  }
+
+  private showSearch() {
+    this.getUIContext().animateTo({ duration: 350, curve: Curve.Friction }, () => {
+      this.isSearchShow = true
+      this.alphaValue = 0
+    })
+  }
+
+  private hideSearch() {
+    this.getUIContext().animateTo({ duration: 350, curve: Curve.Friction }, () => {
+      this.isSearchShow = false
+      this.alphaValue = 1
     })
   }
 
   build() {
     Column() {
       //搜索栏
-      SearchView({ hotKeys: this.hotKeys })
+      SearchView({
+        hotKeys: this.hotKeys, onClicked: () => {
+          //进入搜索模态
+          this.showSearch()
+        }, onSwiper: (index: number) => {
+          this.nowSwiperIndex = index
+        }
+      })
         .width(SizeConstant.FULL_SIZE)
       Tabs({
         //底部
@@ -137,7 +164,11 @@ struct Index {
       })
       .barMode(BarMode.Fixed,
         { nonScrollableLayoutStyle: LayoutStyle.ALWAYS_CENTER })
-    }.width(SizeConstant.FULL_SIZE)
+    }
+    .width(SizeConstant.FULL_SIZE)
+    .opacity(this.alphaValue)
+    .bindContentCover(this.isSearchShow, this.SearchViewBuilder(this.hotKeys[this.nowSwiperIndex].name),
+      { modalTransition: ModalTransition.NONE })
     .backgroundColor($r('app.color.color_272A36'))
     .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
   }
@@ -153,5 +184,60 @@ struct Index {
       message: $r('app.string.press_again')
     })
     return true
+  }
+
+  @Builder
+  SearchViewBuilder(searchText: string) {
+    Column() {
+      Row() {
+        //返回
+        Image($r('app.media.login'))
+          .width(SizeConstant.SIZE_20)
+          .height(SizeConstant.SIZE_20)
+          .margin({ left: SizeConstant.SIZE_15 })
+          .onClick(() => {
+            //跳转登录界面
+            this.hideSearch()
+          })
+
+        Blank()
+
+        //搜索
+        Row() {
+          //搜索图标
+          Image($r('app.media.search'))
+            .width(SizeConstant.SIZE_15)
+            .height(SizeConstant.SIZE_15)
+            .margin({ left: 5, right: 5 })
+          //搜索文字
+          TextInput({
+            text: searchText
+          })
+            .height(SizeConstant.FULL_SIZE)
+            .width(SizeConstant.FULL_SIZE)
+            .fontSize($r('app.float.font_12'))
+            .fontColor(Color.White)
+            .enterKeyType(EnterKeyType.Search)
+            .onSubmit((type: EnterKeyType, event: SubmitEvent) => {
+              if (type === EnterKeyType.Search) {
+                console.debug(`msg:${event.text}`)
+              }
+            })
+        }
+        .geometryTransition("search")
+        .transition(TransitionEffect.OPACITY.animation({ duration: 350, curve: Curve.Friction }))
+        .width(SizeConstant.SIZE_PERCENT_85)
+        .alignItems(VerticalAlign.Center)
+        .height(SizeConstant.SIZE_30)
+        .backgroundColor($r('app.color.color_474954'))
+        .borderRadius(20)
+        .margin({ top: SizeConstant.SIZE_5, bottom: SizeConstant.SIZE_5, right: SizeConstant.SIZE_10 })
+      }
+      .width(SizeConstant.FULL_SIZE)
+      .backgroundColor($r('app.color.color_272A36'))
+      .alignItems(VerticalAlign.Center)
+    }.width(SizeConstant.FULL_SIZE)
+    .height(SizeConstant.FULL_SIZE)
+    .margin({ top: 50 })
   }
 }

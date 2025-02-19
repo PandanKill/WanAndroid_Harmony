@@ -11,6 +11,12 @@ export struct SearchView {
   @StorageLink('isLogin') isLogin: boolean = false
   //热词
   @Prop private hotKeys: HotKeyBean[] = []
+  //点击搜索
+  private onClicked: () => void = () => {
+  }
+  //轮播
+  private onSwiper: (index: number) => void = (index: number) => {
+  }
 
   build() {
     //顶部
@@ -45,7 +51,13 @@ export struct SearchView {
           .height(SizeConstant.FULL_SIZE)
           .width(SizeConstant.FULL_SIZE)
           .itemSpace(0)
+          .onChange((index: number) => {
+            this.onSwiper(index)
+          })
+          .hitTestBehavior(HitTestMode.None)
         }
+        .geometryTransition("search")
+        .transition(TransitionEffect.OPACITY.animation({ duration: 350, curve: Curve.Friction }))
         .width(SizeConstant.SIZE_PERCENT_85)
         .alignItems(VerticalAlign.Center)
         .height(SizeConstant.SIZE_30)
@@ -53,9 +65,8 @@ export struct SearchView {
         .borderRadius(20)
         .margin({ top: SizeConstant.SIZE_5, bottom: SizeConstant.SIZE_10, left: SizeConstant.SIZE_10 })
         .onClick(() => {
-          router.pushUrl({
-            url: "pages/SearchPage"
-          })
+          //进入搜索界面
+          this.onClicked()
         })
 
         Blank()
