@@ -29,6 +29,10 @@
       "value": "#666666"
     },
     {
+      "name": "color_272A36",
+      "value": "#272A36"
+    },
+    {
       "name": "color_808069",
       "value": "#808069"
     },
@@ -65,10 +69,6 @@
       "value": "#999999"
     },
     {
-      "name": "color_272A36",
-      "value": "#272A36"
-    },
-    {
       "name": "color_F6F6F6",
       "value": "#F6F6F6"
     },
@@ -83,6 +83,14 @@
     {
       "name": "color_333333",
       "value": "#333333"
+    },
+    {
+      "name": "color_6A6A6A",
+      "value": "#6A6A6A"
+    },
+    {
+      "name": "color_52D367",
+      "value": "#52D367"
     }
   ]
 }

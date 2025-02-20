@@ -5,6 +5,7 @@
     "pages/SearchPage",
     "pages/WebPage",
     "pages/TagDetailPage",
-    "pages/PersonAvater"
+    "pages/PersonAvater",
+    "pages/SettingPage",
   ]
 }

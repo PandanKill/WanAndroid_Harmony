@@ -61,6 +61,7 @@ struct LoginPage {
     }
 
     let loginBean = new LoginBean(this.userName, this.pwd)
+
     //登录
     let session = rcp.createSession()
     session.post(requestPath.baseUrl + requestPath.PATH_LOGIN, JSON.stringify(loginBean)).then((response) => {
@@ -76,8 +77,11 @@ struct LoginPage {
           promptAction.showToast({
             message: $r('app.string.login_succ')
           })
+          console.info(`login success: ${JSON.stringify(response.cookies)}`)
+          AppStorage.setOrCreate("cookie", JSON.stringify(response.cookies))
           //登录成功
           AppStorage.setOrCreate("isLogin", true)
+          router.back()
         }
       }
     }).catch((err: BusinessError) => {
@@ -89,6 +93,31 @@ struct LoginPage {
 
   build() {
     Column() {
+      //返回
+      Image($r('app.media.icon_back'))
+        .width(SizeConstant.SIZE_15)
+        .height(SizeConstant.SIZE_15)
+        .onClick(() => {
+          router.back()
+        })
+
+      //头像
+      Row() {
+        Image($r('app.media.icon_person'))
+          .width('50%')
+          .aspectRatio(1)
+          .onClick(() => {
+            //跳转相册
+            promptAction.showToast({
+              message: "跳转相册"
+            })
+          })
+      }
+      .alignItems(VerticalAlign.Center)
+      .justifyContent(FlexAlign.Center)
+      .width('30%')
+      .height(SizeConstant.FULL_SIZE)
+
       //用户名
       Row() {
         //请输入用户名
@@ -99,6 +128,7 @@ struct LoginPage {
           .fontColor($r('app.color.color_FFFFFF'))
           .fontSize($r('app.float.font_15'))
           .layoutWeight(1)
+          .enterKeyType(EnterKeyType.Next)
           .height(SizeConstant.FULL_SIZE)
 
         if (this.isShowUserNameClean) {
@@ -124,6 +154,7 @@ struct LoginPage {
           placeholder: $r('app.string.please_input_pwd'),
           text: $$this.pwd
         })
+          .enterKeyType(EnterKeyType.Done)
           .fontColor($r('app.color.color_FFFFFF'))
           .fontSize($r('app.float.font_15'))
           .layoutWeight(1)
@@ -147,26 +178,15 @@ struct LoginPage {
       .margin({ top: SizeConstant.SIZE_50 })
       .alignItems(VerticalAlign.Center)
 
-      //去注册
-      Text($r('app.string.to_register'))
-        .fontColor($r('app.color.color_FFFFFF'))
-        .fontSize($r('app.float.font_15'))
-        .margin({ top: SizeConstant.SIZE_50 })
-        .onClick(() => {
-          //去注册
-          router.pushUrl({
-            url: 'pages/LoginPage'
-            //增加参数：是否是登录还是注册
-          })
-        })
-
       //登录
       Button($r('app.string.to_login'))
-        .width(SizeConstant.SIZE_PERCENT_80)
+        .width(SizeConstant.SIZE_PERCENT_50)
         .height(SizeConstant.SIZE_50)
-        .margin({ top: SizeConstant.SIZE_50 })
-        .fontSize($r('app.float.font_20'))
+        .fontSize($r('app.float.font_15'))
         .fontColor($r('app.color.color_FFFFFF'))
+        .borderWidth(1)
+        .borderRadius(5)
+        .borderColor($r('app.color.color_FFFFFF'))
         .onClick(() => {
           this.login()
         })
@@ -174,7 +194,7 @@ struct LoginPage {
     .width(SizeConstant.FULL_SIZE)
     .height(SizeConstant.FULL_SIZE)
     .alignItems(HorizontalAlign.Center)
-    .backgroundColor($r('app.color.color_666666'))
+    .backgroundColor($r('app.color.color_272A36'))
     .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
   }
 }

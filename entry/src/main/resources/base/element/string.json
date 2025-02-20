@@ -59,6 +59,42 @@
     {
       "name": "wx_gongzhonghao",
       "value": "公众号"
+    },
+    {
+      "name": "setting",
+      "value": "设置"
+    },
+    {
+      "name": "setting_blackmode",
+      "value": "跟随系统暗黑模式"
+    },
+    {
+      "name": "setting_black",
+      "value": "暗黑模式"
+    },
+    {
+      "name": "setting_screenrecord",
+      "value": "屏幕录制"
+    },
+    {
+      "name": "setting_privaty",
+      "value": "隐私政策"
+    },
+    {
+      "name": "setting_question",
+      "value": "问题反馈"
+    },
+    {
+      "name": "setting_wanandroid",
+      "value": "关于玩 Android"
+    },
+    {
+      "name": "setting_clearcache",
+      "value": "清除缓存"
+    },
+    {
+      "name": "setting_update",
+      "value": "版本更新"
     }
   ]
 }

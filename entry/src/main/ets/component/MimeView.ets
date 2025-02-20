@@ -20,9 +20,15 @@ export struct MimeView {
         })
         .onClick(() => {
           //头像详情，共享元素
-          router.pushUrl({
-            url: "pages/PersonAvater"
-          })
+          if (this.isLogin) {
+            router.pushUrl({
+              url: "pages/PersonAvater"
+            })
+          } else {
+            router.pushUrl({
+              url: "pages/LoginPage"
+            })
+          }
         })
 
       //欢迎词
@@ -51,6 +57,13 @@ export struct MimeView {
       .backgroundColor($r('app.color.color_FFFFFF'))
       .onClick(() => {
         //to 积分
+        if (this.isLogin) {
+
+        } else {
+          router.pushUrl({
+            url: "pages/LoginPage"
+          })
+        }
       })
 
       //线
@@ -78,6 +91,13 @@ export struct MimeView {
       .backgroundColor($r('app.color.color_FFFFFF'))
       .onClick(() => {
         //to 收藏
+        if (this.isLogin) {
+
+        } else {
+          router.pushUrl({
+            url: "pages/LoginPage"
+          })
+        }
       })
 
       //线
@@ -106,6 +126,13 @@ export struct MimeView {
       .backgroundColor($r('app.color.color_FFFFFF'))
       .onClick(() => {
         //to 分享
+        if (this.isLogin) {
+
+        } else {
+          router.pushUrl({
+            url: "pages/LoginPage"
+          })
+        }
       })
 
       //线
@@ -134,6 +161,9 @@ export struct MimeView {
       .backgroundColor($r('app.color.color_FFFFFF'))
       .onClick(() => {
         //to 系统设置
+        router.pushUrl({
+          url:"pages/SettingPage"
+        })
       })
 
       //线

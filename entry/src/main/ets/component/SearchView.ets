@@ -71,19 +71,21 @@ export struct SearchView {
 
         Blank()
 
-        // add  未登录
-        if (!this.isLogin) {
-          Image($r('app.media.login'))
-            .width(SizeConstant.SIZE_20)
-            .height(SizeConstant.SIZE_20)
-            .margin({ right: SizeConstant.SIZE_15 })
-            .onClick(() => {
+        Image($r('app.media.login'))
+          .width(SizeConstant.SIZE_20)
+          .height(SizeConstant.SIZE_20)
+          .margin({ right: SizeConstant.SIZE_15 })
+          .onClick(() => {
+            if (this.isLogin) {
+              //跳转文章编辑界面
+
+            } else {
               //跳转登录界面
               router.pushUrl({
                 url: "pages/LoginPage"
               })
-            })
-        }
+            }
+          })
 
       }
       .width(SizeConstant.FULL_SIZE)
