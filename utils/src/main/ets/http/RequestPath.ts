@@ -5,6 +5,9 @@ class RequestPath {
   //登录
   readonly PATH_LOGIN = "/user/login"
 
+  //登出
+  readonly PATH_LOGOUT = "/user/logout/json"
+
   //首页Banner
   readonly PATH_HOME_BANNER = "/banner/json"
   //置顶

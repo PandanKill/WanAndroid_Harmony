@@ -10,6 +10,9 @@ import { JSON } from '@kit.ArkTS'
 import { rcp } from '@kit.RemoteCommunicationKit'
 import { LoginBean } from '../bean/LoginBean'
 import { ResponseBean } from '../bean/ResponseBean'
+import { NavHeaderView } from '../component/NavHeaderView'
+import { http } from '@kit.NetworkKit'
+import { LoginResponse } from '../bean/LoginResponse'
 
 @Entry
 @Component
@@ -61,45 +64,60 @@ struct LoginPage {
     }
 
     let loginBean = new LoginBean(this.userName, this.pwd)
+    console.info(`Response succeeded: ${JSON.stringify(loginBean)}`);
 
     //登录
-    let session = rcp.createSession()
-    session.post(requestPath.baseUrl + requestPath.PATH_LOGIN, JSON.stringify(loginBean)).then((response) => {
-      console.info(`Response succeeded: ${response}`);
-      if (response !== undefined) {
-        let responseBean: ResponseBean<string> = JSON.parse(response.toString()) as ResponseBean<string>
-        if (responseBean.errorCode !== 0) {
-          promptAction.showToast({
-            message: responseBean.errorMsg
-          })
-        } else {
+    let httpRequest = http.createHttp()
+    httpRequest.on('headersReceive', (header) => {
+      console.info('header: ' + JSON.stringify(header));
+    })
+    httpRequest.request(requestPath.baseUrl + requestPath.PATH_LOGIN, {
+      method: http.RequestMethod.POST,
+      header: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      extraData: `password=${this.pwd}&username=${this.userName}`,
+      connectTimeout: 30000,
+      readTimeout: 30000,
+    }, (err: BusinessError, data: http.HttpResponse) => {
+      if (!err) {
+        let responseBean =
+          JSON.parse(JSON.stringify(data.result)) as ResponseBean<LoginResponse>
+        if (data.responseCode === 200) {
+          //登录成功
+          //todo 为啥无法获取到？
+          // AppStorage.setOrCreate('nickname', responseBean.data.nickname)
+          AppStorage.setOrCreate('nickname', this.userName)
+          AppStorage.setOrCreate("isLogin", true)
           //登录成功
           promptAction.showToast({
             message: $r('app.string.login_succ')
           })
-          console.info(`login success: ${JSON.stringify(response.cookies)}`)
-          AppStorage.setOrCreate("cookie", JSON.stringify(response.cookies))
-          //登录成功
-          AppStorage.setOrCreate("isLogin", true)
           router.back()
+        } else {
+          //登录失败
+          promptAction.showToast({
+            message: responseBean.errorMsg
+          })
         }
+      } else {
+        console.error('error:' + JSON.stringify(err));
+        promptAction.showToast({
+          message: err.message
+        })
       }
-    }).catch((err: BusinessError) => {
-      console.error(`Response err: Code is ${err.code}, message is ${JSON.stringify(err)}`);
-    }).finally(() => {
-      session.close()
+      // 取消订阅HTTP响应头事件
+      httpRequest.off('headersReceive');
+      // 当该请求使用完毕时，调用destroy方法主动销毁
+      httpRequest.destroy();
     })
   }
 
   build() {
     Column() {
-      //返回
-      Image($r('app.media.icon_back'))
-        .width(SizeConstant.SIZE_15)
-        .height(SizeConstant.SIZE_15)
-        .onClick(() => {
-          router.back()
-        })
+      NavHeaderView({
+        title: ""
+      })
 
       //头像
       Row() {
@@ -115,8 +133,8 @@ struct LoginPage {
       }
       .alignItems(VerticalAlign.Center)
       .justifyContent(FlexAlign.Center)
-      .width('30%')
-      .height(SizeConstant.FULL_SIZE)
+      .width(SizeConstant.FULL_SIZE)
+      .height('30%')
 
       //用户名
       Row() {
@@ -175,7 +193,7 @@ struct LoginPage {
         }
       }.width(SizeConstant.SIZE_PERCENT_80)
       .height(SizeConstant.SIZE_50)
-      .margin({ top: SizeConstant.SIZE_50 })
+      .margin({ top: SizeConstant.SIZE_20 })
       .alignItems(VerticalAlign.Center)
 
       //登录
@@ -186,6 +204,7 @@ struct LoginPage {
         .fontColor($r('app.color.color_FFFFFF'))
         .borderWidth(1)
         .borderRadius(5)
+        .margin({ top: SizeConstant.SIZE_50 })
         .borderColor($r('app.color.color_FFFFFF'))
         .onClick(() => {
           this.login()

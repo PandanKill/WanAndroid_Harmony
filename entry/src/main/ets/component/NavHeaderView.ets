@@ -7,9 +7,17 @@ export struct NavHeaderView {
   private title: string | Resource = ''
   //是否显示返回按键
   private isShowBack: boolean = true
+  private backRule: Record<string, Record<string, string | VerticalAlign | HorizontalAlign>> = {
+    'left': { 'anchor': '__container__', 'align': HorizontalAlign.Start },
+    'center': { 'anchor': '__container__', 'align': VerticalAlign.Center }
+  }
+  private titleRule: Record<string, Record<string, string | VerticalAlign | HorizontalAlign>> = {
+    'center': { 'anchor': '__container__', 'align': VerticalAlign.Center },
+    'middle': { 'anchor': '__container__', 'align': HorizontalAlign.Center }
+  }
 
   build() {
-    Row() {
+    RelativeContainer() {
       if (this.isShowBack) {
         Image($r('app.media.icon_back'))
           .width(SizeConstant.SIZE_20)
@@ -17,17 +25,19 @@ export struct NavHeaderView {
           .margin({
             left: SizeConstant.SIZE_15
           })
+          .alignRules(this.backRule)
           .onClick(() => {
             router.back()
           })
       }
 
       Text(this.title)
-        .alignSelf(ItemAlign.Center)
+        .alignRules(this.titleRule)
         .fontColor($r('app.color.color_FFFFFF'))
-        .fontSize($r('app.float.font_20'))
+        .fontSize($r('app.float.font_15'))
 
     }.width(SizeConstant.FULL_SIZE)
     .height(SizeConstant.SIZE_50)
+    .backgroundColor($r('app.color.color_272A36'))
   }
 }

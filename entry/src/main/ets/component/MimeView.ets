@@ -4,8 +4,8 @@ import { CommonListItemView } from 'utils'
 
 @Component
 export struct MimeView {
-  @StorageLink("isLogin") isLogin: boolean = false
-  @StorageLink("username") username: string = ''
+  @StorageProp("isLogin") isLogin: boolean = false
+  @StorageProp("nickname") nickname: string = ''
 
   build() {
     Column() {
@@ -32,7 +32,7 @@ export struct MimeView {
         })
 
       //欢迎词
-      Text(this.isLogin ? `欢迎回来！${this.username}` : "欢迎登录！")
+      Text(this.isLogin ? `欢迎回来！${this.nickname}` : "欢迎登录！")
         .fontSize($r('app.float.font_15'))
         .fontColor($r('app.color.color_000000'))
         .margin({ top: SizeConstant.SIZE_5 })
@@ -162,7 +162,7 @@ export struct MimeView {
       .onClick(() => {
         //to 系统设置
         router.pushUrl({
-          url:"pages/SettingPage"
+          url: "pages/SettingPage"
         })
       })
 

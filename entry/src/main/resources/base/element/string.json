@@ -53,6 +53,14 @@
       "value": "登录成功"
     },
     {
+      "name": "logout_succ",
+      "value": "登出成功"
+    },
+    {
+      "name": "logout_fail",
+      "value": "登出异常"
+    },
+    {
       "name": "press_again",
       "value": "再按一次返回桌面"
     },
@@ -95,6 +103,10 @@
     {
       "name": "setting_update",
       "value": "版本更新"
+    },
+    {
+      "name": "logout",
+      "value": "退出登录"
     }
   ]
 }

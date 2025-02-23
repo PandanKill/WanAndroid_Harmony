@@ -1,4 +1,4 @@
-import { AbilityConstant, common, UIAbility, Want } from '@kit.AbilityKit';
+import { AbilityConstant, common, ConfigurationConstant, UIAbility, Want } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { display, window } from '@kit.ArkUI';
 import { BreakpointConstants } from '../constants/BreakpointConstants';
@@ -10,6 +10,7 @@ export default class EntryAbility extends UIAbility {
 
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
     hilog.info(0x0000, 'testTag', '%{public}s', 'Ability onCreate');
+    AppStorage.setOrCreate<ConfigurationConstant.ColorMode>('colorModel', this.context.config.colorMode)
   }
 
   onDestroy(): void {
@@ -53,6 +54,13 @@ export default class EntryAbility extends UIAbility {
   onWindowStageWillDestroy(windowStage: window.WindowStage): void {
 
   }
+  
+  // onConfigurationUpdate(newConfig: Configuration): void {
+  //   let currentColorMode: ConfigurationConstant.ColorMode | undefined = AppStorage.get('colorModel')
+  //   if (currentColorMode?.toString() !== newConfig.colorMode) {
+  //     AppStorage.setOrCreate<ConfigurationConstant.ColorMode>('colorModel', parseInt(newConfig.colorMode))
+  //   }
+  // }
 
   /**
    * 获取断点
