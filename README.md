@@ -5,16 +5,19 @@
 **主题切换**
 
 ### 截图展示
-----
-
-| ![](screenshots%2Fmain_page.png) | ![nav_page.png](screenshots%2Fnav_page.png)｜![answer_page.png](screenshots%2Fanswer_page.png)｜![project_page.png](screenshots%2Fproject_page.png)｜![mime_page.png](screenshots%2Fmime_page.png)｜![web_page.png](screenshots%2Fweb_page.png)
+<img src="screenshots/main_page.png" alt="Logo" style="width: 25vw;" />
+<img src="screenshots/nav_page.png" alt="Logo" style="width: 25vw;" />
+<img src="screenshots/answer_page.png" alt="Logo" style="width: 25vw;" />
+<img src="screenshots/project_page.png" alt="Logo" style="width: 25vw;" />
+<img src="screenshots/mime_page.png" alt="Logo" style="width: 25vw;" />
+<img src="screenshots/web_page.png" alt="Logo" style="width: 25vw;" />
 
 ----
 
 ## 剩余问题
-1、Swiper 的 DataSource无法进行懒加载。。。（目前解决方案：不使用懒加载）
-2、web组件无法加载公众号网页
-3、Response err: Code is 1007900994, message is {"code":1007900994,"data":"Sessions number reached limit"}
-4、loginBean 无法映射？ 怪了。。。
+<p>1、Swiper 的 DataSource无法进行懒加载。。。（目前解决方案：不使用懒加载）<p>
+<p>2、web组件无法加载公众号网页<p>
+<p>3、Response err: Code is 1007900994, message is {"code":1007900994,"data":"Sessions number reached limit"}<p>
+<p>4、loginBean 无法映射？ 怪了。。。<p>
 
 # 欢迎Fork
