@@ -107,6 +107,10 @@
     {
       "name": "logout",
       "value": "退出登录"
+    },
+    {
+      "name": "mime_point",
+      "value": "我的积分"
     }
   ]
 }

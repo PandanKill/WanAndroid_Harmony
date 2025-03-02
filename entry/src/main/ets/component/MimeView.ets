@@ -40,15 +40,15 @@ export struct MimeView {
       //我的积分
       Row() {
         Text("我的积分")
-          .fontSize($r('app.float.font_15'))
+          .fontSize($r('app.float.font_12'))
           .fontColor($r('app.color.color_000000'))
-          .margin({ left: SizeConstant.SIZE_20, top: SizeConstant.SIZE_10, bottom: SizeConstant.SIZE_10 })
+          .margin({ left: SizeConstant.SIZE_15, top: SizeConstant.SIZE_15, bottom: SizeConstant.SIZE_15 })
           .layoutWeight(1)
 
         Image($r('app.media.to_right'))
-          .width(SizeConstant.SIZE_5)
-          .height(SizeConstant.SIZE_5)
-          .margin({ right: SizeConstant.SIZE_20 })
+          .width(SizeConstant.SIZE_15)
+          .height(SizeConstant.SIZE_15)
+          .margin({ right: SizeConstant.SIZE_15 })
 
       }
       .width(SizeConstant.FULL_SIZE)
@@ -57,13 +57,15 @@ export struct MimeView {
       .backgroundColor($r('app.color.color_FFFFFF'))
       .onClick(() => {
         //to 积分
-        if (this.isLogin) {
-
-        } else {
-          router.pushUrl({
-            url: "pages/LoginPage"
-          })
-        }
+        // if (this.isLogin) {
+        router.pushUrl({
+          url: "pages/PointPage"
+        })
+        // } else {
+        //   router.pushUrl({
+        //     url: "pages/LoginPage"
+        //   })
+        // }
       })
 
       //线
@@ -75,15 +77,15 @@ export struct MimeView {
       //我的收藏
       Row() {
         Text("我的收藏")
-          .fontSize($r('app.float.font_15'))
+          .fontSize($r('app.float.font_12'))
           .fontColor($r('app.color.color_000000'))
-          .margin({ left: SizeConstant.SIZE_20, top: SizeConstant.SIZE_10, bottom: SizeConstant.SIZE_10 })
+          .margin({ left: SizeConstant.SIZE_15, top: SizeConstant.SIZE_15, bottom: SizeConstant.SIZE_15 })
           .layoutWeight(1)
 
         Image($r('app.media.to_right'))
-          .width(SizeConstant.SIZE_5)
-          .height(SizeConstant.SIZE_5)
-          .margin({ right: SizeConstant.SIZE_20 })
+          .width(SizeConstant.SIZE_15)
+          .height(SizeConstant.SIZE_15)
+          .margin({ right: SizeConstant.SIZE_15 })
 
       }
       .width(SizeConstant.FULL_SIZE)
@@ -110,15 +112,15 @@ export struct MimeView {
       //我的分享
       Row() {
         Text("我的分享")
-          .fontSize($r('app.float.font_15'))
+          .fontSize($r('app.float.font_12'))
           .fontColor($r('app.color.color_000000'))
-          .margin({ left: SizeConstant.SIZE_20, top: SizeConstant.SIZE_10, bottom: SizeConstant.SIZE_10 })
+          .margin({ left: SizeConstant.SIZE_15, top: SizeConstant.SIZE_15, bottom: SizeConstant.SIZE_15 })
           .layoutWeight(1)
 
         Image($r('app.media.to_right'))
-          .width(SizeConstant.SIZE_5)
-          .height(SizeConstant.SIZE_5)
-          .margin({ right: SizeConstant.SIZE_20 })
+          .width(SizeConstant.SIZE_15)
+          .height(SizeConstant.SIZE_15)
+          .margin({ right: SizeConstant.SIZE_15 })
 
       }
       .width(SizeConstant.FULL_SIZE)
@@ -145,15 +147,15 @@ export struct MimeView {
       //系统设置
       Row() {
         Text("系统设置")
-          .fontSize($r('app.float.font_15'))
+          .fontSize($r('app.float.font_12'))
           .fontColor($r('app.color.color_000000'))
-          .margin({ left: SizeConstant.SIZE_20, top: SizeConstant.SIZE_10, bottom: SizeConstant.SIZE_10 })
+          .margin({ left: SizeConstant.SIZE_15, top: SizeConstant.SIZE_15, bottom: SizeConstant.SIZE_15 })
           .layoutWeight(1)
 
         Image($r('app.media.to_right'))
-          .width(SizeConstant.SIZE_5)
-          .height(SizeConstant.SIZE_5)
-          .margin({ right: SizeConstant.SIZE_20 })
+          .width(SizeConstant.SIZE_15)
+          .height(SizeConstant.SIZE_15)
+          .margin({ right: SizeConstant.SIZE_15 })
 
       }
       .width(SizeConstant.FULL_SIZE)

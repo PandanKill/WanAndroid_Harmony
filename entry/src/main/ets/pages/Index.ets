@@ -8,7 +8,7 @@ import SizeConstant from '../constants/SizeConstant';
 import { FooterTab, FooterTabViewModel } from '../viewModel/FooterTabViewModel';
 import systemTime from '@ohos.systemTime';
 import systemDateTime from '@ohos.systemDateTime';
-import { promptAction } from '@kit.ArkUI';
+import { promptAction, router } from '@kit.ArkUI';
 import { httpRequest, logger, requestPath } from 'utils';
 import { rcp } from '@kit.RemoteCommunicationKit';
 import { JSON } from '@kit.ArkTS';
@@ -29,8 +29,6 @@ struct Index {
   @State private selectIndex: number = 0
   //controller
   private controller: TabsController = new TabsController()
-  //导航栏高度
-  bottomRectHeight: string = AppStorage.get<number>('navHeight') + 'px';
   //最后一次返回时间
   private lastPressMill: number = 0
   //热词
@@ -72,6 +70,7 @@ struct Index {
         let bean = JSON.parse(response.toString()) as ResponseBean<HotKeyBean[]>
         if (bean.errorCode === 0) {
           this.hotKeys = bean.data
+          AppStorage.setOrCreate("hotKey", bean.data)
         }
       }
     }).catch((err: BusinessError) => {
@@ -82,9 +81,15 @@ struct Index {
   }
 
   private showSearch() {
-    this.getUIContext().animateTo({ duration: 350, curve: Curve.Friction }, () => {
-      this.isSearchShow = true
-      this.alphaValue = 0
+    // this.getUIContext().animateTo({ duration: 350, curve: Curve.Friction }, () => {
+    //   this.isSearchShow = true
+    //   this.alphaValue = 0
+    // })
+    router.pushUrl({
+      url: "pages/SearchPage",
+      params: {
+        "currentHotKey": this.hotKeys[this.nowSwiperIndex].name
+      }
     })
   }
 
@@ -155,7 +160,7 @@ struct Index {
       .barWidth(SizeConstant.FULL_SIZE)
       .barHeight(SizeConstant.SIZE_50)
       .barBackgroundColor($r('app.color.color_272A36'))
-      .margin({ bottom: this.bottomRectHeight })
+      .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.BOTTOM])
       .width(SizeConstant.FULL_SIZE)
       .scrollable(false)
       .animationMode(AnimationMode.NO_ANIMATION)
@@ -170,7 +175,6 @@ struct Index {
     .bindContentCover(this.isSearchShow, this.SearchViewBuilder(this.hotKeys[this.nowSwiperIndex].name),
       { modalTransition: ModalTransition.NONE })
     .backgroundColor($r('app.color.color_272A36'))
-    .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
   }
 
   onBackPress(): boolean | void {

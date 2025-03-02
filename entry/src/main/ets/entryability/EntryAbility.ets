@@ -24,7 +24,7 @@ export default class EntryAbility extends UIAbility {
     //获取窗口信息
     windowStage.getMainWindow().then((window1: window.Window) => {
       this.window = window1
-      // //设置沉浸式
+      //设置沉浸式
       // window1.setWindowLayoutFullScreen(true).then(() => {
       //   console.info('Succeeded in setting the window layout to full-screen mode.');
       // })
@@ -33,6 +33,19 @@ export default class EntryAbility extends UIAbility {
       //   });
       let navHeight = window1.getWindowAvoidArea(window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR).bottomRect.height
       AppStorage.setOrCreate("navHeight", navHeight)
+
+      let statusHeight = window1.getWindowAvoidArea(window.AvoidAreaType.TYPE_SYSTEM).topRect.height
+      AppStorage.setOrCreate('topRectHeight', statusHeight);
+      //安全区域监听
+      window1.on('avoidAreaChange', (data) => {
+        if (data.type === window.AvoidAreaType.TYPE_SYSTEM) {
+          let topRectHeight = data.area.topRect.height;
+          AppStorage.setOrCreate('topRectHeight', topRectHeight);
+        } else if (data.type === window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR) {
+          let bottomRectHeight = data.area.bottomRect.height;
+          AppStorage.setOrCreate('navHeight', bottomRectHeight);
+        }
+      })
 
       //设置breakpoint
       this.updateBreakpoint(window1.getWindowProperties().windowRect.width)
@@ -54,7 +67,7 @@ export default class EntryAbility extends UIAbility {
   onWindowStageWillDestroy(windowStage: window.WindowStage): void {
 
   }
-  
+
   // onConfigurationUpdate(newConfig: Configuration): void {
   //   let currentColorMode: ConfigurationConstant.ColorMode | undefined = AppStorage.get('colorModel')
   //   if (currentColorMode?.toString() !== newConfig.colorMode) {

@@ -91,6 +91,7 @@ export struct SearchView {
       .width(SizeConstant.FULL_SIZE)
       .backgroundColor($r('app.color.color_272A36'))
       .alignItems(VerticalAlign.Center)
+      .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP])
 
       //沉浸式延伸到状态栏
     }.width(SizeConstant.FULL_SIZE)

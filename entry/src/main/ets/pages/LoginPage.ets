@@ -214,6 +214,5 @@ struct LoginPage {
     .height(SizeConstant.FULL_SIZE)
     .alignItems(HorizontalAlign.Center)
     .backgroundColor($r('app.color.color_272A36'))
-    .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
   }
 }
