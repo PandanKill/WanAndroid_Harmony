@@ -7,6 +7,7 @@ export struct NavHeaderView {
   private title: string | Resource = ''
   //菜单
   private menu: Resource | string = $r('app.media.login')
+  @StorageProp('topRectHeight') topRectHeight: number = 0
   //是否显示返回按键
   private isShowBack: boolean = true
   private isShowMenu: boolean = false
@@ -31,8 +32,8 @@ export struct NavHeaderView {
     RelativeContainer() {
       if (this.isShowBack) {
         Image($r('app.media.icon_back'))
-          .width(SizeConstant.SIZE_20)
-          .height(SizeConstant.SIZE_20)
+          .width(SizeConstant.SIZE_15)
+          .height(SizeConstant.SIZE_15)
           .margin({
             left: SizeConstant.SIZE_15
           })
@@ -61,7 +62,8 @@ export struct NavHeaderView {
       }
 
     }.width(SizeConstant.FULL_SIZE)
-    .height(SizeConstant.SIZE_50)
+    .padding({ top: px2vp(this.topRectHeight) })
+    .height(SizeConstant.SIZE_80)
     .backgroundColor($r('app.color.color_272A36'))
   }
 }

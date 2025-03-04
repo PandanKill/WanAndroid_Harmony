@@ -1,13 +1,10 @@
+import { ListAttr, ListView, RefreshController, RefreshDataSource } from '@abner/refresh'
 import { NavHeaderView } from '../component/NavHeaderView'
 import SizeConstant from '../constants/SizeConstant'
-import { router } from '@kit.ArkUI'
-import { RefreshController } from '@abner/refresh/src/main/ets/controller/RefreshController'
-import { ListAttr, ListView, RefreshDataSource } from '@abner/refresh'
 
 @Entry
 @Component
-struct PointPage {
-  @State point: number = 0
+struct CollectPage {
   initData: string[] = []
   //是否是首次加载
   @State isFirstLoading: boolean = true
@@ -16,14 +13,6 @@ struct PointPage {
   dataSource: RefreshDataSource = new RefreshDataSource()
   //刷新 controller
   refreshController: RefreshController = new RefreshController()
-  private pointEventRule: AlignRuleOption = {
-    left: { anchor: "__container__", align: HorizontalAlign.Start },
-    center: { anchor: "__container__", align: VerticalAlign.Center }
-  }
-  private pointRule: AlignRuleOption = {
-    right: { anchor: "__container__", align: HorizontalAlign.End },
-    center: { anchor: "__container__", align: VerticalAlign.Center }
-  }
 
   aboutToAppear(): void {
     this.loadInitData()
@@ -62,24 +51,8 @@ struct PointPage {
   build() {
     Column() {
       NavHeaderView({
-        title: $r('app.string.mime_point'),
-        isShowMenu: true,
-        menu: $r('app.media.icon_rank'),
-        onMenuClick: () => {
-          //跳转积分排名
-          router.pushUrl({
-            url: "pages/PointRankPage"
-          })
-        }
+        title: $r('app.string.collect_content')
       })
-
-      Text(this.point.toString())
-        .fontSize($r('app.float.font_60'))
-        .fontColor($r('app.color.color_FFFFFF'))
-        .textAlign(TextAlign.Center)
-        .width(SizeConstant.FULL_SIZE)
-        .height(SizeConstant.SIZE_PERCENT_25)
-        .backgroundColor($r('app.color.color_272A36'))
 
       Stack() {
         if (this.isFirstLoading) {
@@ -116,53 +89,59 @@ struct PointPage {
             .height(SizeConstant.FULL_SIZE)
         }
       }.width(SizeConstant.FULL_SIZE)
-      .layoutWeight(1)
-
+      .height(SizeConstant.FULL_SIZE)
     }.width(SizeConstant.FULL_SIZE)
     .height(SizeConstant.FULL_SIZE)
-    .backgroundColor($r('app.color.color_F5F5F5'))
   }
 
   @Builder
   itemLayout(item: string, index: number) {
     Column() {
-      if (item === "") {
-        //没有数据，最后补一个“没有更多了”
-        Text("没有更多了")
-          .fontSize($r('app.float.font_12'))
-          .fontColor($r('app.color.color_999999'))
-          .alignSelf(ItemAlign.Center)
-          .margin({ top: SizeConstant.SIZE_5 })
-      } else {
+      Row() {
+        Image($r('app.media.icon_default'))
+          .width(SizeConstant.SIZE_20)
+          .height(SizeConstant.SIZE_20)
+          .margin({ left: SizeConstant.SIZE_15 })
+
         Column() {
-          RelativeContainer() {
-            Column() {
-              Text(item)
-                .fontSize($r('app.float.font_12'))
-                .fontColor($r('app.color.color_666666'))
-              Text(item)
-                .fontSize($r('app.float.font_10'))
-                .fontColor($r('app.color.color_999999'))
-                .margin({ top: SizeConstant.SIZE_2 })
-            }.id("pointEvent")
-            .alignRules(this.pointEventRule)
-            .margin({ left: SizeConstant.SIZE_15 })
-
-            Text(item)
-              .alignRules(this.pointRule)
-              .fontColor($r('app.color.color_FF7800'))
-              .fontSize($r('app.float.font_12'))
-              .id("point")
-              .margin({ right: SizeConstant.SIZE_15 })
-          }.width(SizeConstant.FULL_SIZE)
-          .height(60)
-
-          Line()
+          Text(item)
             .width(SizeConstant.FULL_SIZE)
-            .height(1)
-            .backgroundColor($r('app.color.color_F0F0F0'))
-        }
-      }
-    }.width(SizeConstant.FULL_SIZE)
+            .fontSize($r('app.float.font_10'))
+
+          Text(item)
+            .width(SizeConstant.FULL_SIZE)
+            .fontSize($r('app.float.font_10'))
+            .margin({ top: SizeConstant.SIZE_1 })
+
+        }.layoutWeight(1)
+        .margin({ left: SizeConstant.SIZE_5, right: SizeConstant.SIZE_15 })
+      }.alignItems(VerticalAlign.Center)
+      .width(SizeConstant.FULL_SIZE)
+      .margin({ top: SizeConstant.SIZE_10 })
+
+      Text(item)
+        .margin({ left: SizeConstant.SIZE_15, top: SizeConstant.SIZE_10, right: SizeConstant.SIZE_15 })
+        .width(SizeConstant.FULL_SIZE)
+        .maxLines(3)
+        .ellipsisMode(EllipsisMode.END)
+        .fontSize($r('app.float.font_12'))
+
+
+      Row() {
+        Text(item)
+          .fontSize($r('app.float.font_10'))
+          .margin({ left: SizeConstant.SIZE_15 })
+
+        Blank()
+
+        Image($r('app.media.kongxin_love'))
+          .width(SizeConstant.SIZE_20)
+          .height(SizeConstant.SIZE_20)
+          .margin({ right: SizeConstant.SIZE_15 })
+
+      }.margin({ top: SizeConstant.SIZE_10, bottom: SizeConstant.SIZE_10 })
+      .alignItems(VerticalAlign.Center)
+      .width(SizeConstant.FULL_SIZE)
+    }.alignItems(HorizontalAlign.Start)
   }
 }

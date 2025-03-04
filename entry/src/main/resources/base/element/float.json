@@ -39,6 +39,10 @@
     {
       "name": "font_60",
       "value": "60fp"
+    },
+    {
+      "name": "font_13",
+      "value": "13fp"
     }
   ]
 }

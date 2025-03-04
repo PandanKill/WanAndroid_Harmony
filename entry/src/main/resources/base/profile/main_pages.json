@@ -8,6 +8,7 @@
     "pages/PersonAvater",
     "pages/SettingPage",
     "pages/PointPage",
-    "pages/PointRankPage"
+    "pages/PointRankPage",
+    "pages/CollectPage"
   ]
 }

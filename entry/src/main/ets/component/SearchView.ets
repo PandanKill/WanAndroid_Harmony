@@ -11,6 +11,7 @@ export struct SearchView {
   @StorageLink('isLogin') isLogin: boolean = false
   //热词
   @Prop private hotKeys: HotKeyBean[] = []
+  @StorageProp('topRectHeight') topRectHeight: number = 0
   //点击搜索
   private onClicked: () => void = () => {
   }
@@ -91,9 +92,9 @@ export struct SearchView {
       .width(SizeConstant.FULL_SIZE)
       .backgroundColor($r('app.color.color_272A36'))
       .alignItems(VerticalAlign.Center)
-      .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP])
 
       //沉浸式延伸到状态栏
     }.width(SizeConstant.FULL_SIZE)
+    .padding({ top: px2vp(this.topRectHeight) })
   }
 }

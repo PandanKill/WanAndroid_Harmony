@@ -22,6 +22,7 @@ struct SearchPage {
   @State isSearchView: boolean = false
   //搜索词
   @State searchStr: string = this.currentHotData
+  @StorageProp('topRectHeight') topRectHeight: number = 0
   //搜索页面正在加载
   @State isLoadingView: boolean = false
 
@@ -224,6 +225,7 @@ struct SearchPage {
           })
       }.width(SizeConstant.FULL_SIZE)
       .backgroundColor($r('app.color.color_272A36'))
+      .padding({ top: px2vp(this.topRectHeight) })
 
       if (this.isSearchView) {
         //搜索页面

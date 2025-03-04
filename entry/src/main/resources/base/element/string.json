@@ -111,6 +111,14 @@
     {
       "name": "mime_point",
       "value": "我的积分"
+    },
+    {
+      "name": "point_rank",
+      "value": "积分排行榜"
+    },
+    {
+      "name": "collect_content",
+      "value": "我收藏的文章"
     }
   ]
 }

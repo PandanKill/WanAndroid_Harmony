@@ -25,12 +25,12 @@ export default class EntryAbility extends UIAbility {
     windowStage.getMainWindow().then((window1: window.Window) => {
       this.window = window1
       //设置沉浸式
-      // window1.setWindowLayoutFullScreen(true).then(() => {
-      //   console.info('Succeeded in setting the window layout to full-screen mode.');
-      // })
-      //   .catch((err: BusinessError) => {
-      //     console.error('Failed to set the window layout to full-screen mode. Cause:' + JSON.stringify(err));
-      //   });
+      window1.setWindowLayoutFullScreen(true).then(() => {
+        console.info('Succeeded in setting the window layout to full-screen mode.');
+      })
+        .catch((err: BusinessError) => {
+          console.error('Failed to set the window layout to full-screen mode. Cause:' + JSON.stringify(err));
+        });
       let navHeight = window1.getWindowAvoidArea(window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR).bottomRect.height
       AppStorage.setOrCreate("navHeight", navHeight)
 

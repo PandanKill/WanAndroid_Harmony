@@ -93,13 +93,15 @@ export struct MimeView {
       .backgroundColor($r('app.color.color_FFFFFF'))
       .onClick(() => {
         //to 收藏
-        if (this.isLogin) {
-
-        } else {
-          router.pushUrl({
-            url: "pages/LoginPage"
-          })
-        }
+        // if (this.isLogin) {
+        router.pushUrl({
+          url: "pages/CollectPage"
+        })
+        // } else {
+        //   router.pushUrl({
+        //     url: "pages/LoginPage"
+        //   })
+        // }
       })
 
       //线

@@ -11,6 +11,7 @@ export default class SizeConstant {
   static readonly SIZE_PERCENT_50 = '50%'
   static readonly SIZE_PERCENT_33 = '33%'
   static readonly SIZE_PERCENT_25 = '25%'
+  static readonly SIZE_PERCENT_20 = '20%'
 
   /**
    * 100vp

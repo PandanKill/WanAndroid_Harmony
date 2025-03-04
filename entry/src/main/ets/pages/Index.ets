@@ -23,6 +23,7 @@ import http from '@ohos.net.http';
 struct Index {
   @State message: string = 'Hello World';
   @StorageLink('isLogin') isLogin: boolean = false
+  @StorageProp('navHeight') navHeight: number = 0
   //tab
   private tabList: FooterTab[] = new FooterTabViewModel().getTabList()
   //选中index,初始0
@@ -160,7 +161,8 @@ struct Index {
       .barWidth(SizeConstant.FULL_SIZE)
       .barHeight(SizeConstant.SIZE_50)
       .barBackgroundColor($r('app.color.color_272A36'))
-      .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.BOTTOM])
+      .layoutWeight(1)
+      .padding({ bottom: px2vp(this.navHeight) })
       .width(SizeConstant.FULL_SIZE)
       .scrollable(false)
       .animationMode(AnimationMode.NO_ANIMATION)
