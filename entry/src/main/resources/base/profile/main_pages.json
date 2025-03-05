@@ -9,6 +9,7 @@
     "pages/SettingPage",
     "pages/PointPage",
     "pages/PointRankPage",
-    "pages/CollectPage"
+    "pages/CollectPage",
+    "pages/ChatPage"
   ]
 }
