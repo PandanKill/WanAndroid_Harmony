@@ -95,6 +95,22 @@
     {
       "name": "color_FF7800",
       "value": "#FF7800"
+    },
+    {
+      "name": "color_EDEDED",
+      "value": "#EDEDED"
+    },
+    {
+      "name": "color_95EC69",
+      "value": "#95EC69"
+    },
+    {
+      "name": "color_7B7B7B",
+      "value": "#7B7B7B"
+    },
+    {
+      "name": "color_A5A5A5",
+      "value": "#A5A5A5"
     }
   ]
 }
