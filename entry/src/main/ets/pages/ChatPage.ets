@@ -1,4 +1,5 @@
 import { it } from '@ohos/hypium';
+import { NavHeaderView } from '../component/NavHeaderView';
 import SizeConstant from '../constants/SizeConstant';
 
 class Message {
@@ -16,10 +17,17 @@ struct AIChatPage {
   //sk-c1d2d4ae26e44c61b098a719f98bc40d
   @State textArr: Message[] = [];
   @State editValue: string = "";
+  //在切换到录音之后，状态变化
+  private isFirstShowUI: boolean = true
   @StorageProp('navHeight') navHeight: number = 0
   private lastSendMessage: number = 0
   //滚动布局
   private scroller: Scroller = new Scroller()
+  //文本编辑模式
+  @State isSendText: boolean = true
+  //是否正在录音
+  @State isRecording: boolean = false
+  @State recordUI: ResourceColor = Color.White
 
   getMMSS(): string {
     let date = new Date()
@@ -52,6 +60,11 @@ struct AIChatPage {
     Column() {
       Navigation() {
         Column() {
+          //标题
+          NavHeaderView({
+            title: $r('app.string.ai')
+          })
+
           List({
             scroller: this.scroller
           }) {
@@ -80,6 +93,12 @@ struct AIChatPage {
                         .padding(SizeConstant.SIZE_10)
                         .fontSize($r('app.float.font_15'))
                         .textAlign(TextAlign.Start)
+                        .copyOption(CopyOptions.InApp)
+                      // .gesture(
+                      //   LongPressGesture().onAction((event) => {
+                      //
+                      //   })
+                      // )
                     }
 
                     Shape() {
@@ -137,6 +156,7 @@ struct AIChatPage {
                         .height('auto')
                         .fontSize($r('app.float.font_15'))
                         .textAlign(TextAlign.Start)
+                        .copyOption(CopyOptions.InApp)
                     }
 
                   }.width(SizeConstant.FULL_SIZE)
@@ -158,34 +178,75 @@ struct AIChatPage {
             }, (item: Message, index: number) => item.id + index)
           }.width(SizeConstant.FULL_SIZE)
           .layoutWeight(1)
+          .onClick(() => {
+            this.getUIContext().getFocusController().clearFocus()
+          })
 
-          //对比文字框
+          //底部栏
           Row() {
             //语音文字转换
             Image($r('app.media.icon_speek'))
               .width(SizeConstant.SIZE_30)
               .height(SizeConstant.SIZE_30)
               .margin({ left: SizeConstant.SIZE_10 })
-
-            TextArea({
-              text: this.editValue
-            })
-              .backgroundColor(Color.White)
-              .borderRadius(SizeConstant.SIZE_5)
-              .width(SizeConstant.SIZE_PERCENT_65)
-              .margin({ left: SizeConstant.SIZE_10, top: SizeConstant.SIZE_5, bottom: SizeConstant.SIZE_10 })
-              .enterKeyType(EnterKeyType.Send)
-              .onSubmit((eventType: EnterKeyType) => {
-                //发送
-                this.toGetAi(this.editValue)
-                this.editValue = ''
-              })
-              .onChange((value: string) => {
-                //获取输入框内容
-                console.info(value)
-                this.editValue = value
+              .onClick(() => {
+                //切换语音文字
+                this.isFirstShowUI = false
+                this.isSendText = !this.isSendText
               })
 
+            if (this.isSendText) {
+              //编写文字
+              TextArea({
+                text: this.editValue
+              })
+                .id('sendText')
+                .backgroundColor(Color.White)
+                .borderRadius(SizeConstant.SIZE_5)
+                .width(SizeConstant.SIZE_PERCENT_65)
+                .margin({ left: SizeConstant.SIZE_10, top: SizeConstant.SIZE_5, bottom: SizeConstant.SIZE_10 })
+                .enterKeyType(EnterKeyType.Send)
+                .onAppear(() => {
+                  //首次不需要弹软键盘
+                  if (!this.isFirstShowUI) {
+                    //非首次 Appear 的时候，才需要弹出软件盘
+                    this.getUIContext().getFocusController().requestFocus('sendText')
+                  }
+                })
+                .onSubmit((eventType: EnterKeyType) => {
+                  //发送
+                  this.toGetAi(this.editValue)
+                  this.editValue = ''
+                })
+                .onChange((value: string) => {
+                  //获取输入框内容
+                  console.info(value)
+                  this.editValue = value
+                })
+
+            } else {
+              //编写语音
+              Text(this.isRecording ? $r('app.string.recording') : $r('app.string.start_record'))
+                .backgroundColor(this.recordUI)
+                .borderRadius(SizeConstant.SIZE_5)
+                .width(SizeConstant.SIZE_PERCENT_65)
+                .height(SizeConstant.SIZE_35)
+                .textAlign(TextAlign.Center)
+                .fontSize($r('app.float.font_15'))
+                .fontColor(Color.Black)
+                .margin({ left: SizeConstant.SIZE_10, top: SizeConstant.SIZE_5, bottom: SizeConstant.SIZE_10 })
+                .onTouch((event: TouchEvent) => {
+                  if (event.type === TouchType.Down) {
+                    //按下状态
+                    this.recordUI = Color.Grey
+                    this.isRecording = true
+                  } else if (event.type === TouchType.Up) {
+                    //抬起状态
+                    this.recordUI = Color.White
+                    this.isRecording = false
+                  }
+                })
+            }
             //表情
             Image($r('app.media.icon_biaoqing'))
               .width(SizeConstant.SIZE_30)
@@ -205,8 +266,8 @@ struct AIChatPage {
           .padding({ bottom: px2vp(this.navHeight) })
         }.width(SizeConstant.FULL_SIZE)
         .height(SizeConstant.FULL_SIZE)
-      }.title("你好Harmony")
-      .mode(NavigationMode.Stack)
+      }.mode(NavigationMode.Stack)
+
     }.width(SizeConstant.FULL_SIZE)
     .height(SizeConstant.FULL_SIZE)
     .backgroundColor($r('app.color.color_EDEDED'))

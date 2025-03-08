@@ -64,6 +64,7 @@ export struct NavHeaderView {
     }.width(SizeConstant.FULL_SIZE)
     .padding({ top: px2vp(this.topRectHeight) })
     .height(SizeConstant.SIZE_80)
+    .expandSafeArea([SafeAreaType.KEYBOARD])
     .backgroundColor($r('app.color.color_272A36'))
   }
 }

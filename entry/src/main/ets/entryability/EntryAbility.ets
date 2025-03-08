@@ -1,6 +1,6 @@
 import { AbilityConstant, common, ConfigurationConstant, UIAbility, Want } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
-import { display, window } from '@kit.ArkUI';
+import { display, KeyboardAvoidMode, window } from '@kit.ArkUI';
 import { BreakpointConstants } from '../constants/BreakpointConstants';
 import { StorageKey } from '../constants/StorageKey';
 import { BusinessError } from '@kit.BasicServicesKit';
@@ -31,11 +31,14 @@ export default class EntryAbility extends UIAbility {
         .catch((err: BusinessError) => {
           console.error('Failed to set the window layout to full-screen mode. Cause:' + JSON.stringify(err));
         });
+      //获取导航栏高度
       let navHeight = window1.getWindowAvoidArea(window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR).bottomRect.height
       AppStorage.setOrCreate("navHeight", navHeight)
 
+      //获取状态栏高度
       let statusHeight = window1.getWindowAvoidArea(window.AvoidAreaType.TYPE_SYSTEM).topRect.height
       AppStorage.setOrCreate('topRectHeight', statusHeight);
+
       //安全区域监听
       window1.on('avoidAreaChange', (data) => {
         if (data.type === window.AvoidAreaType.TYPE_SYSTEM) {

@@ -119,6 +119,18 @@
     {
       "name": "collect_content",
       "value": "我收藏的文章"
+    },
+    {
+      "name": "ai",
+      "value": "AI"
+    },
+    {
+      "name": "start_record",
+      "value": "按住 说话"
+    },
+    {
+      "name": "recording",
+      "value": "松开 结束"
     }
   ]
 }
