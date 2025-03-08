@@ -24,7 +24,10 @@ struct AIChatPage {
   //滚动布局
   private scroller: Scroller = new Scroller()
   //文本编辑模式
-  @State isSendText: boolean = true
+  @State @Watch('changeSpeekIcon') isSendText: boolean = true
+  @State speekIconResource: Resource = $r('app.media.icon_speek')
+  @State @Watch('changeEmojiIcon') isEmoji: boolean = false
+  @State emojiIconResource: Resource = $r('app.media.icon_biaoqing')
   //是否正在录音
   @State isRecording: boolean = false
   @State recordUI: ResourceColor = Color.White
@@ -34,6 +37,24 @@ struct AIChatPage {
     let hours = date.getHours().toString().padStart(2, '0');
     let min = date.getMinutes().toString().padStart(2, '0');
     return `${hours}:${min}`
+  }
+
+  //更新语音表情包
+  changeSpeekIcon() {
+    if (this.isSendText) {
+      this.speekIconResource = $r('app.media.icon_speek')
+    } else {
+      this.speekIconResource = $r('app.media.icon_keyboard')
+    }
+  }
+
+  //更新表情包样式
+  changeEmojiIcon() {
+    if (this.isEmoji) {
+      this.emojiIconResource = $r('app.media.icon_keyboard')
+    } else {
+      this.emojiIconResource = $r('app.media.icon_biaoqing')
+    }
   }
 
   aboutToAppear(): void {
@@ -183,87 +204,92 @@ struct AIChatPage {
           })
 
           //底部栏
-          Row() {
-            //语音文字转换
-            Image($r('app.media.icon_speek'))
-              .width(SizeConstant.SIZE_30)
-              .height(SizeConstant.SIZE_30)
-              .margin({ left: SizeConstant.SIZE_10 })
-              .onClick(() => {
-                //切换语音文字
-                this.isFirstShowUI = false
-                this.isSendText = !this.isSendText
-              })
-
-            if (this.isSendText) {
-              //编写文字
-              TextArea({
-                text: this.editValue
-              })
-                .id('sendText')
-                .backgroundColor(Color.White)
-                .borderRadius(SizeConstant.SIZE_5)
-                .width(SizeConstant.SIZE_PERCENT_65)
-                .margin({ left: SizeConstant.SIZE_10, top: SizeConstant.SIZE_5, bottom: SizeConstant.SIZE_10 })
-                .enterKeyType(EnterKeyType.Send)
-                .onAppear(() => {
-                  //首次不需要弹软键盘
-                  if (!this.isFirstShowUI) {
-                    //非首次 Appear 的时候，才需要弹出软件盘
-                    this.getUIContext().getFocusController().requestFocus('sendText')
-                  }
-                })
-                .onSubmit((eventType: EnterKeyType) => {
-                  //发送
-                  this.toGetAi(this.editValue)
-                  this.editValue = ''
-                })
-                .onChange((value: string) => {
-                  //获取输入框内容
-                  console.info(value)
-                  this.editValue = value
+          Column() {
+            Row() {
+              //语音文字转换
+              Image(this.speekIconResource)
+                .width(SizeConstant.SIZE_30)
+                .height(SizeConstant.SIZE_30)
+                .margin({ left: SizeConstant.SIZE_10 })
+                .onClick(() => {
+                  //切换语音文字
+                  this.isFirstShowUI = false
+                  this.isSendText = !this.isSendText
                 })
 
-            } else {
-              //编写语音
-              Text(this.isRecording ? $r('app.string.recording') : $r('app.string.start_record'))
-                .backgroundColor(this.recordUI)
-                .borderRadius(SizeConstant.SIZE_5)
-                .width(SizeConstant.SIZE_PERCENT_65)
-                .height(SizeConstant.SIZE_35)
-                .textAlign(TextAlign.Center)
-                .fontSize($r('app.float.font_15'))
-                .fontColor(Color.Black)
-                .margin({ left: SizeConstant.SIZE_10, top: SizeConstant.SIZE_5, bottom: SizeConstant.SIZE_10 })
-                .onTouch((event: TouchEvent) => {
-                  if (event.type === TouchType.Down) {
-                    //按下状态
-                    this.recordUI = Color.Grey
-                    this.isRecording = true
-                  } else if (event.type === TouchType.Up) {
-                    //抬起状态
-                    this.recordUI = Color.White
-                    this.isRecording = false
-                  }
+              if (this.isSendText) {
+                //编写文字
+                TextArea({
+                  text: this.editValue
                 })
-            }
-            //表情
-            Image($r('app.media.icon_biaoqing'))
-              .width(SizeConstant.SIZE_30)
-              .height(SizeConstant.SIZE_30)
-              .margin({ left: SizeConstant.SIZE_10 })
+                  .id('sendText')
+                  .backgroundColor(Color.White)
+                  .borderRadius(SizeConstant.SIZE_5)
+                  .width(SizeConstant.SIZE_PERCENT_65)
+                  .margin({ left: SizeConstant.SIZE_10, top: SizeConstant.SIZE_5, bottom: SizeConstant.SIZE_10 })
+                  .enterKeyType(EnterKeyType.Send)
+                  .onAppear(() => {
+                    //首次不需要弹软键盘
+                    if (!this.isFirstShowUI) {
+                      //非首次 Appear 的时候，才需要弹出软件盘
+                      this.getUIContext().getFocusController().requestFocus('sendText')
+                    }
+                  })
+                  .onSubmit((eventType: EnterKeyType) => {
+                    //发送
+                    this.toGetAi(this.editValue)
+                    this.editValue = ''
+                  })
+                  .onChange((value: string) => {
+                    //获取输入框内容
+                    console.info(value)
+                    this.editValue = value
+                  })
 
-            Blank()
+              } else {
+                //编写语音
+                Text(this.isRecording ? $r('app.string.recording') : $r('app.string.start_record'))
+                  .backgroundColor(this.recordUI)
+                  .borderRadius(SizeConstant.SIZE_5)
+                  .width(SizeConstant.SIZE_PERCENT_65)
+                  .height(SizeConstant.SIZE_35)
+                  .textAlign(TextAlign.Center)
+                  .fontSize($r('app.float.font_15'))
+                  .fontColor(Color.Black)
+                  .margin({ left: SizeConstant.SIZE_10, top: SizeConstant.SIZE_5, bottom: SizeConstant.SIZE_10 })
+                  .onTouch((event: TouchEvent) => {
+                    if (event.type === TouchType.Down) {
+                      //按下状态
+                      this.recordUI = Color.Grey
+                      this.isRecording = true
+                    } else if (event.type === TouchType.Up) {
+                      //抬起状态
+                      this.recordUI = Color.White
+                      this.isRecording = false
+                    }
+                  })
+              }
+              //表情
+              Image(this.emojiIconResource)
+                .width(SizeConstant.SIZE_30)
+                .height(SizeConstant.SIZE_30)
+                .margin({ left: SizeConstant.SIZE_10 })
+                .onClick(() => {
+                  this.isEmoji = !this.isEmoji
+                })
 
-            //加
-            Image($r('app.media.icon_add'))
-              .width(SizeConstant.SIZE_30)
-              .height(SizeConstant.SIZE_30)
-              .margin({ right: SizeConstant.SIZE_10 })
+              Blank()
 
-          }.width(SizeConstant.FULL_SIZE)
-          .backgroundColor($r('app.color.color_F6F6F6'))
+              //加
+              Image($r('app.media.icon_add'))
+                .width(SizeConstant.SIZE_30)
+                .height(SizeConstant.SIZE_30)
+                .margin({ right: SizeConstant.SIZE_10 })
+
+            }.width(SizeConstant.FULL_SIZE)
+          }.backgroundColor($r('app.color.color_F6F6F6'))
           .padding({ bottom: px2vp(this.navHeight) })
+          .width(SizeConstant.FULL_SIZE)
         }.width(SizeConstant.FULL_SIZE)
         .height(SizeConstant.FULL_SIZE)
       }.mode(NavigationMode.Stack)
