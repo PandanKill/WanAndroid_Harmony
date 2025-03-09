@@ -43,6 +43,10 @@
     {
       "name": "font_13",
       "value": "13fp"
+    },
+    {
+      "name": "font_8",
+      "value": "8fp"
     }
   ]
 }

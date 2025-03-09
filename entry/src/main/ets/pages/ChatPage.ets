@@ -1,4 +1,5 @@
 import { it } from '@ohos/hypium';
+import { ChatOtherFunView } from '../component/ChatOtherFunView';
 import { EmojiListView } from '../component/EmojiListView';
 import { NavHeaderView } from '../component/NavHeaderView';
 import SizeConstant from '../constants/SizeConstant';
@@ -29,6 +30,8 @@ struct AIChatPage {
   @State speekIconResource: Resource = $r('app.media.icon_speek')
   @State @Watch('changeEmojiIcon') isEmoji: boolean = false
   @State emojiIconResource: Resource = $r('app.media.icon_biaoqing')
+  //相册、相机
+  @State isPhoto: boolean = false
   //是否正在录音
   @State isRecording: boolean = false
   @State recordUI: ResourceColor = Color.White
@@ -204,6 +207,7 @@ struct AIChatPage {
           .onClick(() => {
             //收起 emoji
             this.isEmoji = false
+            this.isPhoto = false
             this.getUIContext().getFocusController().clearFocus()
           })
 
@@ -221,6 +225,7 @@ struct AIChatPage {
                   this.isFirstShowUI = false
                   this.isSendText = !this.isSendText
                   this.isEmoji = false
+                  this.isPhoto = false
                 })
 
               if (this.isSendText) {
@@ -237,7 +242,7 @@ struct AIChatPage {
                   .enterKeyType(EnterKeyType.Send)
                   .onAppear(() => {
                     //首次不需要弹软键盘
-                    if (!this.isFirstShowUI && !this.isEmoji) {
+                    if (!this.isFirstShowUI && !this.isEmoji && !this.isPhoto) {
                       //非首次 Appear 的时候，才需要弹出软件盘
                       this.getUIContext().getFocusController().requestFocus('sendText')
                     }
@@ -254,6 +259,7 @@ struct AIChatPage {
                   })
                   .onFocus(() => {
                     this.isEmoji = false
+                    this.isPhoto = false
                   })
 
               } else {
@@ -286,6 +292,7 @@ struct AIChatPage {
                 .margin({ left: SizeConstant.SIZE_10 })
                 .onClick(() => {
                   this.isSendText = true
+                  this.isPhoto = false
                   this.isEmoji = !this.isEmoji
                   if (this.isEmoji) {
                     //收起软键盘
@@ -306,6 +313,22 @@ struct AIChatPage {
                 .width(SizeConstant.SIZE_30)
                 .height(SizeConstant.SIZE_30)
                 .margin({ right: SizeConstant.SIZE_10 })
+                .onClick(() => {
+                  this.isSendText = true
+                  this.isEmoji = false
+                  this.isPhoto = !this.isPhoto
+                  if (this.isPhoto) {
+                    this.getUIContext().getFocusController().clearFocus()
+                    //获取最近一张图片
+                    this.getRecentlyImage()
+                  } else {
+                    //弹出软键盘
+                    setTimeout(() => {
+                      //需要延迟50ms，避免无法无法获取到焦点
+                      this.getUIContext().getFocusController().requestFocus('sendText')
+                    }, 50)
+                  }
+                })
 
             }.width(SizeConstant.FULL_SIZE)
 
@@ -331,6 +354,7 @@ struct AIChatPage {
                   .backgroundColor($r('app.color.color_E0E0E0'))
                   .borderRadius(SizeConstant.SIZE_5)
                   .onClick(() => {
+                    //todo 删除字符、表情包字符
                     // if ()
                     // if (this.editValue.length > 0) {
                     //   console.info(`lgwww ${this.editValue}}`)
@@ -360,6 +384,9 @@ struct AIChatPage {
               }.width(SizeConstant.FULL_SIZE)
               .height(SizeConstant.SIZE_PERCENT_25)
               .align(Alignment.BottomEnd)
+            } else if (this.isPhoto) {
+              //相机、相册
+              ChatOtherFunView()
             }
           }.backgroundColor($r('app.color.color_F6F6F6'))
           .padding({ bottom: px2vp(this.navHeight) })
@@ -371,6 +398,14 @@ struct AIChatPage {
     }.width(SizeConstant.FULL_SIZE)
     .height(SizeConstant.FULL_SIZE)
     .backgroundColor($r('app.color.color_EDEDED'))
+  }
+
+  /**
+   * 获取最新的图片
+   */
+  getRecentlyImage() {
+    //RecentPhoto
+    //https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/component-guidelines-recentphoto-V5
   }
 
   //调用AI
@@ -429,4 +464,3 @@ struct AIChatPage {
   //   }
   // }
 }
-
