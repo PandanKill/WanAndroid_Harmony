@@ -131,6 +131,10 @@
     {
       "name": "recording",
       "value": "松开 结束"
+    },
+    {
+      "name": "send",
+      "value": "发送"
     }
   ]
 }

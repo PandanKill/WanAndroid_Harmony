@@ -1,4 +1,5 @@
 import { it } from '@ohos/hypium';
+import { EmojiListView } from '../component/EmojiListView';
 import { NavHeaderView } from '../component/NavHeaderView';
 import SizeConstant from '../constants/SizeConstant';
 
@@ -31,6 +32,7 @@ struct AIChatPage {
   //是否正在录音
   @State isRecording: boolean = false
   @State recordUI: ResourceColor = Color.White
+  private textAreaController: TextAreaController = new TextAreaController()
 
   getMMSS(): string {
     let date = new Date()
@@ -200,11 +202,14 @@ struct AIChatPage {
           }.width(SizeConstant.FULL_SIZE)
           .layoutWeight(1)
           .onClick(() => {
+            //收起 emoji
+            this.isEmoji = false
             this.getUIContext().getFocusController().clearFocus()
           })
 
           //底部栏
           Column() {
+            //输入框
             Row() {
               //语音文字转换
               Image(this.speekIconResource)
@@ -215,12 +220,14 @@ struct AIChatPage {
                   //切换语音文字
                   this.isFirstShowUI = false
                   this.isSendText = !this.isSendText
+                  this.isEmoji = false
                 })
 
               if (this.isSendText) {
                 //编写文字
                 TextArea({
-                  text: this.editValue
+                  text: this.editValue,
+                  controller: this.textAreaController
                 })
                   .id('sendText')
                   .backgroundColor(Color.White)
@@ -230,7 +237,7 @@ struct AIChatPage {
                   .enterKeyType(EnterKeyType.Send)
                   .onAppear(() => {
                     //首次不需要弹软键盘
-                    if (!this.isFirstShowUI) {
+                    if (!this.isFirstShowUI && !this.isEmoji) {
                       //非首次 Appear 的时候，才需要弹出软件盘
                       this.getUIContext().getFocusController().requestFocus('sendText')
                     }
@@ -244,6 +251,9 @@ struct AIChatPage {
                     //获取输入框内容
                     console.info(value)
                     this.editValue = value
+                  })
+                  .onFocus(() => {
+                    this.isEmoji = false
                   })
 
               } else {
@@ -275,18 +285,82 @@ struct AIChatPage {
                 .height(SizeConstant.SIZE_30)
                 .margin({ left: SizeConstant.SIZE_10 })
                 .onClick(() => {
+                  this.isSendText = true
                   this.isEmoji = !this.isEmoji
+                  if (this.isEmoji) {
+                    //收起软键盘
+                    this.getUIContext().getFocusController().clearFocus()
+                  } else {
+                    //弹出软键盘
+                    setTimeout(() => {
+                      //需要延迟50ms，避免无法无法获取到焦点
+                      this.getUIContext().getFocusController().requestFocus('sendText')
+                    }, 50)
+                  }
                 })
 
               Blank()
 
-              //加
+              //图片、相机
               Image($r('app.media.icon_add'))
                 .width(SizeConstant.SIZE_30)
                 .height(SizeConstant.SIZE_30)
                 .margin({ right: SizeConstant.SIZE_10 })
 
             }.width(SizeConstant.FULL_SIZE)
+
+            //显示表情包
+            if (this.isEmoji) {
+              Stack() {
+                EmojiListView({
+                  emojiClick: (item: string) => {
+                    this.editValue = this.editValue + item
+                  }
+                })
+
+                Row() {
+                  Stack() {
+                    Image(this.editValue.length === 0 ? $r('app.media.icon_recall_normal') :
+                    $r('app.media.icon_recall_clickable'))
+                      .width(SizeConstant.SIZE_20)
+                      .height(SizeConstant.SIZE_15)
+                  }
+                  .width(SizeConstant.SIZE_45)
+                  .height(SizeConstant.SIZE_35)
+                  .align(Alignment.Center)
+                  .backgroundColor($r('app.color.color_E0E0E0'))
+                  .borderRadius(SizeConstant.SIZE_5)
+                  .onClick(() => {
+                    // if ()
+                    // if (this.editValue.length > 0) {
+                    //   console.info(`lgwww ${this.editValue}}`)
+                    //   console.info(`lgwww ${this.editValue.length}}`)
+                    //   this.editValue = this.editValue.slice(0, -1)
+                    // }
+                  })
+
+                  Text($r('app.string.send'))
+                    .width(SizeConstant.SIZE_45)
+                    .height(SizeConstant.SIZE_35)
+                    .textAlign(TextAlign.Center)
+                    .backgroundColor(this.editValue.length === 0 ? $r('app.color.color_E0E0E0') :
+                    $r('app.color.color_09C060'))
+                    .fontSize($r('app.float.font_15'))
+                    .fontColor(this.editValue.length === 0 ? $r('app.color.color_BEBEBE') :
+                    $r('app.color.color_FFFFFF'))
+                    .borderRadius(SizeConstant.SIZE_5)
+                    .margin({ left: SizeConstant.SIZE_10 })
+                    .onClick(() => {
+                      //发送
+                      this.toGetAi(this.editValue)
+                      this.editValue = ''
+                    })
+                }
+                .margin({ right: SizeConstant.SIZE_20 })
+              }.width(SizeConstant.FULL_SIZE)
+              .height(SizeConstant.SIZE_PERCENT_25)
+              .align(Alignment.BottomEnd)
+            }
           }.backgroundColor($r('app.color.color_F6F6F6'))
           .padding({ bottom: px2vp(this.navHeight) })
           .width(SizeConstant.FULL_SIZE)
@@ -323,5 +397,36 @@ struct AIChatPage {
     message2.messageType = 2
     this.textArr.push(message2)
   }
+
+  // 精准删除逻辑
+  // private deleteEmojiAtCursor() {
+  //   let cursorPos = this.textAreaController.caretPosition;
+  //   if (cursorPos === 0) {
+  //     return;
+  //   }
+  //
+  //   // 使用字素簇分割器
+  //   let segmenter = new Intl.Segmenter('en', { granularity: 'grapheme' });
+  //   let segments = Array.from(segmenter.segment(this.text));
+  //
+  //   // 找到光标所在字素簇
+  //   let targetSegment: Intl.SegmentData | null = null;
+  //   for (const seg of segments) {
+  //     if (seg.index <= cursorPos - 1 && cursorPos - 1 < seg.index + seg.segment.length) {
+  //       targetSegment = seg;
+  //       break;
+  //     }
+  //   }
+  //
+  //   if (targetSegment) {
+  //     // 删除目标字素簇
+  //     const newText =
+  //       this.text.slice(0, targetSegment.index) +
+  //       this.text.slice(targetSegment.index + targetSegment.segment.length);
+  //
+  //     this.text = newText;
+  //     this.controller.caretPosition(targetSegment.index); // 调整光标位置
+  //   }
+  // }
 }
 

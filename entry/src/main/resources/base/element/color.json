@@ -111,6 +111,22 @@
     {
       "name": "color_A5A5A5",
       "value": "#A5A5A5"
+    },
+    {
+      "name": "color_ECECEC",
+      "value": "#ECECEC"
+    },
+    {
+      "name": "color_E0E0E0",
+      "value": "#E0E0E0"
+    },
+    {
+      "name": "color_09C060",
+      "value": "#09C060"
+    },
+    {
+      "name": "color_BEBEBE",
+      "value": "#BEBEBE"
     }
   ]
 }
