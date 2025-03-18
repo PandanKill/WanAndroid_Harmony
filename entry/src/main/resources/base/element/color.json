@@ -131,6 +131,30 @@
     {
       "name": "color_7C7C7C",
       "value": "#7C7C7C"
+    },
+    {
+      "name": "color_FDFDFD",
+      "value": "#FDFDFD"
+    },
+    {
+      "name": "color_5F5E5F",
+      "value": "#5F5E5F"
+    },
+    {
+      "name": "color_343434",
+      "value": "#343434"
+    },
+    {
+      "name": "color_555555",
+      "value": "#555555"
+    },
+    {
+      "name": "color_08C459",
+      "value": "#08C459"
+    },
+    {
+      "name": "color_05C166",
+      "value": "#05C166"
     }
   ]
 }

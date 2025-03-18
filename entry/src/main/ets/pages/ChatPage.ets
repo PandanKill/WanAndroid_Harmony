@@ -3,6 +3,7 @@ import { ChatOtherFunView } from '../component/ChatOtherFunView';
 import { EmojiListView } from '../component/EmojiListView';
 import { NavHeaderView } from '../component/NavHeaderView';
 import SizeConstant from '../constants/SizeConstant';
+import inputMethodEngine from '@ohos.inputMethodEngine';
 
 class Message {
   text: string = ''
@@ -36,6 +37,7 @@ struct AIChatPage {
   @State isRecording: boolean = false
   @State recordUI: ResourceColor = Color.White
   private textAreaController: TextAreaController = new TextAreaController()
+  private timeId: number = 0
 
   getMMSS(): string {
     let date = new Date()

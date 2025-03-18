@@ -1,6 +1,9 @@
 import { it } from '@ohos/hypium'
 import SizeConstant from '../constants/SizeConstant'
 import { camera, cameraPicker } from '@kit.CameraKit'
+import { PickerOptions, ReminderMode } from '@ohos.file.PhotoPickerComponent'
+import { photoAccessHelper } from '@kit.MediaLibraryKit'
+import { router } from '@kit.ArkUI'
 
 interface ChatFunBean {
   name: string,
@@ -60,6 +63,7 @@ export struct ChatOtherFunView {
   clickFun(id: string) {
     switch (id) {
       case "image":
+        this.openPhoto()
         break
       case "photo":
         this.openCamera()
@@ -68,8 +72,25 @@ export struct ChatOtherFunView {
   }
 
   openPhoto() {
+    router.pushUrl({
+      url: "pages/PhotoPickerComponentPage"
+    })
+    
     //https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/component-guidelines-photoviewpicker-V5
     //PhotoPicker
+    let pickerOption = new PickerOptions()
+    //图片视频都可以显示
+    pickerOption.MIMEType = photoAccessHelper.PhotoViewMIMETypes.IMAGE_VIDEO_TYPE
+    //最大选择数
+    pickerOption.maxSelectNumber = 1
+    //超出最大选择数量时
+    pickerOption.maxSelectedReminderMode = ReminderMode.MASK
+    //是否展示搜索框
+    pickerOption.isSearchSupported = true
+    //是否展示拍照
+    pickerOption.isPhotoTakingSupported = false
+
+
   }
 
   /**
@@ -80,6 +101,7 @@ export struct ChatOtherFunView {
       cameraPosition: camera.CameraPosition.CAMERA_POSITION_BACK
     }
     let pickerResult: cameraPicker.PickerResult =
-      await cameraPicker.pick(getContext(this), [cameraPicker.PickerMediaType.PHOTO], pickerProfile)
+      await cameraPicker.pick(getContext(this),
+        [cameraPicker.PickerMediaType.PHOTO, cameraPicker.PickerMediaType.VIDEO], pickerProfile)
   }
 }
