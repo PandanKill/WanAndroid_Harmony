@@ -41,6 +41,8 @@ struct PhotoPickerComponentPage {
     this.pickerOptions.isSearchSupported = false;
     // 是否支持拍照，默认false
     this.pickerOptions.isPhotoTakingSupported = false;
+    //背景色
+    this.pickerOptions.backgroundColor = "#191919"
   }
 
   onItemClicked(itemInfo: ItemInfo, clickType: ClickType): boolean {
@@ -133,7 +135,7 @@ struct PhotoPickerComponentPage {
     }.width('100%')
     .height('100%')
     .padding({ bottom: px2vp(this.navHeight), top: px2vp(this.topRectHeight) })
-    .backgroundColor($r('app.color.color_333333'))
+    .backgroundColor($r('app.color.color_1A1A18'))
   }
 
   @Builder

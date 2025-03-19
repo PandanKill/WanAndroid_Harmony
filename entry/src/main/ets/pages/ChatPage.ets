@@ -3,13 +3,19 @@ import { ChatOtherFunView } from '../component/ChatOtherFunView';
 import { EmojiListView } from '../component/EmojiListView';
 import { NavHeaderView } from '../component/NavHeaderView';
 import SizeConstant from '../constants/SizeConstant';
-import inputMethodEngine from '@ohos.inputMethodEngine';
+import { http } from '@kit.NetworkKit';
+import { AIRequestBean, InputBean, MessageBean, ParametersBean } from '../bean/AIRequestBean';
+import { JSON } from '@kit.ArkTS';
+import { BusinessError } from '@kit.BasicServicesKit';
+import hilog from '@ohos.hilog';
 
 class Message {
   text: string = ''
   //0 时间、1 发送方、2接收方
   messageType: number = 0
   ownerName: string = ''
+  //发送方 request_id是 send，接收方是真实 id
+  request_id: string = ''
   ownerIcon: Resource | undefined = $r('app.media.icon_default')
   id: string = ''
 }
@@ -65,6 +71,7 @@ struct AIChatPage {
   }
 
   aboutToAppear(): void {
+    //加载数据库 AI 聊天内容
     let message0 = new Message()
     message0.text = this.getMMSS()
     message0.messageType = 0
@@ -428,12 +435,53 @@ struct AIChatPage {
     message1.ownerName = "Owner"
     this.textArr.push(message1)
 
-    let message2 = new Message()
-    message2.text = editValue
-    message2.ownerName = "DeepSeek"
-    message2.messageType = 2
-    this.textArr.push(message2)
+    //调用 API 获取
+    let param: ParametersBean = {
+      result_format: "message",
+      incremental_output: true
+    }
+    let bean: MessageBean = {
+      role: "user",
+      content: this.editValue
+    }
+
+    let inputBean: InputBean = {
+      messages: [bean]
+    }
+
+    let requestBean: AIRequestBean = {
+      model: "deepseek-r1",
+      input: inputBean,
+      parameters: param
+    }
+    let httpSession = http.createHttp()
+    httpSession.request("https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation", {
+      method: http.RequestMethod.POST,
+      header: {
+        "Authorization": `Bearer $..`,
+        "Content-Type": "application/json",
+        "X-DashScope-SSE": "enable"
+      },
+      extraData: JSON.stringify(requestBean)
+    }, (err: BusinessError, response: http.HttpResponse) => {
+      if (err) {
+        //异常
+        console.error(`request ${err.message}`)
+        return
+      }
+      //流式返回
+      hilog.info(0x00, "lgwwww", JSON.stringify(response.header))
+      hilog.info(0x00, "lgwwww", JSON.stringify(response.resultType))
+      hilog.info(0x00, "lgwwww", JSON.stringify(response.responseCode))
+      hilog.info(0x00, "lgwwww", JSON.stringify(response.result))
+    })
   }
+
+  /**
+   03-19 20:18:51.652   61606-61606   A00000/com.lgw...ndroid/lgwwww  com.lgw.wanandroid    I     {"content-type":"text/event-stream;charset=UTF-8","date":"Wed, 19 Mar 2025 12:18:47 GMT","req-arrive-time":"1742386727444","req-cost-time":"477","resp-start-time":"1742386727921","server":"istio-envoy","vary":"Origin,Access-Control-Request-Method,Access-Control-Request-Headers","x-dashscope-call-gateway":"true","x-dashscope-finished":"false","x-dashscope-timeout":"180","x-envoy-upstream-service-time":"470","x-request-id":"67b20699-48c4-9a36-a1f1-4d30e6fed828","set-cookie":["acw_tc=67b20699-48c4-9a36-a1f1-4d30e6fed8280be2c55fe3966f4de28d01f91d1898b7;path=/;HttpOnly;Max-Age=1800"]}
+   03-19 20:18:51.653   61606-61606   A00000/com.lgw...ndroid/lgwwww  com.lgw.wanandroid    I     "id:1\nevent:result\n:HTTP_STATUS/200\ndata:{\"output\":{\"choices\":[{\"message\":{\"content\":\"\",\"reasoning_content\":\"您好\",\"role\":\"assistant\"},\"finish_reason\":\"null\"}]},\"usage\":{\"total_tokens\":7,\"input_tokens\":4,\"output_tokens\":3},\"request_id\":\"67b20699-48c4-9a36-a1f1-4d30e6fed828\"}\n\nid:2\nevent:result\n:HTTP_STATUS/200\ndata:{\"output\":{\"choices\":[{\"message\":{\"content\":\"\",\"reasoning_content\":\"！\",\"role\":\"assistant\"},\"finish_reason\":\"null\"}]},\"usage\":{\"total_tokens\":8,\"input_tokens\":4,\"output_tokens\":4},\"request_id\":\"67b20699-48c4-9a36-a1f1-4d30e6fed828\"}\n\nid:3\nevent:result\n:HTTP_STATUS/200\ndata:{\"output\":{\"choices\":[{\"message\":{\"content\":\"\",\"reasoning_content\":\"我是\",\"role\":\"assistant\"},\"finish_reason\":\"null\"}]},\"usage\":{\"total_tokens\":9,\"input_tokens\":4,\"output_tokens\":5},\"request_id\":\"67b20699-48c4-9a36-a1f1-4d30e6fed828\"}\n\nid:4\nevent:result\n:HTTP_STATUS/200\ndata:{\"output\":{\"choices\":[{\"message\":{\"content\":\"\",\"reasoning_content\":\"由\",\"role\":\"assistant\"},\"finish_reason\":\"null\"}]},\"usage\":{\"total_tokens\":10,\"input_tokens\":4,\"output_tokens\":6},\"request_id\":\"67b20699-48c4-9a36-a1f1-4d30e6fed828\"}\n\nid:5\nevent:result\n:HTTP_STATUS/200\ndata:{\"output\":{\"choices\":[{\"message\":{\"content\":\"\",\"reasoning_content\":\"中国的\",\"role\":\"assistant\"},\"finish_reason\":\"null\"}]},\"usage\":{\"total_tokens\":11,\"input_tokens\":4,\"output_tokens\":7},\"request_id\":\"67b20699-48c4-9a36-a1f1-4d30e6fed828\"}\n\nid:6\nevent:result\n:HTTP_STATUS/200\ndata:{\"output\":{\"choices\":[{\"message\":{\"content\":\"\",\"reasoning_content\":\"深度\",\"role\":\"assistant\"},\"finish_reason\":\"null\"}]},\"usage\":{\"total_tokens\":12,\"input_tokens\":4,\"output_tokens\":8},\"request_id\":\"67b20699-48c4-9a36-a1f1-4d30e6fed828\"}\n\nid:7\nevent:result\n:HTTP_STATUS/200\ndata:{\"output\":{\"choices\":[{\"message\":{\"content\":\"\",\"reasoning_content\":\"求\",\"role\":\"assistant\"},\"finish_reason\":\"null\"}]},\"usage\":{\"total_tokens\":13,\"input_tokens\":4,\"output_tokens\":9},\"request_id\":\"67b20699-48c4-9a36-a1f1-4d30e6fed828\"}\n\nid:8\nevent:result\n:HTTP_STATUS/200\ndata:{\"output\":{\"choices\":[{\"message\":{\"content\":\"\",\"reasoning_content\":\"索\",\"role\":\"assistant\"},\"finish_reason\":\"null\"}]},\"usage\":{\"total_tokens\":14,\"input_tokens\":4,\"output_tokens\":10},\"request_id\":\"67b20699-48c4-9a36-a1f1-4d30e6fed828\"}\n\nid:9\nevent:result\n:HTTP_STATUS/200\ndata:{\"output\":{\"choices\":[{\"message\":{\"content\":\"\",\"reasoning_content\":\"（\",\"role\":\"assistant\"},\"finish_reason\":\"null\"}]},\"usage\":{\"total_tokens\":15,\"input_tokens\":4,\"output_tokens\":11},\"request_id\":\"67b20699-48c4-9a36-a1f1-4d30e6fed828\"}\n\nid:10\nevent:result\n:HTTP_STATUS/200\ndata:{\"output\":{\"choices\":[{\"message\":{\"content\":\"\",\"reasoning_content\":\"Deep\",\"role\":\"assistant\"},\"finish_reason\":\"null\"}]},\"usage\":{\"total_tokens\":16,\"input_tokens\":4,\"output_tokens\":12},\"request_id\":\"67b20699-48c4-9a36-a1f1-4d30e6fed828\"}\n\nid:11\nevent:result\n:HTTP_STATUS/200\ndata:{\"output\":{\"choices\":[{\"message\":{\"content\":\"\",\"reasoning_content\":\"Se\",\"role\":\"assistant\"},\"finish_reason\":\"null\"}]},\"usage\":{\"total_tokens\":17,\"input_tokens\":4,\"output_tokens\":13},\"request_id\":\"67b20699-48c4-9a36-a1f1-4d30e6fed828\"}\n\nid:12\nevent:result\n:HTTP_STATUS/200\ndata:{\"output\":{\"choices\":[{\"message\":{\"content\":\"\
+   *
+   */
 
   // 精准删除逻辑
   // private deleteEmojiAtCursor() {
