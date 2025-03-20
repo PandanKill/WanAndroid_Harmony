@@ -23,8 +23,8 @@ export default class EntryAbility extends UIAbility {
     hilog.info(0x0000, 'testTag', '%{public}s', 'Ability onWindowStageCreate');
 
     //创建表
-    dbUtil.createDB()
-    
+    // dbUtil.createDB()
+
     //获取窗口信息
     windowStage.getMainWindow().then((window1: window.Window) => {
       this.window = window1

@@ -75,22 +75,6 @@ export struct ChatOtherFunView {
     router.pushUrl({
       url: "pages/PhotoPickerComponentPage"
     })
-    
-    //https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/component-guidelines-photoviewpicker-V5
-    //PhotoPicker
-    let pickerOption = new PickerOptions()
-    //图片视频都可以显示
-    pickerOption.MIMEType = photoAccessHelper.PhotoViewMIMETypes.IMAGE_VIDEO_TYPE
-    //最大选择数
-    pickerOption.maxSelectNumber = 1
-    //超出最大选择数量时
-    pickerOption.maxSelectedReminderMode = ReminderMode.MASK
-    //是否展示搜索框
-    pickerOption.isSearchSupported = true
-    //是否展示拍照
-    pickerOption.isPhotoTakingSupported = false
-
-
   }
 
   /**
@@ -103,5 +87,14 @@ export struct ChatOtherFunView {
     let pickerResult: cameraPicker.PickerResult =
       await cameraPicker.pick(getContext(this),
         [cameraPicker.PickerMediaType.PHOTO, cameraPicker.PickerMediaType.VIDEO], pickerProfile)
+
+    let selectUri: Array<string> = []
+    selectUri.push(pickerResult.resultUri)
+    router.back({
+      url: "pages/ChatPage",
+      params: {
+        "selectUri": selectUri
+      }
+    })
   }
 }

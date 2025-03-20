@@ -4,27 +4,35 @@ import { EmojiListView } from '../component/EmojiListView';
 import { NavHeaderView } from '../component/NavHeaderView';
 import SizeConstant from '../constants/SizeConstant';
 import { http } from '@kit.NetworkKit';
-import { AIRequestBean, InputBean, MessageBean, ParametersBean } from '../bean/AIRequestBean';
+import {
+  AIRequestBean,
+  AISpeakBean,
+  InputBean,
+  MessageBean,
+  ParametersBean,
+  StreamOptions
+} from '../bean/AIRequestBean';
 import { JSON } from '@kit.ArkTS';
 import { BusinessError } from '@kit.BasicServicesKit';
 import hilog from '@ohos.hilog';
+import { router } from '@kit.ArkUI';
+import { ChatTextView } from '../component/ChatTextView';
 
-class Message {
+@Observed
+export class Message {
   text: string = ''
   //0 时间、1 发送方、2接收方
   messageType: number = 0
   ownerName: string = ''
-  //发送方 request_id是 send，接收方是真实 id
-  request_id: string = ''
   ownerIcon: Resource | undefined = $r('app.media.icon_default')
+  //发送方 request_id是 send，接收方是真实 id
   id: string = ''
 }
 
 @Entry
 @Component
 struct AIChatPage {
-  //sk-c1d2d4ae26e44c61b098a719f98bc40d
-  @State textArr: Message[] = [];
+  @State messageArr: Message[] = [];
   @State editValue: string = "";
   //在切换到录音之后，状态变化
   private isFirstShowUI: boolean = true
@@ -71,24 +79,57 @@ struct AIChatPage {
   }
 
   aboutToAppear(): void {
+    this.messageArr.push(this.getDateMessage(), this.getSendMessage("nihao"))
+  }
+
+  onPageShow(): void {
+    //获取 pageParam
+    let recordParam = (router.getParams() as Record<string, object>)
+    if (recordParam !== undefined) {
+      let uriArr = recordParam.selectUri
+      if (uriArr !== undefined) {
+        let selectArr = uriArr as Array<string>
+        console.info(`dsads`, JSON.stringify(selectArr))
+      }
+    }
+  }
+
+  /**
+   * 获取接收 message
+   * @returns
+   */
+  getReceiverMessage(): Message {
+    let message = new Message()
+    message.messageType = 2;
+    message.ownerName = "DeepSeek"
+    return message
+  }
+
+  /**
+   * 获取发送 message
+   * @returns
+   */
+  getSendMessage(sendText: string): Message {
+    let message = new Message()
+    message.text = sendText
+    message.messageType = 1
+    message.ownerName = "Owner"
+    message.id = 'send'
+
+    return message
+  }
+
+  /**
+   * 获取时间 message
+   * @returns
+   */
+  getDateMessage(): Message {
     //加载数据库 AI 聊天内容
-    let message0 = new Message()
-    message0.text = this.getMMSS()
-    message0.messageType = 0
-
-    let message1 = new Message()
-    message1.text =
-      "fasongfasongfasongfasongfasongfasongfasongfasongfasongfasongfasongfasongfasongfasongfasongfasongfasongfasongfasongfasongfasongfasongfasongfasongfasongfasongfasongfasong"
-    message1.messageType = 1
-    message1.ownerName = "Owner"
-
-    let message2 = new Message()
-    message2.text =
-      "jieshoujieshoujieshoujieshoujieshoujieshoujieshoujieshoujieshoujieshoujieshoujieshoujieshoujieshoujieshoujieshou"
-    message2.messageType = 2;
-    message2.ownerName = "DeepSeek"
-
-    this.textArr.push(message0, message1, message2)
+    let message = new Message()
+    message.text = this.getMMSS()
+    message.messageType = 0
+    message.id = 'date'
+    return message
   }
 
   build() {
@@ -103,111 +144,9 @@ struct AIChatPage {
           List({
             scroller: this.scroller
           }) {
-            ForEach(this.textArr, (item: Message, index: number) => {
+            ForEach(this.messageArr, (item: Message, index: number) => {
               ListItem() {
-
-                if (item.messageType === 1) {
-                  //横向布局
-                  Row() {
-                    Blank()
-                    //内容
-                    Column() {
-                      if (item.ownerName !== '') {
-                        Text(item.ownerName)
-                          .fontColor($r('app.color.color_7B7B7B'))
-                          .fontSize($r('app.float.font_10'))
-                          .alignSelf(ItemAlign.End)
-                      }
-                      Text(item.text)
-                        .backgroundColor($r('app.color.color_95EC69'))
-                        .constraintSize({ maxWidth: SizeConstant.SIZE_PERCENT_60 })
-                        .borderRadius(SizeConstant.SIZE_5)
-                        .fontColor(Color.Black)
-                        .margin({ top: SizeConstant.SIZE_5 })
-                        .height('auto')
-                        .padding(SizeConstant.SIZE_10)
-                        .fontSize($r('app.float.font_15'))
-                        .textAlign(TextAlign.Start)
-                        .copyOption(CopyOptions.InApp)
-                      // .gesture(
-                      //   LongPressGesture().onAction((event) => {
-                      //
-                      //   })
-                      // )
-                    }
-
-                    Shape() {
-                      Path()
-                        .commands('M0 100 L15 115 L0 130 Z')
-                        .fill($r('app.color.color_95EC69'))
-                        .strokeOpacity(0)
-                    }.margin({ right: SizeConstant.SIZE_10 })
-
-                    Image(item.ownerIcon)
-                      .width(SizeConstant.SIZE_40)
-                      .height(SizeConstant.SIZE_40)
-                      .objectFit(ImageFit.Cover)
-                      .borderRadius(SizeConstant.SIZE_5)
-                      .margin({ right: SizeConstant.SIZE_15 })
-                      .id("sendIconId")
-                      .backgroundColor(Color.Black)
-                  }.width(SizeConstant.FULL_SIZE)
-                  .alignItems(VerticalAlign.Top)
-                  .margin({ top: SizeConstant.SIZE_5, bottom: SizeConstant.SIZE_5 })
-                  .height('auto')
-                } else if (item.messageType === 2) {
-
-                  Row() {
-                    Image(item.ownerIcon)
-                      .width(SizeConstant.SIZE_40)
-                      .height(SizeConstant.SIZE_40)
-                      .borderRadius(SizeConstant.SIZE_5)
-                      .objectFit(ImageFit.Cover)
-                      .margin({ left: SizeConstant.SIZE_15 })
-                      .id("receiverIconId")
-                      .backgroundColor(Color.Black)
-
-                    Shape() {
-                      Path()
-                        .commands('M15 100 L0 115 L15 130 Z')
-                        .fill($r('app.color.color_FFFFFF'))
-                        .strokeOpacity(0)
-                    }.margin({ left: SizeConstant.SIZE_10 })
-
-                    Column() {
-                      if (item.ownerName !== '') {
-                        Text(item.ownerName)
-                          .fontColor($r('app.color.color_7B7B7B'))
-                          .fontSize($r('app.float.font_10'))
-                          .alignSelf(ItemAlign.Start)
-                      }
-                      Text(item.text)
-                        .backgroundColor($r('app.color.color_FFFFFF'))
-                        .constraintSize({ maxWidth: SizeConstant.SIZE_PERCENT_60 })
-                        .borderRadius(SizeConstant.SIZE_5)
-                        .fontColor(Color.Black)
-                        .padding(SizeConstant.SIZE_10)
-                        .margin({ top: SizeConstant.SIZE_5 })
-                        .height('auto')
-                        .fontSize($r('app.float.font_15'))
-                        .textAlign(TextAlign.Start)
-                        .copyOption(CopyOptions.InApp)
-                    }
-
-                  }.width(SizeConstant.FULL_SIZE)
-                  .margin({ top: SizeConstant.SIZE_5, bottom: SizeConstant.SIZE_5 })
-                  .alignItems(VerticalAlign.Top)
-                  .height('auto')
-                } else {
-                  Column() {
-                    Text(item.text)
-                      .fontColor($r('app.color.color_A5A5A5'))
-                      .fontSize($r('app.float.font_10'))
-                  }.alignItems(HorizontalAlign.Center)
-                  .margin({ top: SizeConstant.SIZE_5, bottom: SizeConstant.SIZE_5 })
-                  .width(SizeConstant.FULL_SIZE)
-                }
-
+                ChatTextView({ item: item })
               }.width(SizeConstant.FULL_SIZE)
               .height('auto')
             }, (item: Message, index: number) => item.id + index)
@@ -420,20 +359,13 @@ struct AIChatPage {
   //调用AI
   toGetAi(editValue: string) {
     //判断上一次聊天时间小于
+    // this.messageArr[this.messageArr.length - 1].text = "nihaosijia"
     let currentMill = Date.now()
     if (currentMill - this.lastSendMessage > 10 * 1000) {
-      this.lastSendMessage = currentMill
-      let message0 = new Message()
-      message0.text = this.getMMSS()
-      message0.messageType = 0
-      this.textArr.push(message0)
+      this.messageArr.push(this.getDateMessage())
     }
     //""
-    let message1 = new Message()
-    message1.text = editValue
-    message1.messageType = 1
-    message1.ownerName = "Owner"
-    this.textArr.push(message1)
+    this.messageArr.push(this.getSendMessage(editValue))
 
     //调用 API 获取
     let param: ParametersBean = {
@@ -449,18 +381,26 @@ struct AIChatPage {
       messages: [bean]
     }
 
+    let streamOption: StreamOptions = {
+      include_usage: true
+    }
+
     let requestBean: AIRequestBean = {
       model: "deepseek-r1",
-      input: inputBean,
-      parameters: param
+      messages: [bean],
+      stream: true,
+      stream_options: streamOption
+      // input: inputBean,
+      // parameters: param
     }
     let httpSession = http.createHttp()
-    httpSession.request("https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation", {
+    httpSession.request("https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions", {
       method: http.RequestMethod.POST,
+      expectDataType: http.HttpDataType.STRING,
       header: {
-        "Authorization": `Bearer $..`,
-        "Content-Type": "application/json",
-        "X-DashScope-SSE": "enable"
+        "Authorization": `Bearer `,
+        "Content-Type": "application/json"
+        // "X-DashScope-SSE": "enable"
       },
       extraData: JSON.stringify(requestBean)
     }, (err: BusinessError, response: http.HttpResponse) => {
@@ -469,12 +409,54 @@ struct AIChatPage {
         console.error(`request ${err.message}`)
         return
       }
-      //流式返回
-      hilog.info(0x00, "lgwwww", JSON.stringify(response.header))
-      hilog.info(0x00, "lgwwww", JSON.stringify(response.resultType))
-      hilog.info(0x00, "lgwwww", JSON.stringify(response.responseCode))
-      hilog.info(0x00, "lgwwww", JSON.stringify(response.result))
+
+      if (response.responseCode === http.ResponseCode.OK) {
+        //流式返回
+        try {
+          let responseStr = response.result as string
+          let lines = responseStr.split(/\r?\n/)
+
+          lines.forEach((line, index) => {
+            if (line.trim() === '') {
+              return;
+            }
+
+            if (line.trim().includes('[DONE]')) {
+              //结束
+              hilog.info(0x00, "lgwwww", 'end')
+              return
+            }
+            let content = line.split("data: ")
+            let aiSpeakBean = JSON.parse(content[1]) as AISpeakBean
+
+            let lastMessage = this.messageArr[this.messageArr.length - 1]
+            if (lastMessage.id !== aiSpeakBean.id) {
+              //首次接收
+              let receiverMessage = this.getReceiverMessage()
+              receiverMessage.id = aiSpeakBean.id
+              this.messageArr.push(receiverMessage)
+            }
+            let realLastMessage = this.messageArr[this.messageArr.length - 1]
+
+            let ch = aiSpeakBean.choices
+            if (ch !== undefined) {
+              let delta = ch[0]
+              if (delta && delta.delta && delta.delta.reasoning_content) {
+                realLastMessage.text = realLastMessage.text.concat(delta.delta.reasoning_content)
+              }
+            }
+          })
+        } catch (e) {
+          hilog.error(0x00, "lgwww", e)
+        } finally {
+          httpSession.destroy()
+        }
+      }
     })
+  }
+
+  onPageHide(): void {
+    //销毁请求
   }
 
   /**
