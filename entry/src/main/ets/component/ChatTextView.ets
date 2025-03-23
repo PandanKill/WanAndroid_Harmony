@@ -22,22 +22,31 @@ export struct ChatTextView {
                 .fontSize($r('app.float.font_10'))
                 .alignSelf(ItemAlign.End)
             }
-            Text(this.item.text)
-              .backgroundColor($r('app.color.color_95EC69'))
-              .constraintSize({ maxWidth: SizeConstant.SIZE_PERCENT_60 })
-              .borderRadius(SizeConstant.SIZE_5)
-              .fontColor(Color.Black)
-              .margin({ top: SizeConstant.SIZE_5 })
-              .height('auto')
-              .padding(SizeConstant.SIZE_10)
-              .fontSize($r('app.float.font_15'))
-              .textAlign(TextAlign.Start)
-              .copyOption(CopyOptions.InApp)
-            // .gesture(
-            //   LongPressGesture().onAction((event) => {
-            //
-            //   })
-            // )
+            if (this.item.textType === 0) {
+              //发送方是文字
+              Text(this.item.text)
+                .backgroundColor($r('app.color.color_95EC69'))
+                .constraintSize({ maxWidth: SizeConstant.SIZE_PERCENT_60 })
+                .borderRadius(SizeConstant.SIZE_5)
+                .fontColor(Color.Black)
+                .margin({ top: SizeConstant.SIZE_5 })
+                .height('auto')
+                .padding(SizeConstant.SIZE_10)
+                .fontSize($r('app.float.font_15'))
+                .textAlign(TextAlign.Start)
+                .copyOption(CopyOptions.InApp)
+              // .gesture(
+              //   LongPressGesture().onAction((event) => {
+              //
+              //   })
+              // )
+            } else if (this.item.textType === 1) {
+              //图片
+            } else if (this.item.textType === 2) {
+              //视频
+            } else {
+              //语音
+            }
           }
 
           Shape() {
@@ -85,18 +94,48 @@ export struct ChatTextView {
                 .fontSize($r('app.float.font_10'))
                 .alignSelf(ItemAlign.Start)
             }
-            Text(this.item.text)
-              .backgroundColor($r('app.color.color_FFFFFF'))
-              .constraintSize({ maxWidth: SizeConstant.SIZE_PERCENT_60 })
-              .borderRadius(SizeConstant.SIZE_5)
-              .fontColor(Color.Black)
-              .padding(SizeConstant.SIZE_10)
-              .margin({ top: SizeConstant.SIZE_5 })
-              .height('auto')
-              .fontSize($r('app.float.font_15'))
-              .textAlign(TextAlign.Start)
-              .copyOption(CopyOptions.InApp)
-          }
+            if (this.item.messageStatus == 0) {
+              //加载中
+              Text("数据加载中。")
+                .backgroundColor($r('app.color.color_FFFFFF'))
+                .constraintSize({ maxWidth: SizeConstant.SIZE_PERCENT_60 })
+                .borderRadius(SizeConstant.SIZE_5)
+                .fontColor(Color.Black)
+                .padding(SizeConstant.SIZE_10)
+                .margin({ top: SizeConstant.SIZE_5 })
+                .height('auto')
+                .fontSize($r('app.float.font_15'))
+                .textAlign(TextAlign.Start)
+                .copyOption(CopyOptions.InApp)
+            } else if (this.item.messageStatus == 1) {
+              //加载成功
+              Text(this.item.text)
+                .backgroundColor($r('app.color.color_FFFFFF'))
+                .constraintSize({ maxWidth: SizeConstant.SIZE_PERCENT_60 })
+                .borderRadius(SizeConstant.SIZE_5)
+                .fontColor(Color.Black)
+                .padding(SizeConstant.SIZE_10)
+                .margin({ top: SizeConstant.SIZE_5 })
+                .height('auto')
+                .fontSize($r('app.float.font_15'))
+                .textAlign(TextAlign.Start)
+                .copyOption(CopyOptions.InApp)
+            } else {
+              //加载失败
+              Text("服务器繁忙，请稍后再试。")
+                .backgroundColor($r('app.color.color_FFFFFF'))
+                .constraintSize({ maxWidth: SizeConstant.SIZE_PERCENT_60 })
+                .borderRadius(SizeConstant.SIZE_5)
+                .fontColor(Color.Black)
+                .padding(SizeConstant.SIZE_10)
+                .margin({ top: SizeConstant.SIZE_5 })
+                .height('auto')
+                .fontSize($r('app.float.font_15'))
+                .textAlign(TextAlign.Start)
+                .copyOption(CopyOptions.InApp)
+            }
+
+          }.alignItems(HorizontalAlign.Start)
 
         }.width(SizeConstant.FULL_SIZE)
         .margin({ top: SizeConstant.SIZE_5, bottom: SizeConstant.SIZE_5 })

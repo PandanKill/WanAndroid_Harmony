@@ -178,7 +178,7 @@ export struct MimeView {
 
       //AI 聊天
       Row() {
-        Text("你好 Harmony")
+        Text("百炼模型库")
           .fontSize($r('app.float.font_12'))
           .fontColor($r('app.color.color_000000'))
           .margin({ left: SizeConstant.SIZE_15, top: SizeConstant.SIZE_15, bottom: SizeConstant.SIZE_15 })

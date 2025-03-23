@@ -3,20 +3,13 @@ import { ChatOtherFunView } from '../component/ChatOtherFunView';
 import { EmojiListView } from '../component/EmojiListView';
 import { NavHeaderView } from '../component/NavHeaderView';
 import SizeConstant from '../constants/SizeConstant';
-import { http } from '@kit.NetworkKit';
-import {
-  AIRequestBean,
-  AISpeakBean,
-  InputBean,
-  MessageBean,
-  ParametersBean,
-  StreamOptions
-} from '../bean/AIRequestBean';
+import { AISpeakBean, ModelStudioStreamClient } from '../utils/TextAiRequestUtil';
 import { JSON } from '@kit.ArkTS';
-import { BusinessError } from '@kit.BasicServicesKit';
 import hilog from '@ohos.hilog';
 import { router } from '@kit.ArkUI';
 import { ChatTextView } from '../component/ChatTextView';
+import { imageToBase64 } from '../utils/FileUtil';
+import { FileAIRequestUtil } from '../utils/PictureAIRequestUtil';
 
 @Observed
 export class Message {
@@ -24,6 +17,10 @@ export class Message {
   //0 时间、1 发送方、2接收方
   messageType: number = 0
   ownerName: string = ''
+  //0 加载中 1 显示成功 2读取失败
+  messageStatus: number = 0
+  //消息类型 0 文字 1 图片 2视频 3 语音
+  textType: number = 0
   ownerIcon: Resource | undefined = $r('app.media.icon_default')
   //发送方 request_id是 send，接收方是真实 id
   id: string = ''
@@ -32,6 +29,7 @@ export class Message {
 @Entry
 @Component
 struct AIChatPage {
+  //
   @State messageArr: Message[] = [];
   @State editValue: string = "";
   //在切换到录音之后，状态变化
@@ -82,7 +80,7 @@ struct AIChatPage {
     this.messageArr.push(this.getDateMessage(), this.getSendMessage("nihao"))
   }
 
-  onPageShow(): void {
+  async onPageShow(): Promise<void> {
     //获取 pageParam
     let recordParam = (router.getParams() as Record<string, object>)
     if (recordParam !== undefined) {
@@ -90,6 +88,42 @@ struct AIChatPage {
       if (uriArr !== undefined) {
         let selectArr = uriArr as Array<string>
         console.info(`dsads`, JSON.stringify(selectArr))
+        let base64Url = await imageToBase64(selectArr[0])
+        //获取到图片信息,全模态
+        let fileAi = new FileAIRequestUtil({
+          endpoint: 'https://dashscope.aliyuncs.com',
+          api_key: "xxx",
+          model: 'qwen-omni-turbo',
+          desText: "图中描绘的是什么景象？"
+        })
+
+        //接收
+        const receiverMessage = this.getReceiverMessage()
+        receiverMessage.id = new Date().getTime().toString()
+        receiverMessage.messageStatus = 0
+        this.messageArr.push(receiverMessage)
+
+        fileAi.sendPicStreamRequest(base64Url, {
+          onDataReceived: (aiSpeakBean: AISpeakBean) => {
+            //加载成功
+            receiverMessage.messageStatus = 1
+            let ch = aiSpeakBean.choices
+            if (ch !== undefined) {
+              let delta = ch[0]
+              if (delta && delta.delta && delta.delta.content) {
+                let text = receiverMessage.text
+                let newText = text + delta.delta.content
+                receiverMessage.text = newText
+              }
+            }
+          },
+          onError: (err) => {
+            receiverMessage.messageStatus = 2
+          },
+          onComplete: () => {
+
+          }
+        })
       }
     }
   }
@@ -303,12 +337,13 @@ struct AIChatPage {
                   .borderRadius(SizeConstant.SIZE_5)
                   .onClick(() => {
                     //todo 删除字符、表情包字符
-                    // if ()
-                    // if (this.editValue.length > 0) {
-                    //   console.info(`lgwww ${this.editValue}}`)
-                    //   console.info(`lgwww ${this.editValue.length}}`)
-                    //   this.editValue = this.editValue.slice(0, -1)
-                    // }
+                    if (this.editValue.length > 0) {
+                      hilog.info(0x01, "lgwww", `lgwww ${this.editValue}}`)
+                      hilog.info(0x01, "lgwww", `lgwww ${this.editValue.length}}`)
+                      this.editValue = this.editValue.substring(0, this.editValue.length - 1)
+                      hilog.info(0x01, "lgwww", `lgwww ${this.editValue}}`)
+                      hilog.info(0x01, "lgwww", `lgwww ${this.editValue.length}}`)
+                    }
                   })
 
                   Text($r('app.string.send'))
@@ -359,98 +394,45 @@ struct AIChatPage {
   //调用AI
   toGetAi(editValue: string) {
     //判断上一次聊天时间小于
-    // this.messageArr[this.messageArr.length - 1].text = "nihaosijia"
     let currentMill = Date.now()
-    if (currentMill - this.lastSendMessage > 10 * 1000) {
+    if (currentMill - this.lastSendMessage > 5 * 60 * 1000) {
       this.messageArr.push(this.getDateMessage())
     }
     //""
     this.messageArr.push(this.getSendMessage(editValue))
 
-    //调用 API 获取
-    let param: ParametersBean = {
-      result_format: "message",
-      incremental_output: true
-    }
-    let bean: MessageBean = {
-      role: "user",
-      content: this.editValue
-    }
+    const client = new ModelStudioStreamClient({
+      endpoint: 'https://dashscope.aliyuncs.com',
+      api_key: "xxx",
+      model: 'deepseek-r1'
+    });
 
-    let inputBean: InputBean = {
-      messages: [bean]
-    }
+    //接收
+    const receiverMessage = this.getReceiverMessage()
+    receiverMessage.id = new Date().getTime().toString()
+    receiverMessage.messageStatus = 0
+    this.messageArr.push(receiverMessage)
 
-    let streamOption: StreamOptions = {
-      include_usage: true
-    }
-
-    let requestBean: AIRequestBean = {
-      model: "deepseek-r1",
-      messages: [bean],
-      stream: true,
-      stream_options: streamOption
-      // input: inputBean,
-      // parameters: param
-    }
-    let httpSession = http.createHttp()
-    httpSession.request("https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions", {
-      method: http.RequestMethod.POST,
-      expectDataType: http.HttpDataType.STRING,
-      header: {
-        "Authorization": `Bearer `,
-        "Content-Type": "application/json"
-        // "X-DashScope-SSE": "enable"
-      },
-      extraData: JSON.stringify(requestBean)
-    }, (err: BusinessError, response: http.HttpResponse) => {
-      if (err) {
-        //异常
-        console.error(`request ${err.message}`)
-        return
-      }
-
-      if (response.responseCode === http.ResponseCode.OK) {
-        //流式返回
-        try {
-          let responseStr = response.result as string
-          let lines = responseStr.split(/\r?\n/)
-
-          lines.forEach((line, index) => {
-            if (line.trim() === '') {
-              return;
-            }
-
-            if (line.trim().includes('[DONE]')) {
-              //结束
-              hilog.info(0x00, "lgwwww", 'end')
-              return
-            }
-            let content = line.split("data: ")
-            let aiSpeakBean = JSON.parse(content[1]) as AISpeakBean
-
-            let lastMessage = this.messageArr[this.messageArr.length - 1]
-            if (lastMessage.id !== aiSpeakBean.id) {
-              //首次接收
-              let receiverMessage = this.getReceiverMessage()
-              receiverMessage.id = aiSpeakBean.id
-              this.messageArr.push(receiverMessage)
-            }
-            let realLastMessage = this.messageArr[this.messageArr.length - 1]
-
-            let ch = aiSpeakBean.choices
-            if (ch !== undefined) {
-              let delta = ch[0]
-              if (delta && delta.delta && delta.delta.reasoning_content) {
-                realLastMessage.text = realLastMessage.text.concat(delta.delta.reasoning_content)
-              }
-            }
-          })
-        } catch (e) {
-          hilog.error(0x00, "lgwww", e)
-        } finally {
-          httpSession.destroy()
+    client.sendStreamRequest(this.editValue, {
+      onDataReceived: (aiSpeakBean: AISpeakBean): void => {
+        //加载成功
+        receiverMessage.messageStatus = 1
+        let ch = aiSpeakBean.choices
+        if (ch !== undefined) {
+          let delta = ch[0]
+          if (delta && delta.delta && delta.delta.reasoning_content) {
+            let text = receiverMessage.text
+            let newText = text + delta.delta.reasoning_content
+            receiverMessage.text = newText
+          }
         }
+      },
+      onError: (error: Error): void => {
+        receiverMessage.messageStatus = 2
+      },
+      onComplete: (): void => {
+        //写到数据库
+
       }
     })
   }
@@ -458,12 +440,6 @@ struct AIChatPage {
   onPageHide(): void {
     //销毁请求
   }
-
-  /**
-   03-19 20:18:51.652   61606-61606   A00000/com.lgw...ndroid/lgwwww  com.lgw.wanandroid    I     {"content-type":"text/event-stream;charset=UTF-8","date":"Wed, 19 Mar 2025 12:18:47 GMT","req-arrive-time":"1742386727444","req-cost-time":"477","resp-start-time":"1742386727921","server":"istio-envoy","vary":"Origin,Access-Control-Request-Method,Access-Control-Request-Headers","x-dashscope-call-gateway":"true","x-dashscope-finished":"false","x-dashscope-timeout":"180","x-envoy-upstream-service-time":"470","x-request-id":"67b20699-48c4-9a36-a1f1-4d30e6fed828","set-cookie":["acw_tc=67b20699-48c4-9a36-a1f1-4d30e6fed8280be2c55fe3966f4de28d01f91d1898b7;path=/;HttpOnly;Max-Age=1800"]}
-   03-19 20:18:51.653   61606-61606   A00000/com.lgw...ndroid/lgwwww  com.lgw.wanandroid    I     "id:1\nevent:result\n:HTTP_STATUS/200\ndata:{\"output\":{\"choices\":[{\"message\":{\"content\":\"\",\"reasoning_content\":\"您好\",\"role\":\"assistant\"},\"finish_reason\":\"null\"}]},\"usage\":{\"total_tokens\":7,\"input_tokens\":4,\"output_tokens\":3},\"request_id\":\"67b20699-48c4-9a36-a1f1-4d30e6fed828\"}\n\nid:2\nevent:result\n:HTTP_STATUS/200\ndata:{\"output\":{\"choices\":[{\"message\":{\"content\":\"\",\"reasoning_content\":\"！\",\"role\":\"assistant\"},\"finish_reason\":\"null\"}]},\"usage\":{\"total_tokens\":8,\"input_tokens\":4,\"output_tokens\":4},\"request_id\":\"67b20699-48c4-9a36-a1f1-4d30e6fed828\"}\n\nid:3\nevent:result\n:HTTP_STATUS/200\ndata:{\"output\":{\"choices\":[{\"message\":{\"content\":\"\",\"reasoning_content\":\"我是\",\"role\":\"assistant\"},\"finish_reason\":\"null\"}]},\"usage\":{\"total_tokens\":9,\"input_tokens\":4,\"output_tokens\":5},\"request_id\":\"67b20699-48c4-9a36-a1f1-4d30e6fed828\"}\n\nid:4\nevent:result\n:HTTP_STATUS/200\ndata:{\"output\":{\"choices\":[{\"message\":{\"content\":\"\",\"reasoning_content\":\"由\",\"role\":\"assistant\"},\"finish_reason\":\"null\"}]},\"usage\":{\"total_tokens\":10,\"input_tokens\":4,\"output_tokens\":6},\"request_id\":\"67b20699-48c4-9a36-a1f1-4d30e6fed828\"}\n\nid:5\nevent:result\n:HTTP_STATUS/200\ndata:{\"output\":{\"choices\":[{\"message\":{\"content\":\"\",\"reasoning_content\":\"中国的\",\"role\":\"assistant\"},\"finish_reason\":\"null\"}]},\"usage\":{\"total_tokens\":11,\"input_tokens\":4,\"output_tokens\":7},\"request_id\":\"67b20699-48c4-9a36-a1f1-4d30e6fed828\"}\n\nid:6\nevent:result\n:HTTP_STATUS/200\ndata:{\"output\":{\"choices\":[{\"message\":{\"content\":\"\",\"reasoning_content\":\"深度\",\"role\":\"assistant\"},\"finish_reason\":\"null\"}]},\"usage\":{\"total_tokens\":12,\"input_tokens\":4,\"output_tokens\":8},\"request_id\":\"67b20699-48c4-9a36-a1f1-4d30e6fed828\"}\n\nid:7\nevent:result\n:HTTP_STATUS/200\ndata:{\"output\":{\"choices\":[{\"message\":{\"content\":\"\",\"reasoning_content\":\"求\",\"role\":\"assistant\"},\"finish_reason\":\"null\"}]},\"usage\":{\"total_tokens\":13,\"input_tokens\":4,\"output_tokens\":9},\"request_id\":\"67b20699-48c4-9a36-a1f1-4d30e6fed828\"}\n\nid:8\nevent:result\n:HTTP_STATUS/200\ndata:{\"output\":{\"choices\":[{\"message\":{\"content\":\"\",\"reasoning_content\":\"索\",\"role\":\"assistant\"},\"finish_reason\":\"null\"}]},\"usage\":{\"total_tokens\":14,\"input_tokens\":4,\"output_tokens\":10},\"request_id\":\"67b20699-48c4-9a36-a1f1-4d30e6fed828\"}\n\nid:9\nevent:result\n:HTTP_STATUS/200\ndata:{\"output\":{\"choices\":[{\"message\":{\"content\":\"\",\"reasoning_content\":\"（\",\"role\":\"assistant\"},\"finish_reason\":\"null\"}]},\"usage\":{\"total_tokens\":15,\"input_tokens\":4,\"output_tokens\":11},\"request_id\":\"67b20699-48c4-9a36-a1f1-4d30e6fed828\"}\n\nid:10\nevent:result\n:HTTP_STATUS/200\ndata:{\"output\":{\"choices\":[{\"message\":{\"content\":\"\",\"reasoning_content\":\"Deep\",\"role\":\"assistant\"},\"finish_reason\":\"null\"}]},\"usage\":{\"total_tokens\":16,\"input_tokens\":4,\"output_tokens\":12},\"request_id\":\"67b20699-48c4-9a36-a1f1-4d30e6fed828\"}\n\nid:11\nevent:result\n:HTTP_STATUS/200\ndata:{\"output\":{\"choices\":[{\"message\":{\"content\":\"\",\"reasoning_content\":\"Se\",\"role\":\"assistant\"},\"finish_reason\":\"null\"}]},\"usage\":{\"total_tokens\":17,\"input_tokens\":4,\"output_tokens\":13},\"request_id\":\"67b20699-48c4-9a36-a1f1-4d30e6fed828\"}\n\nid:12\nevent:result\n:HTTP_STATUS/200\ndata:{\"output\":{\"choices\":[{\"message\":{\"content\":\"\
-   *
-   */
 
   // 精准删除逻辑
   // private deleteEmojiAtCursor() {
