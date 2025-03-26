@@ -1,5 +1,6 @@
 import SizeConstant from '../constants/SizeConstant'
 import { Message } from '../pages/ChatPage'
+import { getImageRealSize } from '../utils/FileUtil'
 
 /**
  * 聊天内容 View
@@ -7,6 +8,29 @@ import { Message } from '../pages/ChatPage'
 @Component
 export struct ChatTextView {
   @ObjectLink item: Message
+  //图片的宽高
+  @State picWidth: number = 0
+  @State picHeight: number = 0
+  //最大值
+  static readonly maxHeight = 150
+  static readonly maxWidth = 100
+
+  aboutToAppear(): void {
+    //配置图片信息
+    if (this.item.textType == 1) {
+      if (this.item.imageHeight >= this.item.imageWidth) {
+        //高大于宽
+        this.picHeight = ChatTextView.maxHeight
+        this.picWidth = ChatTextView.maxHeight * this.item.imageWidth / this.item.imageHeight
+        console.info(`lgwww ${this.picWidth}`)
+      } else {
+        //宽大于高
+        this.picWidth = ChatTextView.maxWidth
+        this.picHeight = ChatTextView.maxWidth * this.item.imageHeight / this.item.imageWidth
+        console.info(`lgwww ${this.picHeight}`)
+      }
+    }
+  }
 
   build() {
     Column() {
@@ -42,19 +66,30 @@ export struct ChatTextView {
               // )
             } else if (this.item.textType === 1) {
               //图片
+              Image(this.item.imageUri)
+                .borderRadius(SizeConstant.SIZE_5)
+                .backgroundColor($r('app.color.color_95EC69'))
+                .borderWidth(1)
+                .borderColor(Color.Gray)
+                .objectFit(ImageFit.Contain)
+                .width(this.picWidth)
+                .height(this.picHeight)
             } else if (this.item.textType === 2) {
               //视频
             } else {
               //语音
             }
           }
+          .margin({ right: this.item.textType === 0 ? 0 : SizeConstant.SIZE_10 })
 
-          Shape() {
-            Path()
-              .commands('M0 100 L15 115 L0 130 Z')
-              .fill($r('app.color.color_95EC69'))
-              .strokeOpacity(0)
-          }.margin({ right: SizeConstant.SIZE_10 })
+          if (this.item.textType === 0) {
+            Shape() {
+              Path()
+                .commands('M0 100 L15 115 L0 130 Z')
+                .fill($r('app.color.color_95EC69'))
+                .strokeOpacity(0)
+            }.margin({ right: SizeConstant.SIZE_10 })
+          }
 
           Image(this.item.ownerIcon)
             .width(SizeConstant.SIZE_40)

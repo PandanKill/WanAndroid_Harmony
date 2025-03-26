@@ -8,8 +8,9 @@ import { JSON } from '@kit.ArkTS';
 import hilog from '@ohos.hilog';
 import { router } from '@kit.ArkUI';
 import { ChatTextView } from '../component/ChatTextView';
-import { imageToBase64 } from '../utils/FileUtil';
+import { checkFileMimeType, imageToBase64 } from '../utils/FileUtil';
 import { FileAIRequestUtil } from '../utils/PictureAIRequestUtil';
+import { ItemInfo } from '@kit.MediaLibraryKit';
 
 @Observed
 export class Message {
@@ -21,6 +22,14 @@ export class Message {
   messageStatus: number = 0
   //消息类型 0 文字 1 图片 2视频 3 语音
   textType: number = 0
+  //图片 uri
+  imageUri: string = ''
+  imageWidth: number = 0
+  imageHeight: number = 0
+  //视频 uri
+  videoUri: string = ''
+  videoCapWidth: number = 0
+  videoCapHeight: number = 0
   ownerIcon: Resource | undefined = $r('app.media.icon_default')
   //发送方 request_id是 send，接收方是真实 id
   id: string = ''
@@ -77,7 +86,6 @@ struct AIChatPage {
   }
 
   aboutToAppear(): void {
-    this.messageArr.push(this.getDateMessage(), this.getSendMessage("nihao"))
   }
 
   async onPageShow(): Promise<void> {
@@ -86,9 +94,10 @@ struct AIChatPage {
     if (recordParam !== undefined) {
       let uriArr = recordParam.selectUri
       if (uriArr !== undefined) {
-        let selectArr = uriArr as Array<string>
+        let selectArr = uriArr as Array<ItemInfo>
         console.info(`dsads`, JSON.stringify(selectArr))
-        let base64Url = await imageToBase64(selectArr[0])
+        let itemInfo: ItemInfo = selectArr[0]
+        let base64Url = await imageToBase64(itemInfo.uri ?? "")
         //获取到图片信息,全模态
         let fileAi = new FileAIRequestUtil({
           endpoint: 'https://dashscope.aliyuncs.com',
@@ -96,34 +105,47 @@ struct AIChatPage {
           model: 'qwen-omni-turbo',
           desText: "图中描绘的是什么景象？"
         })
+        //接收
+        let mimeType = await checkFileMimeType(itemInfo.uri ?? "")
+        console.info(`mimeType`, mimeType)
+        if (mimeType === "image") {
+          const sendMessage = this.getSendPicMessage(itemInfo)
+          sendMessage.id = new Date().getTime().toString()
+          this.messageArr.push(sendMessage)
+        } else if (mimeType === "video") {
+          const sendMessage = this.getSendVideoMessage(selectArr[0].uri ?? "")
+          sendMessage.id = new Date().getTime().toString()
+          this.messageArr.push(sendMessage)
+        }
+
 
         //接收
-        const receiverMessage = this.getReceiverMessage()
-        receiverMessage.id = new Date().getTime().toString()
-        receiverMessage.messageStatus = 0
-        this.messageArr.push(receiverMessage)
-
-        fileAi.sendPicStreamRequest(base64Url, {
-          onDataReceived: (aiSpeakBean: AISpeakBean) => {
-            //加载成功
-            receiverMessage.messageStatus = 1
-            let ch = aiSpeakBean.choices
-            if (ch !== undefined) {
-              let delta = ch[0]
-              if (delta && delta.delta && delta.delta.content) {
-                let text = receiverMessage.text
-                let newText = text + delta.delta.content
-                receiverMessage.text = newText
-              }
-            }
-          },
-          onError: (err) => {
-            receiverMessage.messageStatus = 2
-          },
-          onComplete: () => {
-
-          }
-        })
+        // const receiverMessage = this.getReceiverMessage()
+        // receiverMessage.id = new Date().getTime().toString()
+        // receiverMessage.messageStatus = 0
+        // this.messageArr.push(receiverMessage)
+        //
+        // fileAi.sendPicStreamRequest(base64Url, {
+        //   onDataReceived: (aiSpeakBean: AISpeakBean) => {
+        //     //加载成功
+        //     receiverMessage.messageStatus = 1
+        //     let ch = aiSpeakBean.choices
+        //     if (ch !== undefined) {
+        //       let delta = ch[0]
+        //       if (delta && delta.delta && delta.delta.content) {
+        //         let text = receiverMessage.text
+        //         let newText = text + delta.delta.content
+        //         receiverMessage.text = newText
+        //       }
+        //     }
+        //   },
+        //   onError: (err) => {
+        //     receiverMessage.messageStatus = 2
+        //   },
+        //   onComplete: () => {
+        //
+        //   }
+        // })
       }
     }
   }
@@ -140,13 +162,46 @@ struct AIChatPage {
   }
 
   /**
-   * 获取发送 message
+   * 获取发送文字 message
    * @returns
    */
   getSendMessage(sendText: string): Message {
     let message = new Message()
     message.text = sendText
     message.messageType = 1
+    message.textType = 0
+    message.ownerName = "Owner"
+    message.id = 'send'
+
+    return message
+  }
+
+  /**
+   * 获取发送图片 message
+   * @returns
+   */
+  getSendPicMessage(itemInfo: ItemInfo): Message {
+    let message = new Message()
+    message.imageUri = itemInfo.uri ?? ""
+    message.messageType = 1
+    message.imageWidth = itemInfo.width ?? 0
+    message.imageHeight = itemInfo.height ?? 0
+    message.textType = 1
+    message.ownerName = "Owner"
+    message.id = 'send'
+
+    return message
+  }
+
+  /**
+   * 获取发送视频 message
+   * @returns
+   */
+  getSendVideoMessage(videoUri: string): Message {
+    let message = new Message()
+    message.imageUri = videoUri
+    message.messageType = 1
+    message.textType = 2
     message.ownerName = "Owner"
     message.id = 'send'
 

@@ -22,7 +22,7 @@ struct PhotoPickerComponentPage {
   //组件行为
   @State pickerController: PickerController = new PickerController()
   // 已选择的图片
-  @State selectUris: Array<string> = new Array<string>();
+  @State selectUris: Array<ItemInfo> = new Array<ItemInfo>();
   //目前选择的图片
   @State currentUri: string = '';
   @State isBrowserShow: boolean = false
@@ -34,7 +34,7 @@ struct PhotoPickerComponentPage {
     // 设置picker宫格页数据类型
     this.pickerOptions.MIMEType = photoAccessHelper.PhotoViewMIMETypes.IMAGE_VIDEO_TYPE // 图片和照片都显示;
     // 最大选择数量
-    this.pickerOptions.maxSelectNumber = 5;
+    this.pickerOptions.maxSelectNumber = 1;
     // 超出最大选择数量时
     this.pickerOptions.maxSelectedReminderMode = ReminderMode.MASK;
     // 是否展示搜索框，默认false
@@ -59,16 +59,20 @@ struct PhotoPickerComponentPage {
       if (clickType === ClickType.SELECTED) {
         //应用做处理
         if (uri) {
-          this.selectUris.push(uri)
-          this.pickerOptions.preselectedUris = [...this.selectUris]
+          this.selectUris.push(itemInfo)
+          this.pickerOptions.preselectedUris = this.selectUris.map((itemInfo: ItemInfo, index: number) => {
+            return itemInfo.uri ?? ""
+          })
         }
       } else {
         if (uri) {
           //取消勾选
-          this.selectUris = this.selectUris.filter((item: string) => {
-            return item !== uri
+          this.selectUris = this.selectUris.filter((item: ItemInfo) => {
+            return item.uri !== uri
           })
-          this.pickerOptions.preselectedUris = [...this.selectUris]
+          this.pickerOptions.preselectedUris = this.selectUris.map((itemInfo: ItemInfo, index: number) => {
+            return itemInfo.uri ?? ""
+          })
         }
       }
       if (this.selectUris.length > 0) {
@@ -128,7 +132,7 @@ struct PhotoPickerComponentPage {
         // 进入大图，预览已选择的图片
         this.bottomNav('预览', () => {
           if (this.selectUris.length > 0) {
-            this.pickerController.setPhotoBrowserItem(this.selectUris[0], PhotoBrowserRange.SELECTED_ONLY);
+            this.pickerController.setPhotoBrowserItem(this.selectUris[0].uri ?? "", PhotoBrowserRange.SELECTED_ONLY);
           }
         })
       }

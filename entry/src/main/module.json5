@@ -10,11 +10,20 @@
       "2in1"
     ],
     //存在问题
-//    "appStartup": "$profile:startup_build",
+    //    "appStartup": "$profile:startup_build",
     "routerMap": "$profile:route_map",
     "requestPermissions": [
       {
         "name": "ohos.permission.INTERNET"
+      },
+      {
+        "name": "ohos.permission.READ_MEDIA",
+        "reason": "$string:app_name",
+        "usedScene": {
+          "abilities": [
+            'EntryAbility'
+          ]
+        }
       }
     ],
     "deliveryWithInstall": true,

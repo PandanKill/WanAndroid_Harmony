@@ -1,4 +1,4 @@
-import { AbilityConstant, common, ConfigurationConstant, UIAbility, Want } from '@kit.AbilityKit';
+import { abilityAccessCtrl, AbilityConstant, common, ConfigurationConstant, UIAbility, Want } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { display, KeyboardAvoidMode, window } from '@kit.ArkUI';
 import { BreakpointConstants } from '../constants/BreakpointConstants';
@@ -12,6 +12,14 @@ export default class EntryAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
     hilog.info(0x0000, 'testTag', '%{public}s', 'Ability onCreate');
     AppStorage.setOrCreate<ConfigurationConstant.ColorMode>('colorModel', this.context.config.colorMode)
+
+    //请求权限
+    const atManager = abilityAccessCtrl.createAtManager();
+    try {
+      atManager.requestPermissionsFromUser(this.context, ['ohos.permission.READ_MEDIA']);
+    } catch (err) {
+      console.error('权限申请失败:', err);
+    }
   }
 
   onDestroy(): void {
