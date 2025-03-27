@@ -1,6 +1,9 @@
+import { ChatPopupItem } from '../bean/ChatPopupItem'
+import { GeneralPopupItemConstant } from '../constants/GeneralPopupItemConstant'
 import SizeConstant from '../constants/SizeConstant'
 import { Message } from '../pages/ChatPage'
-import { getImageRealSize } from '../utils/FileUtil'
+import { ChatAudioView } from './ChatAudioView'
+import { promptAction } from '@kit.ArkUI'
 
 /**
  * 聊天内容 View
@@ -11,13 +14,16 @@ export struct ChatTextView {
   //图片的宽高
   @State picWidth: number = 0
   @State picHeight: number = 0
+  @State videoTime: string = ''
   //最大值
   static readonly maxHeight = 150
   static readonly maxWidth = 100
+  //是否显示
+  @State showPopup: boolean = false
 
   aboutToAppear(): void {
     //配置图片信息
-    if (this.item.textType == 1) {
+    if (this.item.textType === 1) {
       if (this.item.imageHeight >= this.item.imageWidth) {
         //高大于宽
         this.picHeight = ChatTextView.maxHeight
@@ -27,6 +33,24 @@ export struct ChatTextView {
         //宽大于高
         this.picWidth = ChatTextView.maxWidth
         this.picHeight = ChatTextView.maxWidth * this.item.imageHeight / this.item.imageWidth
+        console.info(`lgwww ${this.picHeight}`)
+      }
+    } else if (this.item.textType === 2) {
+      if (this.item.videoTime >= 60) {
+        this.videoTime = `${(this.item.videoTime / 60).toString()}:${this.item.videoTime % 60}`
+      } else {
+        this.videoTime = `0:${this.item.videoTime % 60}`
+      }
+
+      if (this.item.videoCapHeight >= this.item.videoCapWidth) {
+        //高大于宽
+        this.picHeight = ChatTextView.maxHeight
+        this.picWidth = ChatTextView.maxHeight * this.item.videoCapWidth / this.item.videoCapHeight
+        console.info(`lgwww ${this.picWidth}`)
+      } else {
+        //宽大于高
+        this.picWidth = ChatTextView.maxWidth
+        this.picHeight = ChatTextView.maxWidth * this.item.videoCapHeight / this.item.videoCapWidth
         console.info(`lgwww ${this.picHeight}`)
       }
     }
@@ -59,11 +83,23 @@ export struct ChatTextView {
                 .fontSize($r('app.float.font_15'))
                 .textAlign(TextAlign.Start)
                 .copyOption(CopyOptions.InApp)
-              // .gesture(
-              //   LongPressGesture().onAction((event) => {
-              //
-              //   })
-              // )
+                .gesture(
+                  LongPressGesture().onAction((event) => {
+                    this.showPopup = !this.showPopup
+                  })
+                )
+                .bindPopup(this.showPopup, {
+                  builder: this.popupCustomView(),
+                  popupColor: Color.Black,
+                  backgroundBlurStyle: BlurStyle.NONE,
+                  radius: SizeConstant.SIZE_10,
+                  onStateChange: (e) => {
+                    if (!e.isVisible) {
+                      //气泡状态
+                      this.showPopup = false
+                    }
+                  }
+                })
             } else if (this.item.textType === 1) {
               //图片
               Image(this.item.imageUri)
@@ -74,15 +110,72 @@ export struct ChatTextView {
                 .objectFit(ImageFit.Contain)
                 .width(this.picWidth)
                 .height(this.picHeight)
+                .gesture(
+                  LongPressGesture({ repeat: false }).onAction((event) => {
+                    this.showPopup = !this.showPopup
+                  })
+                )
+                .bindPopup(this.showPopup, {
+                  builder: this.popupCustomView(),
+                  popupColor: Color.Black,
+                  backgroundBlurStyle: BlurStyle.NONE,
+                  radius: SizeConstant.SIZE_10,
+                  onStateChange: (e) => {
+                    if (!e.isVisible) {
+                      //气泡状态
+                      this.showPopup = false
+                    }
+                  }
+                })
             } else if (this.item.textType === 2) {
               //视频
-            } else {
+              Stack() {
+                Image($r('app.media.icon_play'))
+                  .width(SizeConstant.SIZE_50)
+                  .aspectRatio(1)
+                  .align(Alignment.Center)
+
+                Text(this.videoTime)
+                  .fontSize($r('app.float.font_8'))
+                  .fontColor(Color.White)
+                  .align(Alignment.BottomEnd)
+                  .margin({ bottom: SizeConstant.SIZE_2, right: SizeConstant.SIZE_2 })
+              }
+              .width(this.picWidth)
+              .height(this.picHeight)
+              .backgroundColor(Color.Black)
+              .borderRadius(SizeConstant.SIZE_5)
+              .borderColor(Color.Gray)
+              .borderWidth(1)
+              .gesture(
+                LongPressGesture().onAction((event) => {
+                  this.showPopup = !this.showPopup
+                })
+              )
+              .bindPopup(this.showPopup, {
+                builder: this.popupCustomView(),
+                popupColor: Color.Black,
+                backgroundBlurStyle: BlurStyle.NONE,
+                radius: SizeConstant.SIZE_10,
+                onStateChange: (e) => {
+                  if (!e.isVisible) {
+                    //气泡状态
+                    this.showPopup = false
+                  }
+                }
+              })
+            } else if (this.item.textType === 3) {
               //语音
+              ChatAudioView({
+                item: this.item
+              })
+                .margin({ top: SizeConstant.SIZE_5 })
+                .width(SizeConstant.SIZE_PERCENT_40)
             }
           }
-          .margin({ right: this.item.textType === 0 ? 0 : SizeConstant.SIZE_10 })
+          .margin({ right: this.item.textType === 0 || this.item.textType === 3 ? 0 : SizeConstant.SIZE_10 })
 
-          if (this.item.textType === 0) {
+          if (this.item.textType === 0 || this.item.textType === 3) {
             Shape() {
               Path()
                 .commands('M0 100 L15 115 L0 130 Z')
@@ -186,5 +279,36 @@ export struct ChatTextView {
         .width(SizeConstant.FULL_SIZE)
       }
     }
+  }
+
+  @Builder
+  popupCustomView() {
+    Stack() {
+      Grid() {
+        ForEach(GeneralPopupItemConstant.CommonItem, (item: ChatPopupItem, index: number) => {
+          GridItem() {
+            Column() {
+              Image(item.icon)
+                .width(SizeConstant.SIZE_15)
+                .aspectRatio(1)
+
+              Text(item.text)
+                .fontColor(Color.White)
+                .fontSize($r('app.float.font_12'))
+                .padding(SizeConstant.SIZE_5)
+
+            }.alignItems(HorizontalAlign.Center)
+            .onClick(() => {
+              this.showPopup = false
+              promptAction.showToast({
+                message: item.text
+              })
+            })
+          }
+        }, (item: ChatPopupItem, index: number) => JSON.stringify(item) + index)
+      }
+    }.width('auto')
+    .constraintSize({ maxWidth: SizeConstant.SIZE_PERCENT_60 })
+    .padding({ top: SizeConstant.SIZE_15, bottom: SizeConstant.SIZE_15 })
   }
 }

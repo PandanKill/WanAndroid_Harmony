@@ -58,6 +58,12 @@ export struct ChatOtherFunView {
     }.width(SizeConstant.FULL_SIZE)
     .backgroundColor($r('app.color.color_F6F6F6'))
     .height(SizeConstant.SIZE_PERCENT_20)
+    .transition(TransitionEffect.translate({
+      y: SizeConstant.SIZE_PERCENT_20
+    }).animation({
+      duration: 100,
+      curve: Curve.Linear
+    }))
   }
 
   clickFun(id: string) {

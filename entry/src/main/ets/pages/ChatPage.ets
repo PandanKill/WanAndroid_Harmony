@@ -14,7 +14,6 @@ import { ItemInfo } from '@kit.MediaLibraryKit';
 
 @Observed
 export class Message {
-  text: string = ''
   //0 时间、1 发送方、2接收方
   messageType: number = 0
   ownerName: string = ''
@@ -22,6 +21,7 @@ export class Message {
   messageStatus: number = 0
   //消息类型 0 文字 1 图片 2视频 3 语音
   textType: number = 0
+  text: string = ''
   //图片 uri
   imageUri: string = ''
   imageWidth: number = 0
@@ -30,6 +30,11 @@ export class Message {
   videoUri: string = ''
   videoCapWidth: number = 0
   videoCapHeight: number = 0
+  videoTime: number = 0
+  //语音
+  audioUri: string = ''
+  audioTime: number = 0
+  //头像
   ownerIcon: Resource | undefined = $r('app.media.icon_default')
   //发送方 request_id是 send，接收方是真实 id
   id: string = ''
@@ -113,7 +118,7 @@ struct AIChatPage {
           sendMessage.id = new Date().getTime().toString()
           this.messageArr.push(sendMessage)
         } else if (mimeType === "video") {
-          const sendMessage = this.getSendVideoMessage(selectArr[0].uri ?? "")
+          const sendMessage = this.getSendVideoMessage(itemInfo)
           sendMessage.id = new Date().getTime().toString()
           this.messageArr.push(sendMessage)
         }
@@ -197,14 +202,28 @@ struct AIChatPage {
    * 获取发送视频 message
    * @returns
    */
-  getSendVideoMessage(videoUri: string): Message {
+  getSendVideoMessage(itemInfo: ItemInfo): Message {
     let message = new Message()
-    message.imageUri = videoUri
+    message.videoUri = itemInfo.uri ?? ""
     message.messageType = 1
     message.textType = 2
+    message.videoCapWidth = itemInfo.width ?? 0
+    message.videoCapHeight = itemInfo.height ?? 0
+    message.videoTime = Math.floor((itemInfo.duration ?? 0) / 1000)
     message.ownerName = "Owner"
     message.id = 'send'
 
+    return message
+  }
+
+  getAudioMessage(): Message {
+    let message = new Message()
+    message.audioUri = ''
+    message.audioTime = 15
+    message.messageType = 1
+    message.textType = 3
+    message.ownerName = "Owner"
+    message.id = 'send'
     return message
   }
 
@@ -243,8 +262,13 @@ struct AIChatPage {
           .layoutWeight(1)
           .onClick(() => {
             //收起 emoji
-            this.isEmoji = false
-            this.isPhoto = false
+            this.getUIContext().animateTo({
+              duration: 100,
+              curve: Curve.Linear
+            }, () => {
+              this.isEmoji = false
+              this.isPhoto = false
+            })
             this.getUIContext().getFocusController().clearFocus()
           })
 
@@ -261,8 +285,13 @@ struct AIChatPage {
                   //切换语音文字
                   this.isFirstShowUI = false
                   this.isSendText = !this.isSendText
-                  this.isEmoji = false
-                  this.isPhoto = false
+                  this.getUIContext().animateTo({
+                    duration: 100,
+                    curve: Curve.Linear
+                  }, () => {
+                    this.isEmoji = false
+                    this.isPhoto = false
+                  })
                 })
 
               if (this.isSendText) {
@@ -295,8 +324,13 @@ struct AIChatPage {
                     this.editValue = value
                   })
                   .onFocus(() => {
-                    this.isEmoji = false
-                    this.isPhoto = false
+                    this.getUIContext().animateTo({
+                      duration: 100,
+                      curve: Curve.Linear
+                    }, () => {
+                      this.isEmoji = false
+                      this.isPhoto = false
+                    })
                   })
 
               } else {
