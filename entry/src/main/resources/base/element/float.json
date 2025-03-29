@@ -47,6 +47,10 @@
     {
       "name": "font_8",
       "value": "8fp"
+    },
+    {
+      "name": "font_17",
+      "value": "17fp"
     }
   ]
 }

@@ -2,6 +2,7 @@ export default class SizeConstant {
   /**
    * full size
    */
+  static readonly SIZE_PERCENT_200 = '200%'
   static readonly FULL_SIZE = '100%'
   static readonly SIZE_PERCENT_90 = '90%'
   static readonly SIZE_PERCENT_85 = '85%'
@@ -20,7 +21,11 @@ export default class SizeConstant {
   /**
    * 100vp
    */
+  static readonly SIZE_2000 = '2000vp'
+  static readonly SIZE_1000 = '1000vp'
+  static readonly SIZE_600 = '600vp'
   static readonly SIZE_200 = '200vp'
+  static readonly SIZE_100 = '100vp'
   static readonly SIZE_80 = '80vp'
   static readonly SIZE_70 = '70vp'
   static readonly SIZE_60 = '60vp'

@@ -8,9 +8,10 @@ import { JSON } from '@kit.ArkTS';
 import hilog from '@ohos.hilog';
 import { router } from '@kit.ArkUI';
 import { ChatTextView } from '../component/ChatTextView';
-import { checkFileMimeType, imageToBase64 } from '../utils/FileUtil';
+import { checkFileMimeType, fileToBase64 } from '../utils/FileUtil';
 import { FileAIRequestUtil } from '../utils/PictureAIRequestUtil';
 import { ItemInfo } from '@kit.MediaLibraryKit';
+import { AudioRecordView } from '../component/AudioRecordView';
 
 @Observed
 export class Message {
@@ -102,57 +103,106 @@ struct AIChatPage {
         let selectArr = uriArr as Array<ItemInfo>
         console.info(`dsads`, JSON.stringify(selectArr))
         let itemInfo: ItemInfo = selectArr[0]
-        let base64Url = await imageToBase64(itemInfo.uri ?? "")
-        //获取到图片信息,全模态
-        let fileAi = new FileAIRequestUtil({
-          endpoint: 'https://dashscope.aliyuncs.com',
-          api_key: "xxx",
-          model: 'qwen-omni-turbo',
-          desText: "图中描绘的是什么景象？"
-        })
         //接收
         let mimeType = await checkFileMimeType(itemInfo.uri ?? "")
         console.info(`mimeType`, mimeType)
         if (mimeType === "image") {
-          const sendMessage = this.getSendPicMessage(itemInfo)
-          sendMessage.id = new Date().getTime().toString()
-          this.messageArr.push(sendMessage)
+          this.sendImageDataRequest(itemInfo)
         } else if (mimeType === "video") {
-          const sendMessage = this.getSendVideoMessage(itemInfo)
-          sendMessage.id = new Date().getTime().toString()
-          this.messageArr.push(sendMessage)
+          this.sendVideoDataRequest(itemInfo)
         }
-
-
-        //接收
-        // const receiverMessage = this.getReceiverMessage()
-        // receiverMessage.id = new Date().getTime().toString()
-        // receiverMessage.messageStatus = 0
-        // this.messageArr.push(receiverMessage)
-        //
-        // fileAi.sendPicStreamRequest(base64Url, {
-        //   onDataReceived: (aiSpeakBean: AISpeakBean) => {
-        //     //加载成功
-        //     receiverMessage.messageStatus = 1
-        //     let ch = aiSpeakBean.choices
-        //     if (ch !== undefined) {
-        //       let delta = ch[0]
-        //       if (delta && delta.delta && delta.delta.content) {
-        //         let text = receiverMessage.text
-        //         let newText = text + delta.delta.content
-        //         receiverMessage.text = newText
-        //       }
-        //     }
-        //   },
-        //   onError: (err) => {
-        //     receiverMessage.messageStatus = 2
-        //   },
-        //   onComplete: () => {
-        //
-        //   }
-        // })
       }
     }
+  }
+
+  /**
+   * 发送图片Ai 回复
+   * @param itemInfo
+   */
+  async sendVideoDataRequest(itemInfo: ItemInfo) {
+    let base64Url = await fileToBase64(itemInfo.uri ?? "")
+    //获取到图片信息,全模态
+    let fileAi = new FileAIRequestUtil({
+      endpoint: 'https://dashscope.aliyuncs.com',
+      api_key: "sk-c1d2d4ae26e44c61b098a719f98bc40d",
+      model: 'qwen-omni-turbo',
+      desText: "视频的内容是什么"
+    })
+    const sendMessage = this.getSendVideoMessage(itemInfo)
+    sendMessage.id = new Date().getTime().toString()
+    this.messageArr.push(sendMessage)
+    //接收
+    const receiverMessage = this.getReceiverMessage()
+    receiverMessage.id = new Date().getTime().toString()
+    receiverMessage.messageStatus = 0
+    this.messageArr.push(receiverMessage)
+
+    fileAi.sendStreamRequest("video_url", `data:video/mp4;base64,${base64Url}`, {
+      onDataReceived: (aiSpeakBean: AISpeakBean) => {
+        //加载成功
+        receiverMessage.messageStatus = 1
+        let ch = aiSpeakBean.choices
+        if (ch !== undefined) {
+          let delta = ch[0]
+          if (delta && delta.delta && delta.delta.content) {
+            let text = receiverMessage.text
+            let newText = text + delta.delta.content
+            receiverMessage.text = newText
+          }
+        }
+      },
+      onError: (err) => {
+        receiverMessage.messageStatus = 2
+      },
+      onComplete: () => {
+
+      }
+    })
+  }
+
+  /**
+   * 发送图片Ai 回复
+   * @param itemInfo
+   */
+  async sendImageDataRequest(itemInfo: ItemInfo) {
+    let base64Url = await fileToBase64(itemInfo.uri ?? "")
+    //获取到图片信息,全模态
+    let fileAi = new FileAIRequestUtil({
+      endpoint: 'https://dashscope.aliyuncs.com',
+      api_key: "sk-c1d2d4ae26e44c61b098a719f98bc40d",
+      model: 'qwen-omni-turbo',
+      desText: "图中描绘的是什么景象？"
+    })
+    const sendMessage = this.getSendPicMessage(itemInfo)
+    sendMessage.id = new Date().getTime().toString()
+    this.messageArr.push(sendMessage)
+    //接收
+    const receiverMessage = this.getReceiverMessage()
+    receiverMessage.id = new Date().getTime().toString()
+    receiverMessage.messageStatus = 0
+    this.messageArr.push(receiverMessage)
+
+    fileAi.sendStreamRequest("image_url", `data:image/png;base64,${base64Url}`, {
+      onDataReceived: (aiSpeakBean: AISpeakBean) => {
+        //加载成功
+        receiverMessage.messageStatus = 1
+        let ch = aiSpeakBean.choices
+        if (ch !== undefined) {
+          let delta = ch[0]
+          if (delta && delta.delta && delta.delta.content) {
+            let text = receiverMessage.text
+            let newText = text + delta.delta.content
+            receiverMessage.text = newText
+          }
+        }
+      },
+      onError: (err) => {
+        receiverMessage.messageStatus = 2
+      },
+      onComplete: () => {
+
+      }
+    })
   }
 
   /**
@@ -249,220 +299,235 @@ struct AIChatPage {
             title: $r('app.string.ai')
           })
 
-          List({
-            scroller: this.scroller
-          }) {
-            ForEach(this.messageArr, (item: Message, index: number) => {
-              ListItem() {
-                ChatTextView({ item: item })
+          Stack() {
+            //聊天列表
+            Column() {
+              List({
+                scroller: this.scroller
+              }) {
+                ForEach(this.messageArr, (item: Message, index: number) => {
+                  ListItem() {
+                    ChatTextView({ item: item })
+                  }.width(SizeConstant.FULL_SIZE)
+                  .height('auto')
+                }, (item: Message, index: number) => item.id + index)
               }.width(SizeConstant.FULL_SIZE)
-              .height('auto')
-            }, (item: Message, index: number) => item.id + index)
-          }.width(SizeConstant.FULL_SIZE)
-          .layoutWeight(1)
-          .onClick(() => {
-            //收起 emoji
-            this.getUIContext().animateTo({
-              duration: 100,
-              curve: Curve.Linear
-            }, () => {
-              this.isEmoji = false
-              this.isPhoto = false
-            })
-            this.getUIContext().getFocusController().clearFocus()
-          })
-
-          //底部栏
-          Column() {
-            //输入框
-            Row() {
-              //语音文字转换
-              Image(this.speekIconResource)
-                .width(SizeConstant.SIZE_30)
-                .height(SizeConstant.SIZE_30)
-                .margin({ left: SizeConstant.SIZE_10 })
-                .onClick(() => {
-                  //切换语音文字
-                  this.isFirstShowUI = false
-                  this.isSendText = !this.isSendText
-                  this.getUIContext().animateTo({
-                    duration: 100,
-                    curve: Curve.Linear
-                  }, () => {
-                    this.isEmoji = false
-                    this.isPhoto = false
-                  })
-                })
-
-              if (this.isSendText) {
-                //编写文字
-                TextArea({
-                  text: this.editValue,
-                  controller: this.textAreaController
-                })
-                  .id('sendText')
-                  .backgroundColor(Color.White)
-                  .borderRadius(SizeConstant.SIZE_5)
-                  .width(SizeConstant.SIZE_PERCENT_65)
-                  .margin({ left: SizeConstant.SIZE_10, top: SizeConstant.SIZE_5, bottom: SizeConstant.SIZE_10 })
-                  .enterKeyType(EnterKeyType.Send)
-                  .onAppear(() => {
-                    //首次不需要弹软键盘
-                    if (!this.isFirstShowUI && !this.isEmoji && !this.isPhoto) {
-                      //非首次 Appear 的时候，才需要弹出软件盘
-                      this.getUIContext().getFocusController().requestFocus('sendText')
-                    }
-                  })
-                  .onSubmit((eventType: EnterKeyType) => {
-                    //发送
-                    this.toGetAi(this.editValue)
-                    this.editValue = ''
-                  })
-                  .onChange((value: string) => {
-                    //获取输入框内容
-                    console.info(value)
-                    this.editValue = value
-                  })
-                  .onFocus(() => {
-                    this.getUIContext().animateTo({
-                      duration: 100,
-                      curve: Curve.Linear
-                    }, () => {
-                      this.isEmoji = false
-                      this.isPhoto = false
-                    })
-                  })
-
-              } else {
-                //编写语音
-                Text(this.isRecording ? $r('app.string.recording') : $r('app.string.start_record'))
-                  .backgroundColor(this.recordUI)
-                  .borderRadius(SizeConstant.SIZE_5)
-                  .width(SizeConstant.SIZE_PERCENT_65)
-                  .height(SizeConstant.SIZE_35)
-                  .textAlign(TextAlign.Center)
-                  .fontSize($r('app.float.font_15'))
-                  .fontColor(Color.Black)
-                  .margin({ left: SizeConstant.SIZE_10, top: SizeConstant.SIZE_5, bottom: SizeConstant.SIZE_10 })
-                  .onTouch((event: TouchEvent) => {
-                    if (event.type === TouchType.Down) {
-                      //按下状态
-                      this.recordUI = Color.Grey
-                      this.isRecording = true
-                    } else if (event.type === TouchType.Up) {
-                      //抬起状态
-                      this.recordUI = Color.White
-                      this.isRecording = false
-                    }
-                  })
-              }
-              //表情
-              Image(this.emojiIconResource)
-                .width(SizeConstant.SIZE_30)
-                .height(SizeConstant.SIZE_30)
-                .margin({ left: SizeConstant.SIZE_10 })
-                .onClick(() => {
-                  this.isSendText = true
-                  this.isPhoto = false
-                  this.isEmoji = !this.isEmoji
-                  if (this.isEmoji) {
-                    //收起软键盘
-                    this.getUIContext().getFocusController().clearFocus()
-                  } else {
-                    //弹出软键盘
-                    setTimeout(() => {
-                      //需要延迟50ms，避免无法无法获取到焦点
-                      this.getUIContext().getFocusController().requestFocus('sendText')
-                    }, 50)
-                  }
-                })
-
-              Blank()
-
-              //图片、相机
-              Image($r('app.media.icon_add'))
-                .width(SizeConstant.SIZE_30)
-                .height(SizeConstant.SIZE_30)
-                .margin({ right: SizeConstant.SIZE_10 })
-                .onClick(() => {
-                  this.isSendText = true
+              .layoutWeight(1)
+              .onClick(() => {
+                //收起 emoji
+                this.getUIContext().animateTo({
+                  duration: 100,
+                  curve: Curve.Linear
+                }, () => {
                   this.isEmoji = false
-                  this.isPhoto = !this.isPhoto
-                  if (this.isPhoto) {
-                    this.getUIContext().getFocusController().clearFocus()
-                    //获取最近一张图片
-                    this.getRecentlyImage()
-                  } else {
-                    //弹出软键盘
-                    setTimeout(() => {
-                      //需要延迟50ms，避免无法无法获取到焦点
-                      this.getUIContext().getFocusController().requestFocus('sendText')
-                    }, 50)
-                  }
+                  this.isPhoto = false
                 })
+                this.getUIContext().getFocusController().clearFocus()
+              })
 
-            }.width(SizeConstant.FULL_SIZE)
-
-            //显示表情包
-            if (this.isEmoji) {
-              Stack() {
-                EmojiListView({
-                  emojiClick: (item: string) => {
-                    this.editValue = this.editValue + item
-                  }
-                })
-
+              //底部栏
+              Column() {
+                //输入框
                 Row() {
-                  Stack() {
-                    Image(this.editValue.length === 0 ? $r('app.media.icon_recall_normal') :
-                    $r('app.media.icon_recall_clickable'))
-                      .width(SizeConstant.SIZE_20)
-                      .height(SizeConstant.SIZE_15)
-                  }
-                  .width(SizeConstant.SIZE_45)
-                  .height(SizeConstant.SIZE_35)
-                  .align(Alignment.Center)
-                  .backgroundColor($r('app.color.color_E0E0E0'))
-                  .borderRadius(SizeConstant.SIZE_5)
-                  .onClick(() => {
-                    //todo 删除字符、表情包字符
-                    if (this.editValue.length > 0) {
-                      hilog.info(0x01, "lgwww", `lgwww ${this.editValue}}`)
-                      hilog.info(0x01, "lgwww", `lgwww ${this.editValue.length}}`)
-                      this.editValue = this.editValue.substring(0, this.editValue.length - 1)
-                      hilog.info(0x01, "lgwww", `lgwww ${this.editValue}}`)
-                      hilog.info(0x01, "lgwww", `lgwww ${this.editValue.length}}`)
-                    }
-                  })
-
-                  Text($r('app.string.send'))
-                    .width(SizeConstant.SIZE_45)
-                    .height(SizeConstant.SIZE_35)
-                    .textAlign(TextAlign.Center)
-                    .backgroundColor(this.editValue.length === 0 ? $r('app.color.color_E0E0E0') :
-                    $r('app.color.color_09C060'))
-                    .fontSize($r('app.float.font_15'))
-                    .fontColor(this.editValue.length === 0 ? $r('app.color.color_BEBEBE') :
-                    $r('app.color.color_FFFFFF'))
-                    .borderRadius(SizeConstant.SIZE_5)
+                  //语音文字转换
+                  Image(this.speekIconResource)
+                    .width(SizeConstant.SIZE_30)
+                    .height(SizeConstant.SIZE_30)
                     .margin({ left: SizeConstant.SIZE_10 })
                     .onClick(() => {
-                      //发送
-                      this.toGetAi(this.editValue)
-                      this.editValue = ''
+                      //切换语音文字
+                      this.isFirstShowUI = false
+                      this.isSendText = !this.isSendText
+                      this.getUIContext().animateTo({
+                        duration: 100,
+                        curve: Curve.Linear
+                      }, () => {
+                        this.isEmoji = false
+                        this.isPhoto = false
+                      })
                     })
+
+                  if (this.isSendText) {
+                    //编写文字
+                    TextArea({
+                      text: this.editValue,
+                      controller: this.textAreaController
+                    })
+                      .id('sendText')
+                      .backgroundColor(Color.White)
+                      .borderRadius(SizeConstant.SIZE_5)
+                      .width(SizeConstant.SIZE_PERCENT_65)
+                      .margin({ left: SizeConstant.SIZE_10, top: SizeConstant.SIZE_5, bottom: SizeConstant.SIZE_10 })
+                      .enterKeyType(EnterKeyType.Send)
+                      .onAppear(() => {
+                        //首次不需要弹软键盘
+                        if (!this.isFirstShowUI && !this.isEmoji && !this.isPhoto) {
+                          //非首次 Appear 的时候，才需要弹出软件盘
+                          this.getUIContext().getFocusController().requestFocus('sendText')
+                        }
+                      })
+                      .onSubmit((eventType: EnterKeyType) => {
+                        //发送
+                        this.toGetAi(this.editValue)
+                        this.editValue = ''
+                      })
+                      .onChange((value: string) => {
+                        //获取输入框内容
+                        console.info(value)
+                        this.editValue = value
+                      })
+                      .onFocus(() => {
+                        this.getUIContext().animateTo({
+                          duration: 100,
+                          curve: Curve.Linear
+                        }, () => {
+                          this.isEmoji = false
+                          this.isPhoto = false
+                        })
+                      })
+
+                  } else {
+                    //编写语音
+                    Text(this.isRecording ? $r('app.string.recording') : $r('app.string.start_record'))
+                      .backgroundColor(this.recordUI)
+                      .borderRadius(SizeConstant.SIZE_5)
+                      .width(SizeConstant.SIZE_PERCENT_65)
+                      .height(SizeConstant.SIZE_35)
+                      .textAlign(TextAlign.Center)
+                      .fontSize($r('app.float.font_15'))
+                      .fontColor(Color.Black)
+                      .margin({ left: SizeConstant.SIZE_10, top: SizeConstant.SIZE_5, bottom: SizeConstant.SIZE_10 })
+                      .onTouch((event: TouchEvent) => {
+                        if (event.type === TouchType.Down) {
+                          //按下状态
+                          this.recordUI = Color.Grey
+                          this.isRecording = true
+                        } else if (event.type === TouchType.Up) {
+                          //抬起状态
+                          this.recordUI = Color.White
+                          this.isRecording = false
+                        }
+                      })
+                  }
+                  //表情
+                  Image(this.emojiIconResource)
+                    .width(SizeConstant.SIZE_30)
+                    .height(SizeConstant.SIZE_30)
+                    .margin({ left: SizeConstant.SIZE_10 })
+                    .onClick(() => {
+                      this.isSendText = true
+                      this.isPhoto = false
+                      this.isEmoji = !this.isEmoji
+                      if (this.isEmoji) {
+                        //收起软键盘
+                        this.getUIContext().getFocusController().clearFocus()
+                      } else {
+                        //弹出软键盘
+                        setTimeout(() => {
+                          //需要延迟50ms，避免无法无法获取到焦点
+                          this.getUIContext().getFocusController().requestFocus('sendText')
+                        }, 50)
+                      }
+                    })
+
+                  Blank()
+
+                  //图片、相机
+                  Image($r('app.media.icon_add'))
+                    .width(SizeConstant.SIZE_30)
+                    .height(SizeConstant.SIZE_30)
+                    .margin({ right: SizeConstant.SIZE_10 })
+                    .onClick(() => {
+                      this.isSendText = true
+                      this.isEmoji = false
+                      this.isPhoto = !this.isPhoto
+                      if (this.isPhoto) {
+                        this.getUIContext().getFocusController().clearFocus()
+                        //获取最近一张图片
+                        this.getRecentlyImage()
+                      } else {
+                        //弹出软键盘
+                        setTimeout(() => {
+                          //需要延迟50ms，避免无法无法获取到焦点
+                          this.getUIContext().getFocusController().requestFocus('sendText')
+                        }, 50)
+                      }
+                    })
+
+                }.width(SizeConstant.FULL_SIZE)
+
+                //显示表情包
+                if (this.isEmoji) {
+                  Stack() {
+                    EmojiListView({
+                      emojiClick: (item: string) => {
+                        this.editValue = this.editValue + item
+                      }
+                    })
+
+                    Row() {
+                      Stack() {
+                        Image(this.editValue.length === 0 ? $r('app.media.icon_recall_normal') :
+                        $r('app.media.icon_recall_clickable'))
+                          .width(SizeConstant.SIZE_20)
+                          .height(SizeConstant.SIZE_15)
+                      }
+                      .width(SizeConstant.SIZE_45)
+                      .height(SizeConstant.SIZE_35)
+                      .align(Alignment.Center)
+                      .backgroundColor($r('app.color.color_E0E0E0'))
+                      .borderRadius(SizeConstant.SIZE_5)
+                      .onClick(() => {
+                        //todo 删除字符、表情包字符
+                        if (this.editValue.length > 0) {
+                          hilog.info(0x01, "lgwww", `lgwww ${this.editValue}}`)
+                          hilog.info(0x01, "lgwww", `lgwww ${this.editValue.length}}`)
+                          this.editValue = this.editValue.substring(0, this.editValue.length - 1)
+                          hilog.info(0x01, "lgwww", `lgwww ${this.editValue}}`)
+                          hilog.info(0x01, "lgwww", `lgwww ${this.editValue.length}}`)
+                        }
+                      })
+
+                      Text($r('app.string.send'))
+                        .width(SizeConstant.SIZE_45)
+                        .height(SizeConstant.SIZE_35)
+                        .textAlign(TextAlign.Center)
+                        .backgroundColor(this.editValue.length === 0 ? $r('app.color.color_E0E0E0') :
+                        $r('app.color.color_09C060'))
+                        .fontSize($r('app.float.font_15'))
+                        .fontColor(this.editValue.length === 0 ? $r('app.color.color_BEBEBE') :
+                        $r('app.color.color_FFFFFF'))
+                        .borderRadius(SizeConstant.SIZE_5)
+                        .margin({ left: SizeConstant.SIZE_10 })
+                        .onClick(() => {
+                          //发送
+                          this.toGetAi(this.editValue)
+                          this.editValue = ''
+                        })
+                    }
+                    .margin({ right: SizeConstant.SIZE_20 })
+                  }.width(SizeConstant.FULL_SIZE)
+                  .height(SizeConstant.SIZE_PERCENT_25)
+                  .align(Alignment.BottomEnd)
+                } else if (this.isPhoto) {
+                  //相机、相册
+                  ChatOtherFunView()
                 }
-                .margin({ right: SizeConstant.SIZE_20 })
-              }.width(SizeConstant.FULL_SIZE)
-              .height(SizeConstant.SIZE_PERCENT_25)
-              .align(Alignment.BottomEnd)
-            } else if (this.isPhoto) {
-              //相机、相册
-              ChatOtherFunView()
+              }.backgroundColor($r('app.color.color_F6F6F6'))
+              .padding({ bottom: px2vp(this.navHeight) })
+              .width(SizeConstant.FULL_SIZE)
+            }.width(SizeConstant.FULL_SIZE)
+            .height(SizeConstant.FULL_SIZE)
+
+            //语音
+            if (this.isRecording) {
+              //开启录音
+              AudioRecordView()
+                .width(SizeConstant.FULL_SIZE)
+                .height(SizeConstant.FULL_SIZE)
             }
-          }.backgroundColor($r('app.color.color_F6F6F6'))
-          .padding({ bottom: px2vp(this.navHeight) })
-          .width(SizeConstant.FULL_SIZE)
+          }.width(SizeConstant.FULL_SIZE)
+          .layoutWeight(1)
         }.width(SizeConstant.FULL_SIZE)
         .height(SizeConstant.FULL_SIZE)
       }.mode(NavigationMode.Stack)
@@ -492,7 +557,7 @@ struct AIChatPage {
 
     const client = new ModelStudioStreamClient({
       endpoint: 'https://dashscope.aliyuncs.com',
-      api_key: "xxx",
+      api_key: "sk-c1d2d4ae26e44c61b098a719f98bc40d",
       model: 'deepseek-r1'
     });
 

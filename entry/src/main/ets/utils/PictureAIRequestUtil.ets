@@ -25,7 +25,8 @@ interface MessageBean {
 interface MessageBeanContent {
   type: string,
   text: string | null,
-  image_url: ImageUrlContent | null
+  image_url: ImageUrlContent | null,
+  video_url: ImageUrlContent | null
 }
 
 interface ImageUrlContent {
@@ -61,30 +62,43 @@ export class FileAIRequestUtil {
     this.config = config
   }
 
-  async sendPicStreamRequest(baseUri: string, callbacks: StreamResponseCallbacks) {
+  async sendStreamRequest(urlType: string, baseUri: string, callbacks: StreamResponseCallbacks) {
     const httpSession = http.createHttp()
     try {
       const url = `${this.config.endpoint}/compatible-mode/v1/chat/completions`
       let systemMessage: MessageBeanContent = {
         type: "text",
         text: "You are a helpful assistant.",
-        image_url: null
+        image_url: null,
+        video_url: null
       }
       let bean1: MessageBean = {
         role: "system",
         content: [systemMessage]
       }
 
-      let userMessage1: MessageBeanContent = {
-        type: "image_url",
-        image_url: { "url": baseUri },
-        text: null
+      let userMessage1: MessageBeanContent
+      if (urlType === "image_url") {
+        userMessage1 = {
+          type: urlType,
+          image_url: { "url": baseUri },
+          text: null,
+          video_url: null
+        }
+      } else {
+        userMessage1 = {
+          type: urlType,
+          image_url: null,
+          text: null,
+          video_url: { "url": baseUri }
+        }
       }
 
       let userMessage2: MessageBeanContent = {
         type: "text",
         image_url: null,
-        text: this.config.desText
+        text: this.config.desText,
+        video_url: null
       }
 
       let bean2: MessageBean = {

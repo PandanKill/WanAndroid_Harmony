@@ -7,20 +7,20 @@ export class GeneralPopupItemConstant {
       icon: $r('app.media.icon_explore'),
       text: '搜一搜'
     },
-    //引用
-    {
-      icon: $r('app.media.icon_explore'),
-      text: '引用'
-    },
     //删除
     {
-      icon: $r('app.media.icon_explore'),
+      icon: $r('app.media.icon_delete_white'),
       text: '删除'
     },
     //复制
     {
-      icon: $r('app.media.icon_explore'),
+      icon: $r('app.media.icon_copy'),
       text: '复制'
+    },
+    //询问
+    {
+      icon: $r('app.media.icon_question'),
+      text: '询问'
     }
   ]
 }

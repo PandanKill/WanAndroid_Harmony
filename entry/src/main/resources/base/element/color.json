@@ -163,6 +163,38 @@
     {
       "name": "color_191919",
       "value": "#191919"
+    },
+    {
+      "name": "color_4C4C4C",
+      "value": "#4C4C4C"
+    },
+    {
+      "name": "color_DCDCDC",
+      "value": "#DCDCDC"
+    },
+    {
+      "name": "color_ACACAC",
+      "value": "#ACACAC"
+    },
+    {
+      "name": "color_595959",
+      "value": "#595959"
+    },
+    {
+      "name": "color_A1A1A1",
+      "value": "#A1A1A1"
+    },
+    {
+      "name": "color_D2D2D2",
+      "value": "#D2D2D2"
+    },
+    {
+      "name": "color_A9A9A9",
+      "value": "#A9A9A9"
+    },
+    {
+      "name": "color_4E8F3D",
+      "value": "#4E8F3D"
     }
   ]
 }

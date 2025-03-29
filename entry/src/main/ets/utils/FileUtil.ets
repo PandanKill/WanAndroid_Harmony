@@ -4,7 +4,7 @@ import { BusinessError } from '@kit.BasicServicesKit';
 import { fileUri } from '@kit.CoreFileKit';
 import { image } from '@kit.ImageKit';
 
-export async function imageToBase64(uri: string): Promise<string> {
+export async function fileToBase64(uri: string): Promise<string> {
   try {
     //获取 file 对象
     const file = fs.openSync(uri, fs.OpenMode.READ_ONLY)
@@ -28,7 +28,7 @@ export async function imageToBase64(uri: string): Promise<string> {
 
     fs.closeSync(file.fd)
 
-    return `data:image/png;base64,${base64Str}`
+    return base64Str
   } catch (error) {
     const err: BusinessError = error as BusinessError;
     console.error('转换失败:', err.code, err.message);

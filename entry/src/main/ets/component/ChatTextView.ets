@@ -90,7 +90,7 @@ export struct ChatTextView {
                 )
                 .bindPopup(this.showPopup, {
                   builder: this.popupCustomView(),
-                  popupColor: Color.Black,
+                  popupColor: $r('app.color.color_4C4C4C'),
                   backgroundBlurStyle: BlurStyle.NONE,
                   radius: SizeConstant.SIZE_10,
                   onStateChange: (e) => {
@@ -109,7 +109,8 @@ export struct ChatTextView {
                 .borderColor(Color.Gray)
                 .objectFit(ImageFit.Contain)
                 .width(this.picWidth)
-                .height(this.picHeight)
+                .height(this.picHeight)//移除自带的拖拽事件
+                .draggable(false)
                 .gesture(
                   LongPressGesture({ repeat: false }).onAction((event) => {
                     this.showPopup = !this.showPopup
@@ -283,7 +284,7 @@ export struct ChatTextView {
 
   @Builder
   popupCustomView() {
-    Stack() {
+    Stack({ alignContent: Alignment.Center }) {
       Grid() {
         ForEach(GeneralPopupItemConstant.CommonItem, (item: ChatPopupItem, index: number) => {
           GridItem() {
@@ -307,8 +308,14 @@ export struct ChatTextView {
           }
         }, (item: ChatPopupItem, index: number) => JSON.stringify(item) + index)
       }
+      .columnsTemplate('1fr 1fr 1fr 1fr')
     }.width('auto')
     .constraintSize({ maxWidth: SizeConstant.SIZE_PERCENT_60 })
-    .padding({ top: SizeConstant.SIZE_15, bottom: SizeConstant.SIZE_15 })
+    .padding({
+      top: SizeConstant.SIZE_15,
+      bottom: SizeConstant.SIZE_15,
+      left: SizeConstant.SIZE_10,
+      right: SizeConstant.SIZE_10
+    })
   }
 }
