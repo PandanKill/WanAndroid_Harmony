@@ -1,4 +1,3 @@
-import { it } from '@ohos/hypium';
 import { ChatOtherFunView } from '../component/ChatOtherFunView';
 import { EmojiListView } from '../component/EmojiListView';
 import { NavHeaderView } from '../component/NavHeaderView';
@@ -12,6 +11,8 @@ import { checkFileMimeType, fileToBase64 } from '../utils/FileUtil';
 import { FileAIRequestUtil } from '../utils/PictureAIRequestUtil';
 import { ItemInfo } from '@kit.MediaLibraryKit';
 import { AudioRecordView } from '../component/AudioRecordView';
+import { EventState, CustomTouchType } from '../bean/TouchType';
+import { AudioParseTextView } from '../component/AudioParseTextView';
 
 @Observed
 export class Message {
@@ -62,9 +63,32 @@ struct AIChatPage {
   @State isPhoto: boolean = false
   //是否正在录音
   @State isRecording: boolean = false
+  //音频解析
+  @State isAudioParsing: boolean = false
   @State recordUI: ResourceColor = Color.White
   private textAreaController: TextAreaController = new TextAreaController()
   private timeId: number = 0
+  @State eventAudio: EventState = new EventState()
+  //事件回调
+  onAudioTouch = async (event: TouchEvent) => {
+    // const eventState: EventState = new EventState()
+    if (event.type === TouchType.Down) {
+      //按下状态
+      this.recordUI = Color.Grey
+      this.isRecording = true
+      this.eventAudio.type = CustomTouchType.Down
+    } else if (event.type === TouchType.Up) {
+      //抬起状态
+      this.recordUI = Color.White
+      this.eventAudio.type = CustomTouchType.Up
+    } else if (event.type === TouchType.Move) {
+      this.eventAudio.type = CustomTouchType.Move
+      this.eventAudio.x = event.touches[0].displayX
+      this.eventAudio.y = event.touches[0].displayY
+    } else if (event.type === TouchType.Cancel) {
+      this.eventAudio.type = CustomTouchType.Cancel
+    }
+  }
 
   getMMSS(): string {
     let date = new Date()
@@ -129,11 +153,9 @@ struct AIChatPage {
       desText: "视频的内容是什么"
     })
     const sendMessage = this.getSendVideoMessage(itemInfo)
-    sendMessage.id = new Date().getTime().toString()
     this.messageArr.push(sendMessage)
     //接收
     const receiverMessage = this.getReceiverMessage()
-    receiverMessage.id = new Date().getTime().toString()
     receiverMessage.messageStatus = 0
     this.messageArr.push(receiverMessage)
 
@@ -174,11 +196,9 @@ struct AIChatPage {
       desText: "图中描绘的是什么景象？"
     })
     const sendMessage = this.getSendPicMessage(itemInfo)
-    sendMessage.id = new Date().getTime().toString()
     this.messageArr.push(sendMessage)
     //接收
     const receiverMessage = this.getReceiverMessage()
-    receiverMessage.id = new Date().getTime().toString()
     receiverMessage.messageStatus = 0
     this.messageArr.push(receiverMessage)
 
@@ -213,6 +233,7 @@ struct AIChatPage {
     let message = new Message()
     message.messageType = 2;
     message.ownerName = "DeepSeek"
+    message.id = new Date().getTime().toString()
     return message
   }
 
@@ -243,7 +264,7 @@ struct AIChatPage {
     message.imageHeight = itemInfo.height ?? 0
     message.textType = 1
     message.ownerName = "Owner"
-    message.id = 'send'
+    message.id = new Date().getTime().toString()
 
     return message
   }
@@ -261,19 +282,19 @@ struct AIChatPage {
     message.videoCapHeight = itemInfo.height ?? 0
     message.videoTime = Math.floor((itemInfo.duration ?? 0) / 1000)
     message.ownerName = "Owner"
-    message.id = 'send'
+    message.id = new Date().getTime().toString()
 
     return message
   }
 
-  getAudioMessage(): Message {
+  getSendAudioMessage(): Message {
     let message = new Message()
     message.audioUri = ''
     message.audioTime = 15
     message.messageType = 1
     message.textType = 3
     message.ownerName = "Owner"
-    message.id = 'send'
+    message.id = new Date().getTime().toString()
     return message
   }
 
@@ -398,15 +419,7 @@ struct AIChatPage {
                       .fontColor(Color.Black)
                       .margin({ left: SizeConstant.SIZE_10, top: SizeConstant.SIZE_5, bottom: SizeConstant.SIZE_10 })
                       .onTouch((event: TouchEvent) => {
-                        if (event.type === TouchType.Down) {
-                          //按下状态
-                          this.recordUI = Color.Grey
-                          this.isRecording = true
-                        } else if (event.type === TouchType.Up) {
-                          //抬起状态
-                          this.recordUI = Color.White
-                          this.isRecording = false
-                        }
+                        this.onAudioTouch(event)
                       })
                   }
                   //表情
@@ -522,10 +535,33 @@ struct AIChatPage {
             //语音
             if (this.isRecording) {
               //开启录音
-              AudioRecordView()
+              AudioRecordView({
+                event: this.eventAudio,
+                audioRecord: this.isRecording,
+                audioParse: this.isAudioParsing,
+                onDataSend: (textType: number) => {
+                  this.isRecording = false
+                  if (textType === 0) {
+                    let message = this.getSendMessage("文字发送")
+                    this.messageArr.push(message)
+                  } else if (textType === 3) {
+                    let message = this.getSendAudioMessage()
+                    this.messageArr.push(message)
+                  }
+                }
+              })
                 .width(SizeConstant.FULL_SIZE)
                 .height(SizeConstant.FULL_SIZE)
             }
+
+            if (this.isAudioParsing) {
+              AudioParseTextView({
+                isParse: this.isAudioParsing
+              })
+                .width(SizeConstant.FULL_SIZE)
+                .height(SizeConstant.FULL_SIZE)
+            }
+
           }.width(SizeConstant.FULL_SIZE)
           .layoutWeight(1)
         }.width(SizeConstant.FULL_SIZE)
@@ -563,7 +599,6 @@ struct AIChatPage {
 
     //接收
     const receiverMessage = this.getReceiverMessage()
-    receiverMessage.id = new Date().getTime().toString()
     receiverMessage.messageStatus = 0
     this.messageArr.push(receiverMessage)
 
@@ -626,3 +661,5 @@ struct AIChatPage {
   //   }
   // }
 }
+
+export { EventState };

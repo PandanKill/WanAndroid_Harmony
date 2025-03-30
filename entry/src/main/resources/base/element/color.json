@@ -195,6 +195,26 @@
     {
       "name": "color_4E8F3D",
       "value": "#4E8F3D"
+    },
+    {
+      "name": "color_181818",
+      "value": "#181818"
+    },
+    {
+      "name": "color_DBDBDB",
+      "value": "#DBDBDB"
+    },
+    {
+      "name": "color_FB5251",
+      "value": "#FB5251"
+    },
+    {
+      "name": "color_505050",
+      "value": "#505050"
+    },
+    {
+      "name": "color_e1e1e1",
+      "value": "#e1e1e1"
     }
   ]
 }

@@ -17,6 +17,7 @@ export default class SizeConstant {
   static readonly SIZE_PERCENT_25 = '25%'
   static readonly SIZE_PERCENT_20 = '20%'
   static readonly SIZE_PERCENT_10 = '10%'
+  static readonly SIZE_PERCENT_5 = '5%'
 
   /**
    * 100vp
@@ -28,6 +29,7 @@ export default class SizeConstant {
   static readonly SIZE_100 = '100vp'
   static readonly SIZE_80 = '80vp'
   static readonly SIZE_70 = '70vp'
+  static readonly SIZE_64 = '64vp'
   static readonly SIZE_60 = '60vp'
   static readonly SIZE_50 = '50vp'
   static readonly SIZE_45 = '45vp'
@@ -43,4 +45,5 @@ export default class SizeConstant {
   static readonly SIZE_3 = '3vp'
   static readonly SIZE_2 = '2vp'
   static readonly SIZE_1 = '1vp'
+  static readonly SIZE_0 = '0vp'
 }
