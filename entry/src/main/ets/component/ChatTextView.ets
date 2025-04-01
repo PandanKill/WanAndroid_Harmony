@@ -284,7 +284,7 @@ export struct ChatTextView {
 
   @Builder
   popupCustomView() {
-    Stack({ alignContent: Alignment.Center }) {
+    Column() {
       Grid() {
         ForEach(GeneralPopupItemConstant.CommonItem, (item: ChatPopupItem, index: number) => {
           GridItem() {
@@ -308,9 +308,9 @@ export struct ChatTextView {
           }
         }, (item: ChatPopupItem, index: number) => JSON.stringify(item) + index)
       }
-      .columnsTemplate('1fr 1fr 1fr 1fr')
-    }.width('auto')
-    .constraintSize({ maxWidth: SizeConstant.SIZE_PERCENT_60 })
+      // .columnsTemplate('1fr 1fr 1fr 1fr')
+    }
+    .width(SizeConstant.SIZE_PERCENT_50)
     .padding({
       top: SizeConstant.SIZE_15,
       bottom: SizeConstant.SIZE_15,

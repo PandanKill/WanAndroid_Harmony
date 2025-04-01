@@ -13,6 +13,7 @@ import { ItemInfo } from '@kit.MediaLibraryKit';
 import { AudioRecordView } from '../component/AudioRecordView';
 import { EventState, CustomTouchType } from '../bean/TouchType';
 import { AudioParseTextView } from '../component/AudioParseTextView';
+import { startVibrator } from '../utils/VibratorUtil';
 
 @Observed
 export class Message {
@@ -77,6 +78,8 @@ struct AIChatPage {
       this.recordUI = Color.Grey
       this.isRecording = true
       this.eventAudio.type = CustomTouchType.Down
+      //震动
+      startVibrator()
     } else if (event.type === TouchType.Up) {
       //抬起状态
       this.recordUI = Color.White

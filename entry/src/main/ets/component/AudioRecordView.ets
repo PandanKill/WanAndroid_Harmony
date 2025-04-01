@@ -3,6 +3,7 @@ import { componentUtils } from "@kit.ArkUI";
 import { EventState } from "../pages/ChatPage";
 import { CustomTouchType } from "../bean/TouchType";
 import { AudioParseTextView } from "./AudioParseTextView";
+import { startVibrator } from "../utils/VibratorUtil";
 
 /**
  * 录音页面
@@ -70,6 +71,8 @@ export struct AudioRecordView {
    */
   voiceChange() {
     if (this.voiceStatus === PressCancelVoicePostText.pressing) {
+      //震动
+      startVibrator()
       //发送语音
       this.getUIContext().animateTo({
         duration: 100,
@@ -83,6 +86,8 @@ export struct AudioRecordView {
         this.vocalContentMargin = SizeConstant.SIZE_0
       })
     } else if (this.voiceStatus === PressCancelVoicePostText.postText) {
+      //震动
+      startVibrator()
       //转文字
       this.getUIContext().animateTo({
         duration: 100,
@@ -96,6 +101,8 @@ export struct AudioRecordView {
         this.vocalContentMargin = SizeConstant.SIZE_10
       })
     } else if (this.voiceStatus === PressCancelVoicePostText.cancelVoice) {
+      //震动
+      startVibrator()
       //取消
       this.getUIContext().animateTo({
         duration: 100,
