@@ -17,6 +17,11 @@ export class GeneralPopupItemConstant {
     {
       icon: $r('app.media.icon_copy'),
       text: '复制'
+    },
+    //引用
+    {
+      icon: $r('app.media.icon_copy'),
+      text: '引用'
     }
   ]
   //图片相关
@@ -51,6 +56,14 @@ export class GeneralPopupItemConstant {
     {
       icon: $r('app.media.icon_explore'),
       text: '语音解析'
+    }
+  ]
+  //文本相关
+  static readonly TextCommonItem: ChatPopupItem[] = [
+  //搜一搜
+    {
+      icon: $r('app.media.icon_explore'),
+      text: '翻译'
     }
   ]
 }

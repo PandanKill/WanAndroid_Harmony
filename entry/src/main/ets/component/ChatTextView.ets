@@ -20,6 +20,8 @@ export struct ChatTextView {
   static readonly maxWidth = 100
   //是否显示
   @State showPopup: boolean = false
+  onReferListener: (refItem: Message) => void = (refItem) => {
+  }
 
   aboutToAppear(): void {
     //配置图片信息
@@ -301,13 +303,14 @@ export struct ChatTextView {
             }.alignItems(HorizontalAlign.Center)
             .onClick(() => {
               this.showPopup = false
-              promptAction.showToast({
-                message: item.text
-              })
+              if (item.text === '引用') {
+                this.onReferListener(this.item)
+              }
             })
           }
         }, (item: ChatPopupItem, index: number) => JSON.stringify(item) + index)
       }
+
       // .columnsTemplate('1fr 1fr 1fr 1fr')
     }
     .width(SizeConstant.SIZE_PERCENT_50)

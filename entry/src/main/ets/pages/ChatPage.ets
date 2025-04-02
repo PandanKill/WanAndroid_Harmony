@@ -5,7 +5,7 @@ import SizeConstant from '../constants/SizeConstant';
 import { AISpeakBean, ModelStudioStreamClient } from '../utils/TextAiRequestUtil';
 import { JSON } from '@kit.ArkTS';
 import hilog from '@ohos.hilog';
-import { router } from '@kit.ArkUI';
+import { componentUtils, router, window } from '@kit.ArkUI';
 import { ChatTextView } from '../component/ChatTextView';
 import { checkFileMimeType, fileToBase64 } from '../utils/FileUtil';
 import { FileAIRequestUtil } from '../utils/PictureAIRequestUtil';
@@ -14,6 +14,7 @@ import { AudioRecordView } from '../component/AudioRecordView';
 import { EventState, CustomTouchType } from '../bean/TouchType';
 import { AudioParseTextView } from '../component/AudioParseTextView';
 import { startVibrator } from '../utils/VibratorUtil';
+import { ReferenceView } from '../component/ReferenceView';
 
 @Observed
 export class Message {
@@ -41,6 +42,10 @@ export class Message {
   ownerIcon: Resource | undefined = $r('app.media.icon_default')
   //发送方 request_id是 send，接收方是真实 id
   id: string = ''
+  //引用 id
+  referId: string = ''
+  referType: number = 0
+  referText: string = ''
 }
 
 @Entry
@@ -66,6 +71,9 @@ struct AIChatPage {
   @State isRecording: boolean = false
   //音频解析
   @State isAudioParsing: boolean = false
+  //是否存在引用
+  @State isRefer: boolean = false
+  private referMessage: Message | undefined
   @State recordUI: ResourceColor = Color.White
   private textAreaController: TextAreaController = new TextAreaController()
   private timeId: number = 0
@@ -331,7 +339,13 @@ struct AIChatPage {
               }) {
                 ForEach(this.messageArr, (item: Message, index: number) => {
                   ListItem() {
-                    ChatTextView({ item: item })
+                    ChatTextView({
+                      item: item, onReferListener: (refItem: Message) => {
+                        //引用回调
+                        this.referMessage = refItem
+                        this.isRefer = true
+                      }
+                    })
                   }.width(SizeConstant.FULL_SIZE)
                   .height('auto')
                 }, (item: Message, index: number) => item.id + index)
@@ -371,60 +385,75 @@ struct AIChatPage {
                       })
                     })
 
-                  if (this.isSendText) {
-                    //编写文字
-                    TextArea({
-                      text: this.editValue,
-                      controller: this.textAreaController
-                    })
-                      .id('sendText')
-                      .backgroundColor(Color.White)
-                      .borderRadius(SizeConstant.SIZE_5)
-                      .width(SizeConstant.SIZE_PERCENT_65)
-                      .margin({ left: SizeConstant.SIZE_10, top: SizeConstant.SIZE_5, bottom: SizeConstant.SIZE_10 })
-                      .enterKeyType(EnterKeyType.Send)
-                      .onAppear(() => {
-                        //首次不需要弹软键盘
-                        if (!this.isFirstShowUI && !this.isEmoji && !this.isPhoto) {
-                          //非首次 Appear 的时候，才需要弹出软件盘
-                          this.getUIContext().getFocusController().requestFocus('sendText')
-                        }
+                  //输入框
+                  Column() {
+                    if (this.isSendText) {
+                      //编写文字
+                      TextArea({
+                        text: this.editValue,
+                        controller: this.textAreaController
                       })
-                      .onSubmit((eventType: EnterKeyType) => {
-                        //发送
-                        this.toGetAi(this.editValue)
-                        this.editValue = ''
-                      })
-                      .onChange((value: string) => {
-                        //获取输入框内容
-                        console.info(value)
-                        this.editValue = value
-                      })
-                      .onFocus(() => {
-                        this.getUIContext().animateTo({
-                          duration: 100,
-                          curve: Curve.Linear
-                        }, () => {
-                          this.isEmoji = false
-                          this.isPhoto = false
+                        .id('sendText')
+                        .backgroundColor(Color.White)
+                        .borderRadius(SizeConstant.SIZE_5)
+                        .width(SizeConstant.SIZE_PERCENT_65)
+                        .margin({ left: SizeConstant.SIZE_10, top: SizeConstant.SIZE_5, bottom: SizeConstant.SIZE_3 })
+                        .enterKeyType(EnterKeyType.Send)
+                        .onAppear(() => {
+                          //首次不需要弹软键盘
+                          if (!this.isFirstShowUI && !this.isEmoji && !this.isPhoto) {
+                            //非首次 Appear 的时候，才需要弹出软件盘
+                            this.getUIContext().getFocusController().requestFocus('sendText')
+                          }
                         })
-                      })
+                        .onSubmit((eventType: EnterKeyType) => {
+                          //发送
+                          this.toGetAi(this.editValue)
+                          this.editValue = ''
+                        })
+                        .onChange((value: string) => {
+                          //获取输入框内容
+                          console.info(value)
+                          this.editValue = value
+                        })
+                        .onFocus(() => {
+                          this.getUIContext().animateTo({
+                            duration: 100,
+                            curve: Curve.Linear
+                          }, () => {
+                            this.isEmoji = false
+                            this.isPhoto = false
+                          })
+                        })
 
-                  } else {
-                    //编写语音
-                    Text(this.isRecording ? $r('app.string.recording') : $r('app.string.start_record'))
-                      .backgroundColor(this.recordUI)
-                      .borderRadius(SizeConstant.SIZE_5)
-                      .width(SizeConstant.SIZE_PERCENT_65)
-                      .height(SizeConstant.SIZE_35)
-                      .textAlign(TextAlign.Center)
-                      .fontSize($r('app.float.font_15'))
-                      .fontColor(Color.Black)
-                      .margin({ left: SizeConstant.SIZE_10, top: SizeConstant.SIZE_5, bottom: SizeConstant.SIZE_10 })
-                      .onTouch((event: TouchEvent) => {
-                        this.onAudioTouch(event)
-                      })
+                    } else {
+                      //编写语音
+                      Text(this.isRecording ? $r('app.string.recording') : $r('app.string.start_record'))
+                        .backgroundColor(this.recordUI)
+                        .borderRadius(SizeConstant.SIZE_5)
+                        .width(SizeConstant.SIZE_PERCENT_65)
+                        .height(SizeConstant.SIZE_35)
+                        .textAlign(TextAlign.Center)
+                        .fontSize($r('app.float.font_15'))
+                        .fontColor(Color.Black)
+                        .margin({ left: SizeConstant.SIZE_10, top: SizeConstant.SIZE_5, bottom: SizeConstant.SIZE_3 })
+                        .onTouch((event: TouchEvent) => {
+                          this.onAudioTouch(event)
+                        })
+                    }
+
+                    if (this.isRefer) {
+                      ReferenceView({
+                        referenceOwner: this.referMessage?.ownerName,
+                        referenceText: this.referMessage?.text,
+                        onCancel: () => {
+                          this.isRefer = false
+                        }
+                      }).width(SizeConstant.SIZE_PERCENT_65)
+                        .margin({ left: SizeConstant.SIZE_10 })
+                    }
                   }
+
                   //表情
                   Image(this.emojiIconResource)
                     .width(SizeConstant.SIZE_30)

@@ -215,6 +215,14 @@
     {
       "name": "color_e1e1e1",
       "value": "#e1e1e1"
+    },
+    {
+      "name": "color_EAEAEA",
+      "value": "#EAEAEA"
+    },
+    {
+      "name": "color_6B6B6B",
+      "value": "#6B6B6B"
     }
   ]
 }
