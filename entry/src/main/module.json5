@@ -27,6 +27,13 @@
             'EntryAbility'
           ]
         }
+      },
+      {
+        "name": "ohos.permission.MICROPHONE",
+        "reason": "$string:app_name",
+        "usedScene": {
+          "when": "inuse"
+        }
       }
     ],
     "deliveryWithInstall": true,

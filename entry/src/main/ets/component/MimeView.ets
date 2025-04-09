@@ -188,7 +188,36 @@ export struct MimeView {
           .width(SizeConstant.SIZE_15)
           .height(SizeConstant.SIZE_15)
           .margin({ right: SizeConstant.SIZE_15 })
+      }
+      .width(SizeConstant.FULL_SIZE)
+      .alignItems(VerticalAlign.Center)
+      .backgroundColor($r('app.color.color_FFFFFF'))
+      .onClick(() => {
+        //to AI 聊天
+        router.pushUrl({
+          url: "pages/ChatPage"
+        })
+      })
 
+
+      //线
+      Divider()
+        .width(SizeConstant.FULL_SIZE)
+        .height(1)
+        .color($r('app.color.color_979797'))
+
+      //图像生成
+      Row() {
+        Text("图像生成")
+          .fontSize($r('app.float.font_12'))
+          .fontColor($r('app.color.color_000000'))
+          .margin({ left: SizeConstant.SIZE_15, top: SizeConstant.SIZE_15, bottom: SizeConstant.SIZE_15 })
+          .layoutWeight(1)
+
+        Image($r('app.media.to_right'))
+          .width(SizeConstant.SIZE_15)
+          .height(SizeConstant.SIZE_15)
+          .margin({ right: SizeConstant.SIZE_15 })
       }
       .width(SizeConstant.FULL_SIZE)
       .alignItems(VerticalAlign.Center)

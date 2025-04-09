@@ -9,7 +9,7 @@ import { promptAction } from '@kit.ArkUI'
  * 聊天内容 View
  */
 @Component
-export struct ChatTextView {
+export struct ChatItemView {
   @ObjectLink item: Message
   //图片的宽高
   @State picWidth: number = 0
@@ -22,22 +22,27 @@ export struct ChatTextView {
   @State showPopup: boolean = false
   onReferListener: (refItem: Message) => void = (refItem) => {
   }
+  //引用内容
+  @State popItem: ChatPopupItem[] = []
 
   aboutToAppear(): void {
     //配置图片信息
     if (this.item.textType === 1) {
+      this.popItem = [...GeneralPopupItemConstant.CommonItem, ...GeneralPopupItemConstant.PicCommonItem]
       if (this.item.imageHeight >= this.item.imageWidth) {
         //高大于宽
-        this.picHeight = ChatTextView.maxHeight
-        this.picWidth = ChatTextView.maxHeight * this.item.imageWidth / this.item.imageHeight
+        this.picHeight = ChatItemView.maxHeight
+        this.picWidth = ChatItemView.maxHeight * this.item.imageWidth / this.item.imageHeight
         console.info(`lgwww ${this.picWidth}`)
       } else {
         //宽大于高
-        this.picWidth = ChatTextView.maxWidth
-        this.picHeight = ChatTextView.maxWidth * this.item.imageHeight / this.item.imageWidth
+        this.picWidth = ChatItemView.maxWidth
+        this.picHeight = ChatItemView.maxWidth * this.item.imageHeight / this.item.imageWidth
         console.info(`lgwww ${this.picHeight}`)
       }
     } else if (this.item.textType === 2) {
+      //视频
+      this.popItem = [...GeneralPopupItemConstant.CommonItem, ...GeneralPopupItemConstant.VideoCommonItem]
       if (this.item.videoTime >= 60) {
         this.videoTime = `${(this.item.videoTime / 60).toString()}:${this.item.videoTime % 60}`
       } else {
@@ -46,15 +51,21 @@ export struct ChatTextView {
 
       if (this.item.videoCapHeight >= this.item.videoCapWidth) {
         //高大于宽
-        this.picHeight = ChatTextView.maxHeight
-        this.picWidth = ChatTextView.maxHeight * this.item.videoCapWidth / this.item.videoCapHeight
+        this.picHeight = ChatItemView.maxHeight
+        this.picWidth = ChatItemView.maxHeight * this.item.videoCapWidth / this.item.videoCapHeight
         console.info(`lgwww ${this.picWidth}`)
       } else {
         //宽大于高
-        this.picWidth = ChatTextView.maxWidth
-        this.picHeight = ChatTextView.maxWidth * this.item.videoCapHeight / this.item.videoCapWidth
+        this.picWidth = ChatItemView.maxWidth
+        this.picHeight = ChatItemView.maxWidth * this.item.videoCapHeight / this.item.videoCapWidth
         console.info(`lgwww ${this.picHeight}`)
       }
+    } else if (this.item.textType === 0) {
+      //文字
+      this.popItem = [...GeneralPopupItemConstant.CommonItem, ...GeneralPopupItemConstant.TextCommonItem]
+    } else if (this.item.textType === 3) {
+      //语音
+      this.popItem = [...GeneralPopupItemConstant.CommonItem, ...GeneralPopupItemConstant.AudioCommonItem]
     }
   }
 
@@ -288,7 +299,7 @@ export struct ChatTextView {
   popupCustomView() {
     Column() {
       Grid() {
-        ForEach(GeneralPopupItemConstant.CommonItem, (item: ChatPopupItem, index: number) => {
+        ForEach(this.popItem, (item: ChatPopupItem, index: number) => {
           GridItem() {
             Column() {
               Image(item.icon)

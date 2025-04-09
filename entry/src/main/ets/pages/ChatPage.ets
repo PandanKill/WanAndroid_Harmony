@@ -5,8 +5,8 @@ import SizeConstant from '../constants/SizeConstant';
 import { AISpeakBean, ModelStudioStreamClient } from '../utils/TextAiRequestUtil';
 import { JSON } from '@kit.ArkTS';
 import hilog from '@ohos.hilog';
-import { componentUtils, router, window } from '@kit.ArkUI';
-import { ChatTextView } from '../component/ChatTextView';
+import { componentUtils, promptAction, router, window } from '@kit.ArkUI';
+import { ChatItemView } from '../component/ChatItemView';
 import { checkFileMimeType, fileToBase64 } from '../utils/FileUtil';
 import { FileAIRequestUtil } from '../utils/PictureAIRequestUtil';
 import { ItemInfo } from '@kit.MediaLibraryKit';
@@ -15,6 +15,8 @@ import { EventState, CustomTouchType } from '../bean/TouchType';
 import { AudioParseTextView } from '../component/AudioParseTextView';
 import { startVibrator } from '../utils/VibratorUtil';
 import { ReferenceView } from '../component/ReferenceView';
+import { checkPermissionGrant, requestPermissionForUser } from '../utils/PermissionUtil';
+import { abilityAccessCtrl, common } from '@kit.AbilityKit';
 
 @Observed
 export class Message {
@@ -78,20 +80,22 @@ struct AIChatPage {
   private textAreaController: TextAreaController = new TextAreaController()
   private timeId: number = 0
   @State eventAudio: EventState = new EventState()
+  private context: common.UIAbilityContext = getContext(this) as common.UIAbilityContext
   //事件回调
   onAudioTouch = async (event: TouchEvent) => {
     // const eventState: EventState = new EventState()
     if (event.type === TouchType.Down) {
-      //按下状态
-      this.recordUI = Color.Grey
-      this.isRecording = true
-      this.eventAudio.type = CustomTouchType.Down
-      //震动
-      startVibrator()
+      //校验录音权限
+      let grant = await checkPermissionGrant('ohos.permission.MICROPHONE')
+      if (grant === abilityAccessCtrl.GrantStatus.PERMISSION_GRANTED) {
+        this.startRecord()
+      } else {
+        requestPermissionForUser(['ohos.permission.MICROPHONE'], this.context, this.startRecord, this.deniedWarning)
+      }
+
     } else if (event.type === TouchType.Up) {
       //抬起状态
-      this.recordUI = Color.White
-      this.eventAudio.type = CustomTouchType.Up
+      this.stopRecord()
     } else if (event.type === TouchType.Move) {
       this.eventAudio.type = CustomTouchType.Move
       this.eventAudio.x = event.touches[0].displayX
@@ -99,6 +103,35 @@ struct AIChatPage {
     } else if (event.type === TouchType.Cancel) {
       this.eventAudio.type = CustomTouchType.Cancel
     }
+  }
+
+  /**
+   * 权限授权失败
+   */
+  deniedWarning() {
+    promptAction.showToast({
+      message: "麦克风授权失败"
+    })
+  }
+
+  /**
+   * 结束录音
+   */
+  stopRecord() {
+    this.recordUI = Color.White
+    this.eventAudio.type = CustomTouchType.Up
+  }
+
+  /**
+   * 开始录音
+   */
+  startRecord() {
+    //按下状态
+    this.recordUI = Color.Grey
+    this.isRecording = true
+    this.eventAudio.type = CustomTouchType.Down
+    //震动
+    startVibrator()
   }
 
   getMMSS(): string {
@@ -159,7 +192,7 @@ struct AIChatPage {
     //获取到图片信息,全模态
     let fileAi = new FileAIRequestUtil({
       endpoint: 'https://dashscope.aliyuncs.com',
-      api_key: "sk-c1d2d4ae26e44c61b098a719f98bc40d",
+      api_key: "",
       model: 'qwen-omni-turbo',
       desText: "视频的内容是什么"
     })
@@ -202,7 +235,7 @@ struct AIChatPage {
     //获取到图片信息,全模态
     let fileAi = new FileAIRequestUtil({
       endpoint: 'https://dashscope.aliyuncs.com',
-      api_key: "sk-c1d2d4ae26e44c61b098a719f98bc40d",
+      api_key: "",
       model: 'qwen-omni-turbo',
       desText: "图中描绘的是什么景象？"
     })
@@ -339,7 +372,7 @@ struct AIChatPage {
               }) {
                 ForEach(this.messageArr, (item: Message, index: number) => {
                   ListItem() {
-                    ChatTextView({
+                    ChatItemView({
                       item: item, onReferListener: (refItem: Message) => {
                         //引用回调
                         this.referMessage = refItem
@@ -445,7 +478,7 @@ struct AIChatPage {
                     if (this.isRefer) {
                       ReferenceView({
                         referenceOwner: this.referMessage?.ownerName,
-                        referenceText: this.referMessage?.text,
+                        referenceText: this.getShowReferText(this.referMessage),
                         onCancel: () => {
                           this.isRefer = false
                         }
@@ -606,6 +639,37 @@ struct AIChatPage {
   }
 
   /**
+   * 展示引用内容
+   * @param text
+   * @returns
+   */
+  getShowReferText(refMsg: Message | undefined): string | undefined {
+    if (refMsg === undefined) {
+      return undefined
+    }
+    let tempRef: string | undefined
+    switch (refMsg.textType) {
+      case 0:
+        tempRef = refMsg.text
+        break
+      case 1:
+        tempRef = "[图片]"
+        break
+      case 2:
+        tempRef = "[视频]"
+        break
+      case 3:
+        tempRef = `[语音] ${refMsg.audioTime}"`
+        break
+      default:
+        tempRef = undefined
+        break
+    }
+
+    return tempRef
+  }
+
+  /**
    * 获取最新的图片
    */
   getRecentlyImage() {
@@ -625,7 +689,7 @@ struct AIChatPage {
 
     const client = new ModelStudioStreamClient({
       endpoint: 'https://dashscope.aliyuncs.com',
-      api_key: "sk-c1d2d4ae26e44c61b098a719f98bc40d",
+      api_key: "",
       model: 'deepseek-r1'
     });
 
