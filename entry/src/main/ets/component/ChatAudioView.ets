@@ -4,6 +4,7 @@ import { Message } from '../pages/ChatPage'
 @Component
 export struct ChatAudioView {
   @ObjectLink item: Message
+  @Link showPopup: boolean
 
   build() {
     Row() {
@@ -24,7 +25,7 @@ export struct ChatAudioView {
     .borderRadius(SizeConstant.SIZE_5)
     .gesture(
       LongPressGesture().onAction((event) => {
-
+        this.showPopup = !this.showPopup
       })
     )
   }

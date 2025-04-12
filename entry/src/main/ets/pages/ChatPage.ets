@@ -17,6 +17,7 @@ import { startVibrator } from '../utils/VibratorUtil';
 import { ReferenceView } from '../component/ReferenceView';
 import { checkPermissionGrant, requestPermissionForUser } from '../utils/PermissionUtil';
 import { abilityAccessCtrl, common } from '@kit.AbilityKit';
+import itemClickManager from '../componentManager/PopupItemClickManager';
 
 @Observed
 export class Message {
@@ -160,6 +161,12 @@ struct AIChatPage {
   }
 
   aboutToAppear(): void {
+    //引用
+    itemClickManager.onReferListener = (refItem) => {
+      //引用回调
+      this.referMessage = refItem
+      this.isRefer = true
+    }
   }
 
   async onPageShow(): Promise<void> {
@@ -374,9 +381,7 @@ struct AIChatPage {
                   ListItem() {
                     ChatItemView({
                       item: item, onReferListener: (refItem: Message) => {
-                        //引用回调
-                        this.referMessage = refItem
-                        this.isRefer = true
+
                       }
                     })
                   }.width(SizeConstant.FULL_SIZE)

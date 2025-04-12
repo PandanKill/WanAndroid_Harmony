@@ -4,6 +4,7 @@ import SizeConstant from '../constants/SizeConstant'
 import { Message } from '../pages/ChatPage'
 import { ChatAudioView } from './ChatAudioView'
 import { promptAction } from '@kit.ArkUI'
+import itemClickManager from '../componentManager/PopupItemClickManager'
 
 /**
  * 聊天内容 View
@@ -20,8 +21,6 @@ export struct ChatItemView {
   static readonly maxWidth = 100
   //是否显示
   @State showPopup: boolean = false
-  onReferListener: (refItem: Message) => void = (refItem) => {
-  }
   //引用内容
   @State popItem: ChatPopupItem[] = []
 
@@ -181,10 +180,23 @@ export struct ChatItemView {
             } else if (this.item.textType === 3) {
               //语音
               ChatAudioView({
-                item: this.item
+                item: this.item,
+                showPopup: this.showPopup
               })
                 .margin({ top: SizeConstant.SIZE_5 })
                 .width(SizeConstant.SIZE_PERCENT_40)
+                .bindPopup(this.showPopup, {
+                  builder: this.popupCustomView(),
+                  popupColor: Color.Black,
+                  backgroundBlurStyle: BlurStyle.NONE,
+                  radius: SizeConstant.SIZE_10,
+                  onStateChange: (e) => {
+                    if (!e.isVisible) {
+                      //气泡状态
+                      this.showPopup = false
+                    }
+                  }
+                })
             }
           }
           .margin({ right: this.item.textType === 0 || this.item.textType === 3 ? 0 : SizeConstant.SIZE_10 })
@@ -314,9 +326,7 @@ export struct ChatItemView {
             }.alignItems(HorizontalAlign.Center)
             .onClick(() => {
               this.showPopup = false
-              if (item.text === '引用') {
-                this.onReferListener(this.item)
-              }
+              itemClickManager.onClickItem(item, this.item)
             })
           }
         }, (item: ChatPopupItem, index: number) => JSON.stringify(item) + index)
