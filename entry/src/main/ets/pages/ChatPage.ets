@@ -2,13 +2,12 @@ import { ChatOtherFunView } from '../component/ChatOtherFunView';
 import { EmojiListView } from '../component/EmojiListView';
 import { NavHeaderView } from '../component/NavHeaderView';
 import SizeConstant from '../constants/SizeConstant';
-import { AISpeakBean, ModelStudioStreamClient } from '../utils/TextAiRequestUtil';
 import { JSON } from '@kit.ArkTS';
 import hilog from '@ohos.hilog';
 import { componentUtils, promptAction, router, window } from '@kit.ArkUI';
 import { ChatItemView } from '../component/ChatItemView';
 import { checkFileMimeType, fileToBase64 } from '../utils/FileUtil';
-import { FileAIRequestUtil } from '../utils/PictureAIRequestUtil';
+import { FileAIStreamRequestUtil } from '../utils/FileAIRequestUtil';
 import { ItemInfo } from '@kit.MediaLibraryKit';
 import { AudioRecordView } from '../component/AudioRecordView';
 import { EventState, CustomTouchType } from '../bean/TouchType';
@@ -18,6 +17,7 @@ import { ReferenceView } from '../component/ReferenceView';
 import { checkPermissionGrant, requestPermissionForUser } from '../utils/PermissionUtil';
 import { abilityAccessCtrl, common } from '@kit.AbilityKit';
 import itemClickManager from '../componentManager/PopupItemClickManager';
+import { ModelStudioStreamClient } from '../utils/TextAiRequestUtil';
 
 @Observed
 export class Message {
@@ -167,6 +167,19 @@ struct AIChatPage {
       this.referMessage = refItem
       this.isRefer = true
     }
+
+    itemClickManager.onDeleteListener = (deleteMessage) => {
+      // 从后向前遍历，避免索引错乱
+      for (let i = this.messageArr.length - 1; i >= 0; i--) {
+        if (this.messageArr[i].id === deleteMessage.id) {
+          this.messageArr.splice(i, 1); // 删除符合条件的对象
+        }
+      }
+    }
+
+    itemClickManager.onResendListener = (message) => {
+      this.toGetAi(message.text)
+    }
   }
 
   async onPageShow(): Promise<void> {
@@ -197,9 +210,9 @@ struct AIChatPage {
   async sendVideoDataRequest(itemInfo: ItemInfo) {
     let base64Url = await fileToBase64(itemInfo.uri ?? "")
     //获取到图片信息,全模态
-    let fileAi = new FileAIRequestUtil({
+    let fileAi = new FileAIStreamRequestUtil({
       endpoint: 'https://dashscope.aliyuncs.com',
-      api_key: "",
+      api_key: "sk-c1d2d4ae26e44c61b098a719f98bc40d",
       model: 'qwen-omni-turbo',
       desText: "视频的内容是什么"
     })
@@ -217,10 +230,17 @@ struct AIChatPage {
         let ch = aiSpeakBean.choices
         if (ch !== undefined) {
           let delta = ch[0]
-          if (delta && delta.delta && delta.delta.content) {
-            let text = receiverMessage.text
-            let newText = text + delta.delta.content
-            receiverMessage.text = newText
+          if (delta && delta.delta) {
+            if (delta.delta.reasoning_content) {
+              let text = receiverMessage.text
+              let newText = text + delta.delta.reasoning_content
+              receiverMessage.text = newText
+            }
+            if (delta.delta.content) {
+              let text = receiverMessage.text
+              let newText = text + delta.delta.content
+              receiverMessage.text = newText
+            }
           }
         }
       },
@@ -240,9 +260,9 @@ struct AIChatPage {
   async sendImageDataRequest(itemInfo: ItemInfo) {
     let base64Url = await fileToBase64(itemInfo.uri ?? "")
     //获取到图片信息,全模态
-    let fileAi = new FileAIRequestUtil({
+    let fileAi = new FileAIStreamRequestUtil({
       endpoint: 'https://dashscope.aliyuncs.com',
-      api_key: "",
+      api_key: "sk-c1d2d4ae26e44c61b098a719f98bc40d",
       model: 'qwen-omni-turbo',
       desText: "图中描绘的是什么景象？"
     })
@@ -260,10 +280,17 @@ struct AIChatPage {
         let ch = aiSpeakBean.choices
         if (ch !== undefined) {
           let delta = ch[0]
-          if (delta && delta.delta && delta.delta.content) {
-            let text = receiverMessage.text
-            let newText = text + delta.delta.content
-            receiverMessage.text = newText
+          if (delta && delta.delta) {
+            if (delta.delta.reasoning_content) {
+              let text = receiverMessage.text
+              let newText = text + delta.delta.reasoning_content
+              receiverMessage.text = newText
+            }
+            if (delta.delta.content) {
+              let text = receiverMessage.text
+              let newText = text + delta.delta.content
+              receiverMessage.text = newText
+            }
           }
         }
       },
@@ -298,7 +325,7 @@ struct AIChatPage {
     message.messageType = 1
     message.textType = 0
     message.ownerName = "Owner"
-    message.id = 'send'
+    message.id = new Date().getTime().toString()
 
     return message
   }
@@ -380,9 +407,7 @@ struct AIChatPage {
                 ForEach(this.messageArr, (item: Message, index: number) => {
                   ListItem() {
                     ChatItemView({
-                      item: item, onReferListener: (refItem: Message) => {
-
-                      }
+                      item: item
                     })
                   }.width(SizeConstant.FULL_SIZE)
                   .height('auto')
@@ -692,9 +717,10 @@ struct AIChatPage {
     //""
     this.messageArr.push(this.getSendMessage(editValue))
 
+    //请求
     const client = new ModelStudioStreamClient({
       endpoint: 'https://dashscope.aliyuncs.com',
-      api_key: "",
+      api_key: "sk-c1d2d4ae26e44c61b098a719f98bc40d",
       model: 'deepseek-r1'
     });
 
@@ -710,10 +736,17 @@ struct AIChatPage {
         let ch = aiSpeakBean.choices
         if (ch !== undefined) {
           let delta = ch[0]
-          if (delta && delta.delta && delta.delta.reasoning_content) {
-            let text = receiverMessage.text
-            let newText = text + delta.delta.reasoning_content
-            receiverMessage.text = newText
+          if (delta && delta.delta) {
+            if (delta.delta.reasoning_content) {
+              let text = receiverMessage.text
+              let newText = text + delta.delta.reasoning_content
+              receiverMessage.text = newText
+            }
+            if (delta.delta.content) {
+              let text = receiverMessage.text
+              let newText = text + delta.delta.content
+              receiverMessage.text = newText
+            }
           }
         }
       },
@@ -762,5 +795,39 @@ struct AIChatPage {
   //   }
   // }
 }
+
+interface AIRequestBean {
+  model: string,
+  messages: Array<MessageBean>,
+  stream: boolean,
+  stream_options: StreamOptions
+}
+
+interface StreamOptions {
+  include_usage: boolean
+}
+
+interface MessageBean {
+  role: string,
+  content: string
+}
+
+export interface AISpeakBean {
+  choices: Array<DeltaBean | null> | undefined,
+  model: string,
+
+  //speek id
+  id: string
+}
+
+interface DeltaBean {
+  delta: DeltaContentBean
+}
+
+interface DeltaContentBean {
+  content: string | null,
+  reasoning_content: string | null
+}
+
 
 export { EventState };

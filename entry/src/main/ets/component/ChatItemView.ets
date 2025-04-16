@@ -23,6 +23,9 @@ export struct ChatItemView {
   @State showPopup: boolean = false
   //引用内容
   @State popItem: ChatPopupItem[] = []
+  //文字选中
+  @State start: number = -1
+  @State end: number = -1
 
   aboutToAppear(): void {
     //配置图片信息
@@ -95,8 +98,14 @@ export struct ChatItemView {
                 .fontSize($r('app.float.font_15'))
                 .textAlign(TextAlign.Start)
                 .copyOption(CopyOptions.InApp)
+                .selection(this.start, this.end)
+                .draggable(true)
+                .caretColor(Color.Blue/*$r('app.color.color_0DC15C')*/)
+                .selectedBackgroundColor(Color.Red/*$r('app.color.color_B9EFA4')*/)
                 .gesture(
                   LongPressGesture().onAction((event) => {
+                    this.start = 0
+                    this.end = this.item.text.length - 1
                     this.showPopup = !this.showPopup
                   })
                 )
@@ -332,9 +341,10 @@ export struct ChatItemView {
         }, (item: ChatPopupItem, index: number) => JSON.stringify(item) + index)
       }
 
-      // .columnsTemplate('1fr 1fr 1fr 1fr')
+      .columnsTemplate('1fr 1fr 1fr 1fr')
+      .rowsGap(5)
     }
-    .width(SizeConstant.SIZE_PERCENT_50)
+    .width(SizeConstant.SIZE_PERCENT_60)
     .padding({
       top: SizeConstant.SIZE_15,
       bottom: SizeConstant.SIZE_15,

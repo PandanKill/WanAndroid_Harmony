@@ -1,40 +1,8 @@
 import { http } from '@kit.NetworkKit';
-import { BusinessError } from '@kit.BasicServicesKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+import { AISpeakBean } from './TextAiRequestUtil';
 import util from '@ohos.util';
-
-interface AIRequestBean {
-  model: string,
-  messages: Array<MessageBean>,
-  stream: boolean,
-  stream_options: StreamOptions
-}
-
-interface StreamOptions {
-  include_usage: boolean
-}
-
-interface MessageBean {
-  role: string,
-  content: string
-}
-
-export interface AISpeakBean {
-  choices: Array<DeltaBean | null> | undefined,
-  model: string,
-
-  //speek id
-  id: string
-}
-
-interface DeltaBean {
-  delta: DeltaContentBean
-}
-
-interface DeltaContentBean {
-  content: string | null,
-  reasoning_content: string | null
-}
 
 /**
  * Ai Request Config
@@ -46,7 +14,38 @@ interface StreamRequestConfig {
   api_key: string
   //模型类型
   model: string
+  //描述信息
+  desText: string
 }
+
+interface MessageBean {
+  role: string,
+  content: Array<MessageBeanContent>
+}
+
+interface MessageBeanContent {
+  type: string,
+  text: string | null,
+  image_url: ImageUrlContent | null,
+  video_url: ImageUrlContent | null
+}
+
+interface ImageUrlContent {
+  url: string
+}
+
+interface StreamOptions {
+  include_usage: boolean
+}
+
+interface AIRequestBean {
+  model: string,
+  messages: Array<MessageBean>,
+  stream: boolean,
+  stream_options: StreamOptions,
+  modalities: Array<string>
+}
+
 
 /**
  * 数据回调
@@ -57,58 +56,55 @@ interface StreamResponseCallbacks {
   onComplete: () => void; // 流式结束回调
 }
 
-/**
- * 一次性读取网络数据
- *
- const client = new ModelStudioClient({
- endpoint: 'https://dashscope.aliyuncs.com',
- api_key: "",
- model: 'deepseek-r1'
- });
-
- //接收
- const receiverMessage = this.getReceiverMessage()
- receiverMessage.messageStatus = 0
- this.messageArr.push(receiverMessage)
-
- client.sendStreamRequest(this.editValue, {
- onDataReceived: (aiSpeakBean: AISpeakBean): void => {
- //加载成功
- receiverMessage.messageStatus = 1
- let ch = aiSpeakBean.choices
- if (ch !== undefined) {
- let delta = ch[0]
- if (delta && delta.delta && delta.delta.reasoning_content) {
- let text = receiverMessage.text
- let newText = text + delta.delta.reasoning_content
- receiverMessage.text = newText
- }
- }
- },
- onError: (error: Error): void => {
- receiverMessage.messageStatus = 2
- },
- onComplete: (): void => {
- //写到数据库
-
- }
- })
- */
-export class ModelStudioClient {
+export class FileAIRequestUtil {
   private config: StreamRequestConfig
 
   constructor(config: StreamRequestConfig) {
     this.config = config
   }
 
-  //请求
-  async sendOnceRequest(content: string, callback: StreamResponseCallbacks) {
+  async sendStreamRequest(urlType: string, baseUri: string, callbacks: StreamResponseCallbacks) {
     const httpSession = http.createHttp()
     try {
       const url = `${this.config.endpoint}/compatible-mode/v1/chat/completions`
-      let bean: MessageBean = {
+      let systemMessage: MessageBeanContent = {
+        type: "text",
+        text: "You are a helpful assistant.",
+        image_url: null,
+        video_url: null
+      }
+      let bean1: MessageBean = {
+        role: "system",
+        content: [systemMessage]
+      }
+
+      let userMessage1: MessageBeanContent
+      if (urlType === "image_url") {
+        userMessage1 = {
+          type: urlType,
+          image_url: { "url": baseUri },
+          text: null,
+          video_url: null
+        }
+      } else {
+        userMessage1 = {
+          type: urlType,
+          image_url: null,
+          text: null,
+          video_url: { "url": baseUri }
+        }
+      }
+
+      let userMessage2: MessageBeanContent = {
+        type: "text",
+        image_url: null,
+        text: this.config.desText,
+        video_url: null
+      }
+
+      let bean2: MessageBean = {
         role: "user",
-        content: content
+        content: [userMessage1, userMessage2]
       }
 
       let streamOption: StreamOptions = {
@@ -117,18 +113,21 @@ export class ModelStudioClient {
 
       let requestBean: AIRequestBean = {
         model: this.config.model,
-        messages: [bean],
+        messages: [bean1, bean2],
         stream: true,
         stream_options: streamOption,
+        modalities: ['text']
       }
+
+      hilog.info(0x00, "lgww", JSON.stringify(requestBean))
 
       const response = await httpSession.request(url, {
         method: http.RequestMethod.POST,
         expectDataType: http.HttpDataType.STRING,
         header: {
-          "Authorization": `Bearer ${this.config.api_key}`,
+          "Authorization": this.config.api_key,
           "Content-Type": "application/json",
-          "X-DashScope-SSE": "enable"
+          // "X-DashScope-SSE": "enable"
         },
         extraData: JSON.stringify(requestBean)
       })
@@ -137,27 +136,24 @@ export class ModelStudioClient {
       if (response.responseCode !== http.ResponseCode.OK) {
         throw new Error(`HTTP Error: ${response.responseCode}`);
       }
+      hilog.info(0x00, "lgww", response.result.toString())
 
       // 6. 处理流式响应（模拟分块读取）
-      this.processStreamResponse(response.result as string, callback);
+      this.processStreamResponse(response.result as string, callbacks);
 
       // 4. 通知流式结束
-      callback.onComplete();
+      callbacks.onComplete();
     } catch (error) {
       const err = error as BusinessError;
-      callback.onError(new Error(`请求失败: ${err.code} - ${err.message}`));
+      hilog.error(0x00, "lgww", err.message)
+      callbacks.onError(new Error(`请求失败: ${err.code} - ${err.message}`));
     } finally {
       httpSession.destroy()
     }
   }
 
-  /**
-   * 处理数据
-   * @param arg0
-   * @param callback
-   */
-  processStreamResponse(responseText: string, callback: StreamResponseCallbacks) {
-    hilog.info(0x00, "lgwwww", responseText)
+  processStreamResponse(responseText: string, callbacks: StreamResponseCallbacks) {
+    hilog.info(0x00, "lgww", responseText)
     let lines = responseText.split(/\r?\n/)
 
     lines.forEach((line, index) => {
@@ -172,29 +168,63 @@ export class ModelStudioClient {
       }
       let content = line.split("data: ")
       let aiSpeakBean = JSON.parse(content[1]) as AISpeakBean
-      callback.onDataReceived(aiSpeakBean)
+      callbacks.onDataReceived(aiSpeakBean)
     })
   }
 }
 
-
 /**
- * 流式读取
+ * 流式返回
  */
-export class ModelStudioStreamClient {
+export class FileAIStreamRequestUtil {
   private config: StreamRequestConfig
 
   constructor(config: StreamRequestConfig) {
     this.config = config
   }
 
-  sendStreamRequest(content: string, callback: StreamResponseCallbacks) {
+  sendStreamRequest(urlType: string, baseUri: string, callback: StreamResponseCallbacks) {
     const httpSession = http.createHttp()
     try {
       const url = `${this.config.endpoint}/compatible-mode/v1/chat/completions`
-      let bean: MessageBean = {
+      let systemMessage: MessageBeanContent = {
+        type: "text",
+        text: "You are a helpful assistant.",
+        image_url: null,
+        video_url: null
+      }
+      let bean1: MessageBean = {
+        role: "system",
+        content: [systemMessage]
+      }
+
+      let userMessage1: MessageBeanContent
+      if (urlType === "image_url") {
+        userMessage1 = {
+          type: urlType,
+          image_url: { "url": baseUri },
+          text: null,
+          video_url: null
+        }
+      } else {
+        userMessage1 = {
+          type: urlType,
+          image_url: null,
+          text: null,
+          video_url: { "url": baseUri }
+        }
+      }
+
+      let userMessage2: MessageBeanContent = {
+        type: "text",
+        image_url: null,
+        text: this.config.desText,
+        video_url: null
+      }
+
+      let bean2: MessageBean = {
         role: "user",
-        content: content
+        content: [userMessage1, userMessage2]
       }
 
       let streamOption: StreamOptions = {
@@ -203,9 +233,10 @@ export class ModelStudioStreamClient {
 
       let requestBean: AIRequestBean = {
         model: this.config.model,
-        messages: [bean],
+        messages: [bean1, bean2],
         stream: true,
         stream_options: streamOption,
+        modalities: ['text']
       }
 
       httpSession.on('dataReceive', (data: ArrayBuffer) => {
@@ -243,8 +274,7 @@ export class ModelStudioStreamClient {
         // 开发者根据自身业务需要添加header字段
         header: {
           "Authorization": `Bearer ${this.config.api_key}`,
-          "Content-Type": "application/json",
-          "X-DashScope-SSE": "enable"
+          "Content-Type": "application/json"
         },
         // 当使用POST请求时此字段用于传递请求体内容，具体格式与服务端协商确定
         extraData: JSON.stringify(requestBean),
@@ -269,6 +299,7 @@ export class ModelStudioStreamClient {
       }).catch((err: Error) => {
         console.info("requestInStream ERROR : err = " + JSON.stringify(err));
       });
+
     } catch (err) {
       let e = err as BusinessError
       callback.onError(new Error(`请求失败: ${e.code} - ${e.message}`))
