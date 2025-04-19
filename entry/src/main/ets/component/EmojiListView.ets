@@ -7,7 +7,7 @@ import SizeConstant from '../constants/SizeConstant'
 @Component
 export struct EmojiListView {
   private emojis: string[] = EmojiConstant.emojiArr
-  private emojiClick: (item: string) => void = (item) => {
+  emojiClick: (item: string) => void = (item) => {
   }
 
   build() {

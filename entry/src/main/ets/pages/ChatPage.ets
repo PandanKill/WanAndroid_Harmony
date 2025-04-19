@@ -7,7 +7,6 @@ import hilog from '@ohos.hilog';
 import { componentUtils, promptAction, router, window } from '@kit.ArkUI';
 import { ChatItemView } from '../component/ChatItemView';
 import { checkFileMimeType, fileToBase64 } from '../utils/FileUtil';
-import { FileAIStreamRequestUtil } from '../utils/FileAIRequestUtil';
 import { ItemInfo } from '@kit.MediaLibraryKit';
 import { AudioRecordView } from '../component/AudioRecordView';
 import { EventState, CustomTouchType } from '../bean/TouchType';
@@ -17,15 +16,22 @@ import { ReferenceView } from '../component/ReferenceView';
 import { checkPermissionGrant, requestPermissionForUser } from '../utils/PermissionUtil';
 import { abilityAccessCtrl, common } from '@kit.AbilityKit';
 import itemClickManager from '../componentManager/PopupItemClickManager';
-import { ModelStudioStreamClient } from '../utils/TextAiRequestUtil';
+import { CommonAiRequestUtil } from '../utils/CommonAiRequestUtil';
 
 @Observed
 export class Message {
+  /**
+   * 消息方
+   */
   //0 时间、1 发送方、2接收方
   messageType: number = 0
   ownerName: string = ''
+  /**
+   * 消息状态
+   */
   //0 加载中 1 显示成功 2读取失败
   messageStatus: number = 0
+  errorMessage: string = ""
   //消息类型 0 文字 1 图片 2视频 3 语音
   textType: number = 0
   text: string = ''
@@ -46,9 +52,16 @@ export class Message {
   //发送方 request_id是 send，接收方是真实 id
   id: string = ''
   //引用 id
+  referEnable: boolean = false
   referId: string = ''
   referType: number = 0
   referText: string = ''
+  /**
+   * 翻译
+   */
+  translateEnable: boolean = false
+  translateLoading: boolean = false
+  translateText: string = ''
 }
 
 @Entry
@@ -76,7 +89,7 @@ struct AIChatPage {
   @State isAudioParsing: boolean = false
   //是否存在引用
   @State isRefer: boolean = false
-  private referMessage: Message | undefined
+  private referMessage: Message | null = null
   @State recordUI: ResourceColor = Color.White
   private textAreaController: TextAreaController = new TextAreaController()
   private timeId: number = 0
@@ -208,49 +221,18 @@ struct AIChatPage {
    * @param itemInfo
    */
   async sendVideoDataRequest(itemInfo: ItemInfo) {
-    let base64Url = await fileToBase64(itemInfo.uri ?? "")
-    //获取到图片信息,全模态
-    let fileAi = new FileAIStreamRequestUtil({
-      endpoint: 'https://dashscope.aliyuncs.com',
-      api_key: "sk-c1d2d4ae26e44c61b098a719f98bc40d",
-      model: 'qwen-omni-turbo',
-      desText: "视频的内容是什么"
-    })
+    //判断上一次聊天时间小于
+    let currentMill = Date.now()
+    if (currentMill - this.lastSendMessage > 5 * 60 * 1000) {
+      this.messageArr.push(this.getDateMessage())
+    }
+
     const sendMessage = this.getSendVideoMessage(itemInfo)
     this.messageArr.push(sendMessage)
     //接收
-    const receiverMessage = this.getReceiverMessage()
-    receiverMessage.messageStatus = 0
-    this.messageArr.push(receiverMessage)
-
-    fileAi.sendStreamRequest("video_url", `data:video/mp4;base64,${base64Url}`, {
-      onDataReceived: (aiSpeakBean: AISpeakBean) => {
-        //加载成功
-        receiverMessage.messageStatus = 1
-        let ch = aiSpeakBean.choices
-        if (ch !== undefined) {
-          let delta = ch[0]
-          if (delta && delta.delta) {
-            if (delta.delta.reasoning_content) {
-              let text = receiverMessage.text
-              let newText = text + delta.delta.reasoning_content
-              receiverMessage.text = newText
-            }
-            if (delta.delta.content) {
-              let text = receiverMessage.text
-              let newText = text + delta.delta.content
-              receiverMessage.text = newText
-            }
-          }
-        }
-      },
-      onError: (err) => {
-        receiverMessage.messageStatus = 2
-      },
-      onComplete: () => {
-
-      }
-    })
+    // const receiverMessage = this.getReceiverMessage()
+    // receiverMessage.messageStatus = 0
+    // this.messageArr.push(receiverMessage)
   }
 
   /**
@@ -258,49 +240,18 @@ struct AIChatPage {
    * @param itemInfo
    */
   async sendImageDataRequest(itemInfo: ItemInfo) {
-    let base64Url = await fileToBase64(itemInfo.uri ?? "")
-    //获取到图片信息,全模态
-    let fileAi = new FileAIStreamRequestUtil({
-      endpoint: 'https://dashscope.aliyuncs.com',
-      api_key: "sk-c1d2d4ae26e44c61b098a719f98bc40d",
-      model: 'qwen-omni-turbo',
-      desText: "图中描绘的是什么景象？"
-    })
+    //判断上一次聊天时间小于
+    let currentMill = Date.now()
+    if (currentMill - this.lastSendMessage > 5 * 60 * 1000) {
+      this.messageArr.push(this.getDateMessage())
+    }
+
     const sendMessage = this.getSendPicMessage(itemInfo)
     this.messageArr.push(sendMessage)
     //接收
-    const receiverMessage = this.getReceiverMessage()
-    receiverMessage.messageStatus = 0
-    this.messageArr.push(receiverMessage)
-
-    fileAi.sendStreamRequest("image_url", `data:image/png;base64,${base64Url}`, {
-      onDataReceived: (aiSpeakBean: AISpeakBean) => {
-        //加载成功
-        receiverMessage.messageStatus = 1
-        let ch = aiSpeakBean.choices
-        if (ch !== undefined) {
-          let delta = ch[0]
-          if (delta && delta.delta) {
-            if (delta.delta.reasoning_content) {
-              let text = receiverMessage.text
-              let newText = text + delta.delta.reasoning_content
-              receiverMessage.text = newText
-            }
-            if (delta.delta.content) {
-              let text = receiverMessage.text
-              let newText = text + delta.delta.content
-              receiverMessage.text = newText
-            }
-          }
-        }
-      },
-      onError: (err) => {
-        receiverMessage.messageStatus = 2
-      },
-      onComplete: () => {
-
-      }
-    })
+    // const receiverMessage = this.getReceiverMessage()
+    // receiverMessage.messageStatus = 0
+    // this.messageArr.push(receiverMessage)
   }
 
   /**
@@ -508,9 +459,10 @@ struct AIChatPage {
                     if (this.isRefer) {
                       ReferenceView({
                         referenceOwner: this.referMessage?.ownerName,
-                        referenceText: this.getShowReferText(this.referMessage),
+                        referenceText: this.getShowReferText(this.referMessage!),
                         onCancel: () => {
                           this.isRefer = false
+                          this.referMessage = null
                         }
                       }).width(SizeConstant.SIZE_PERCENT_65)
                         .margin({ left: SizeConstant.SIZE_10 })
@@ -673,11 +625,11 @@ struct AIChatPage {
    * @param text
    * @returns
    */
-  getShowReferText(refMsg: Message | undefined): string | undefined {
+  getShowReferText(refMsg: Message | undefined): string {
     if (refMsg === undefined) {
-      return undefined
+      return ""
     }
-    let tempRef: string | undefined
+    let tempRef: string
     switch (refMsg.textType) {
       case 0:
         tempRef = refMsg.text
@@ -692,7 +644,7 @@ struct AIChatPage {
         tempRef = `[语音] ${refMsg.audioTime}"`
         break
       default:
-        tempRef = undefined
+        tempRef = ""
         break
     }
 
@@ -715,10 +667,20 @@ struct AIChatPage {
       this.messageArr.push(this.getDateMessage())
     }
     //""
-    this.messageArr.push(this.getSendMessage(editValue))
+    let sendMessage = this.getSendMessage(editValue)
+    if (this.isRefer && this.referMessage) {
+      sendMessage.referEnable = true
+      sendMessage.referId = this.referMessage.id
+      sendMessage.referType = this.referMessage.textType
+      sendMessage.referText = this.getShowReferText(this.referMessage!)
+    }
+    this.messageArr.push(sendMessage)
+    //重置引用
+    this.isRefer = false
+    this.referMessage = null
 
     //请求
-    const client = new ModelStudioStreamClient({
+    const client = new CommonAiRequestUtil({
       endpoint: 'https://dashscope.aliyuncs.com',
       api_key: "sk-c1d2d4ae26e44c61b098a719f98bc40d",
       model: 'deepseek-r1'
@@ -729,7 +691,7 @@ struct AIChatPage {
     receiverMessage.messageStatus = 0
     this.messageArr.push(receiverMessage)
 
-    client.sendStreamRequest(this.editValue, {
+    client.sendStreamRequest(client.getTextJsonContent(this.editValue), {
       onDataReceived: (aiSpeakBean: AISpeakBean): void => {
         //加载成功
         receiverMessage.messageStatus = 1
@@ -752,6 +714,7 @@ struct AIChatPage {
       },
       onError: (error: Error): void => {
         receiverMessage.messageStatus = 2
+        receiverMessage.errorMessage = error.message
       },
       onComplete: (): void => {
         //写到数据库

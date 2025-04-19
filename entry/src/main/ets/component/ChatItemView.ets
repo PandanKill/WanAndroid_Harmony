@@ -5,6 +5,8 @@ import { Message } from '../pages/ChatPage'
 import { ChatAudioView } from './ChatAudioView'
 import { promptAction } from '@kit.ArkUI'
 import itemClickManager from '../componentManager/PopupItemClickManager'
+import { TranslateView } from './TranslateView'
+import { ReferenceChatView } from './ReferenceChatView'
 
 /**
  * 聊天内容 View
@@ -103,11 +105,18 @@ export struct ChatItemView {
                 .caretColor(Color.Blue/*$r('app.color.color_0DC15C')*/)
                 .selectedBackgroundColor(Color.Red/*$r('app.color.color_B9EFA4')*/)
                 .gesture(
-                  LongPressGesture().onAction((event) => {
-                    this.start = 0
-                    this.end = this.item.text.length - 1
-                    this.showPopup = !this.showPopup
-                  })
+                  GestureGroup(
+                    GestureMode.Parallel,
+                    LongPressGesture().onAction((event) => {
+                      this.start = 0
+                      this.end = this.item.text.length - 1
+                      this.showPopup = !this.showPopup
+                    }),
+                    TapGesture({ count: 2 }).onAction((event) => {
+                      //双击
+                    })
+                  )
+
                 )
                 .bindPopup(this.showPopup, {
                   builder: this.popupCustomView(),
@@ -207,7 +216,23 @@ export struct ChatItemView {
                   }
                 })
             }
+
+            //翻译
+            if (this.item.translateEnable) {
+              //展示翻译内容
+              TranslateView({
+                isLoading: this.item.translateLoading,
+                translateText: this.item.translateText
+              })
+            }
+            if (this.item.referEnable) {
+              //展示引用信息
+              ReferenceChatView({
+                referText: this.item.referText
+              })
+            }
           }
+          .alignItems(HorizontalAlign.End)
           .margin({ right: this.item.textType === 0 || this.item.textType === 3 ? 0 : SizeConstant.SIZE_10 })
 
           if (this.item.textType === 0 || this.item.textType === 3) {
@@ -285,7 +310,7 @@ export struct ChatItemView {
                 .copyOption(CopyOptions.InApp)
             } else {
               //加载失败
-              Text("服务器繁忙，请稍后再试。")
+              Text(this.item.errorMessage)
                 .backgroundColor($r('app.color.color_FFFFFF'))
                 .constraintSize({ maxWidth: SizeConstant.SIZE_PERCENT_60 })
                 .borderRadius(SizeConstant.SIZE_5)
@@ -297,7 +322,6 @@ export struct ChatItemView {
                 .textAlign(TextAlign.Start)
                 .copyOption(CopyOptions.InApp)
             }
-
           }.alignItems(HorizontalAlign.Start)
 
         }.width(SizeConstant.FULL_SIZE)

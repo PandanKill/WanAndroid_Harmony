@@ -44,11 +44,11 @@ export class GeneralPopupItemConstant {
   ]
   //音频相关
   static readonly AudioCommonItem: ChatPopupItem[] = [
-    {
-      icon: $r('app.media.icon_tuili'),
-      text: '语音推理',
-      itemId: 7
-    },
+  // {
+  //   icon: $r('app.media.icon_tuili'),
+  //   text: '语音推理',
+  //   itemId: 7
+  // },
     {
       icon: $r('app.media.icon_lijie'),
       text: '语音理解',
@@ -85,7 +85,7 @@ export class GeneralPopupItemConstant {
       text: '复制',
       itemId: 13
     },
-    //引用
+    //多轮对话
     {
       icon: $r('app.media.icon_ref'),
       text: '引用',

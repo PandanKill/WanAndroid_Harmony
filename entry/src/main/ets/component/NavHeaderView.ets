@@ -4,13 +4,13 @@ import { router } from '@kit.ArkUI'
 @Component
 export struct NavHeaderView {
   //标题
-  private title: string | Resource = ''
+  title: string | Resource = ''
   //菜单
-  private menu: Resource | string = $r('app.media.login')
+  menu: Resource | string = $r('app.media.login')
   @StorageProp('topRectHeight') topRectHeight: number = 0
   //是否显示返回按键
   private isShowBack: boolean = true
-  private isShowMenu: boolean = false
+  isShowMenu: boolean = false
   private backRule: Record<string, Record<string, string | VerticalAlign | HorizontalAlign>> = {
     'left': { 'anchor': '__container__', 'align': HorizontalAlign.Start },
     'center': { 'anchor': '__container__', 'align': VerticalAlign.Center }
@@ -24,7 +24,7 @@ export struct NavHeaderView {
     center: { 'anchor': '__container__', 'align': VerticalAlign.Center }
   }
   //菜单点击
-  private onMenuClick: () => void = () => {
+  onMenuClick: () => void = () => {
 
   }
 
