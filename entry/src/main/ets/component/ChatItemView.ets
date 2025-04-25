@@ -14,6 +14,10 @@ import { ReferenceChatView } from './ReferenceChatView'
 @Component
 export struct ChatItemView {
   @ObjectLink item: Message
+  @Link chatTextDetailContent: boolean
+  @Link chatPicDetailContent: boolean
+  @Link chatVideoDetailContent: boolean
+  @Link detailMessage: Message | null
   //图片的宽高
   @State picWidth: number = 0
   @State picHeight: number = 0
@@ -99,11 +103,8 @@ export struct ChatItemView {
                 .padding(SizeConstant.SIZE_10)
                 .fontSize($r('app.float.font_15'))
                 .textAlign(TextAlign.Start)
-                .copyOption(CopyOptions.InApp)
-                .selection(this.start, this.end)
+                .copyOption(CopyOptions.None)
                 .draggable(true)
-                .caretColor(Color.Blue/*$r('app.color.color_0DC15C')*/)
-                .selectedBackgroundColor(Color.Red/*$r('app.color.color_B9EFA4')*/)
                 .gesture(
                   GestureGroup(
                     GestureMode.Parallel,
@@ -113,7 +114,14 @@ export struct ChatItemView {
                       this.showPopup = !this.showPopup
                     }),
                     TapGesture({ count: 2 }).onAction((event) => {
-                      //双击
+                      //双击,展示详情页
+                      this.detailMessage = this.item
+                      this.getUIContext().animateTo({
+                        duration: 150,
+                        curve: Curve.Linear
+                      }, () => {
+                        this.chatTextDetailContent = true
+                      })
                     })
                   )
 
@@ -142,9 +150,16 @@ export struct ChatItemView {
                 .height(this.picHeight)//移除自带的拖拽事件
                 .draggable(false)
                 .gesture(
-                  LongPressGesture({ repeat: false }).onAction((event) => {
-                    this.showPopup = !this.showPopup
-                  })
+                  GestureGroup(
+                    GestureMode.Parallel,
+                    LongPressGesture({ repeat: false }).onAction((event) => {
+                      this.showPopup = !this.showPopup
+                    }),
+                    TapGesture({ count: 1 }).onAction((event) => {
+                      this.detailMessage = this.item
+                      this.chatPicDetailContent = true
+                    })
+                  )
                 )
                 .bindPopup(this.showPopup, {
                   builder: this.popupCustomView(),
@@ -179,9 +194,15 @@ export struct ChatItemView {
               .borderColor(Color.Gray)
               .borderWidth(1)
               .gesture(
-                LongPressGesture().onAction((event) => {
-                  this.showPopup = !this.showPopup
-                })
+                GestureGroup(GestureMode.Parallel,
+                  LongPressGesture().onAction((event) => {
+                    this.showPopup = !this.showPopup
+                  }),
+                  TapGesture({ count: 1 }).onAction((event) => {
+                    this.detailMessage = this.item
+                    this.chatVideoDetailContent = true
+                  })
+                )
               )
               .bindPopup(this.showPopup, {
                 builder: this.popupCustomView(),
