@@ -98,7 +98,6 @@ struct AIChatPage {
   @State chatPicDetailContent: boolean = false
   //视频详情模态页面
   @State chatVideoDetailContent: boolean = false
-  @State detailMessage: Message | null = null
   //引用消息
   private referMessage: Message | null = null
   @State recordUI: ResourceColor = Color.White
@@ -370,10 +369,6 @@ struct AIChatPage {
                   ForEach(this.messageArr, (item: Message, index: number) => {
                     ListItem() {
                       ChatItemView({
-                        chatTextDetailContent: this.chatTextDetailContent,
-                        chatPicDetailContent: this.chatPicDetailContent,
-                        chatVideoDetailContent: this.chatVideoDetailContent,
-                        detailMessage: this.detailMessage,
                         item: item
                       })
                     }.width(SizeConstant.FULL_SIZE)
@@ -639,24 +634,6 @@ struct AIChatPage {
             .layoutWeight(1)
           }.width(SizeConstant.FULL_SIZE)
           .height(SizeConstant.FULL_SIZE)
-
-          if (this.chatTextDetailContent) {
-            //文字详情页
-            ChatTextDetailContent({
-              detailMessage:this.detailMessage,
-              chatTextDetailContent:this.chatTextDetailContent
-            })
-          }
-
-          if (this.chatPicDetailContent) {
-            //图片详情页
-            ChatPicDetailContent()
-          }
-
-          if (this.chatVideoDetailContent) {
-            //视频详情页
-            ChatVideoDetailContent()
-          }
         }.width(SizeConstant.FULL_SIZE)
         .height(SizeConstant.FULL_SIZE)
       }.mode(NavigationMode.Stack)

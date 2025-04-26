@@ -7,6 +7,8 @@ import { promptAction } from '@kit.ArkUI'
 import itemClickManager from '../componentManager/PopupItemClickManager'
 import { TranslateView } from './TranslateView'
 import { ReferenceChatView } from './ReferenceChatView'
+import { ChatTextDetailContent } from './ChatTextDetailContent'
+import { ChatPicDetailContent } from './ChatPicDetailContent'
 
 /**
  * 聊天内容 View
@@ -14,19 +16,20 @@ import { ReferenceChatView } from './ReferenceChatView'
 @Component
 export struct ChatItemView {
   @ObjectLink item: Message
-  @Link chatTextDetailContent: boolean
-  @Link chatPicDetailContent: boolean
-  @Link chatVideoDetailContent: boolean
-  @Link detailMessage: Message | null
   //图片的宽高
   @State picWidth: number = 0
   @State picHeight: number = 0
+  //视频时长
   @State videoTime: string = ''
   //最大值
   static readonly maxHeight = 150
   static readonly maxWidth = 100
   //是否显示
   @State showPopup: boolean = false
+  //是否显示全屏模态
+  @State showTextContent: boolean = false
+  @State showPicContent: boolean = false
+  @State showVideoContent: boolean = false
   //引用内容
   @State popItem: ChatPopupItem[] = []
   //文字选中
@@ -41,12 +44,10 @@ export struct ChatItemView {
         //高大于宽
         this.picHeight = ChatItemView.maxHeight
         this.picWidth = ChatItemView.maxHeight * this.item.imageWidth / this.item.imageHeight
-        console.info(`lgwww ${this.picWidth}`)
       } else {
         //宽大于高
         this.picWidth = ChatItemView.maxWidth
         this.picHeight = ChatItemView.maxWidth * this.item.imageHeight / this.item.imageWidth
-        console.info(`lgwww ${this.picHeight}`)
       }
     } else if (this.item.textType === 2) {
       //视频
@@ -115,13 +116,7 @@ export struct ChatItemView {
                     }),
                     TapGesture({ count: 2 }).onAction((event) => {
                       //双击,展示详情页
-                      this.detailMessage = this.item
-                      this.getUIContext().animateTo({
-                        duration: 150,
-                        curve: Curve.Linear
-                      }, () => {
-                        this.chatTextDetailContent = true
-                      })
+                      this.showTextContent = true
                     })
                   )
 
@@ -136,6 +131,11 @@ export struct ChatItemView {
                       //气泡状态
                       this.showPopup = false
                     }
+                  }
+                })
+                .bindContentCover(this.showTextContent, this.contentTextCover(this.item), {
+                  onDisappear: () => {
+                    this.showTextContent = false
                   }
                 })
             } else if (this.item.textType === 1) {
@@ -156,8 +156,7 @@ export struct ChatItemView {
                       this.showPopup = !this.showPopup
                     }),
                     TapGesture({ count: 1 }).onAction((event) => {
-                      this.detailMessage = this.item
-                      this.chatPicDetailContent = true
+                      this.showPicContent = true
                     })
                   )
                 )
@@ -171,6 +170,11 @@ export struct ChatItemView {
                       //气泡状态
                       this.showPopup = false
                     }
+                  }
+                })
+                .bindContentCover(this.showPicContent, this.contentPicCover(this.item), {
+                  onDisappear: () => {
+                    this.showPicContent = false
                   }
                 })
             } else if (this.item.textType === 2) {
@@ -199,8 +203,7 @@ export struct ChatItemView {
                     this.showPopup = !this.showPopup
                   }),
                   TapGesture({ count: 1 }).onAction((event) => {
-                    this.detailMessage = this.item
-                    this.chatVideoDetailContent = true
+                    this.showVideoContent = true
                   })
                 )
               )
@@ -214,6 +217,11 @@ export struct ChatItemView {
                     //气泡状态
                     this.showPopup = false
                   }
+                }
+              })
+              .bindContentCover(this.showVideoContent, this.contentVideoCover(), {
+                onDisappear: () => {
+                  this.showVideoContent = false
                 }
               })
             } else if (this.item.textType === 3) {
@@ -328,7 +336,17 @@ export struct ChatItemView {
                 .height('auto')
                 .fontSize($r('app.float.font_15'))
                 .textAlign(TextAlign.Start)
-                .copyOption(CopyOptions.InApp)
+                .copyOption(CopyOptions.None)
+                .gesture(
+                  TapGesture({ count: 2 }).onAction((event) => {
+                    this.showTextContent = true
+                  })
+                )
+                .bindContentCover(this.showTextContent, this.contentTextCover(this.item), {
+                  onDisappear: () => {
+                    this.showTextContent = false
+                  }
+                })
             } else {
               //加载失败
               Text(this.item.errorMessage)
@@ -396,5 +414,42 @@ export struct ChatItemView {
       left: SizeConstant.SIZE_10,
       right: SizeConstant.SIZE_10
     })
+  }
+
+  /**
+   * 文字模态页面
+   */
+  @Builder
+  contentTextCover(message: Message) {
+    //文字详情页
+    ChatTextDetailContent({
+      detailMessage: message,
+      chatTextDetailContent: this.showTextContent
+    }).width(SizeConstant.FULL_SIZE)
+      .height(SizeConstant.FULL_SIZE)
+  }
+
+  /**
+   * 图片模态页面
+   */
+  @Builder
+  contentPicCover(message: Message) {
+    ChatPicDetailContent({
+      detailMessage: message,
+      chatPicDetailContent: this.showPicContent
+    }).width(SizeConstant.FULL_SIZE)
+      .height(SizeConstant.FULL_SIZE)
+  }
+
+  /**
+   * 视频模态页面
+   */
+  @Builder
+  contentVideoCover() {
+    Stack() {
+      Text("你好 我是模态")
+    }.width(SizeConstant.FULL_SIZE)
+    .height(SizeConstant.FULL_SIZE)
+    .backgroundColor(Color.White)
   }
 }

@@ -10,6 +10,7 @@ import { fileToBase64 } from "../utils/FileUtil";
 /**
  * 聊天 Item 点击
  */
+@Observed
 class PopupItemClickManager {
   /**
    * 使用回调可以
@@ -266,7 +267,8 @@ class PopupItemClickManager {
       api_key: "sk-c1d2d4ae26e44c61b098a719f98bc40d"
     })
 
-    client.sendStreamRequest(client.getPicReasoningJsonContent("image_url", `data:image/png;base64,${base64Url}`, "这道题怎么解答？"), {
+    client.sendStreamRequest(client.getPicReasoningJsonContent("image_url", `data:image/png;base64,${base64Url}`,
+      "这道题怎么解答？"), {
       onDataReceived: (aiSpeakBean: AISpeakBean) => {
         console.info(`onPicReasoning data: ${JSON.stringify(aiSpeakBean)}`)
       },

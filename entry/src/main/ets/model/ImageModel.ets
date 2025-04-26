@@ -1,0 +1,3 @@
+@Observed
+export class ImageModel {
+}

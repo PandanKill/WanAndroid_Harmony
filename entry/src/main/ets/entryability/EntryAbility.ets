@@ -47,6 +47,12 @@ export default class EntryAbility extends UIAbility {
       let navHeight = window1.getWindowAvoidArea(window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR).bottomRect.height
       AppStorage.setOrCreate("navHeight", navHeight)
 
+      let winRect = window1.getWindowProperties().windowRect
+      let winWidth = winRect.width
+      let winHeight = winRect.height
+      AppStorage.setOrCreate("winWidth", winWidth)
+      AppStorage.setOrCreate("winHeight", winHeight)
+
       //获取状态栏高度
       let statusHeight = window1.getWindowAvoidArea(window.AvoidAreaType.TYPE_SYSTEM).topRect.height
       AppStorage.setOrCreate('topRectHeight', statusHeight);
@@ -113,6 +119,8 @@ export default class EntryAbility extends UIAbility {
   onWindowStageDestroy(): void {
     // Main window is destroyed, release UI related resources
     hilog.info(0x0000, 'testTag', '%{public}s', 'Ability onWindowStageDestroy');
+    this.window?.off('avoidAreaChange')
+    this.window?.off('windowSizeChange')
   }
 
   onForeground(): void {
