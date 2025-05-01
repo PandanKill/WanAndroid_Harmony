@@ -17,9 +17,6 @@ import { checkPermissionGrant, requestPermissionForUser } from '../utils/Permiss
 import { abilityAccessCtrl, common } from '@kit.AbilityKit';
 import itemClickManager from '../componentManager/PopupItemClickManager';
 import { CommonAiRequestUtil } from '../utils/CommonAiRequestUtil';
-import { ChatTextDetailContent } from '../component/ChatTextDetailContent';
-import { ChatPicDetailContent } from '../component/ChatPicDetailContent';
-import { ChatVideoDetailContent } from '../component/ChatVideoDetailContent';
 
 @Observed
 export class Message {
@@ -92,12 +89,6 @@ struct AIChatPage {
   @State isAudioParsing: boolean = false
   //是否存在引用
   @State isRefer: boolean = false
-  //文字详情模态页面
-  @State chatTextDetailContent: boolean = false
-  //图片详情模态页面
-  @State chatPicDetailContent: boolean = false
-  //视频详情模态页面
-  @State chatVideoDetailContent: boolean = false
   //引用消息
   private referMessage: Message | null = null
   @State recordUI: ResourceColor = Color.White

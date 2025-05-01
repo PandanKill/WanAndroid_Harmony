@@ -9,6 +9,10 @@ import { TranslateView } from './TranslateView'
 import { ReferenceChatView } from './ReferenceChatView'
 import { ChatTextDetailContent } from './ChatTextDetailContent'
 import { ChatPicDetailContent } from './ChatPicDetailContent'
+import { image } from '@kit.ImageKit'
+import { getFetchFrameByTime } from '../utils/CommonUtils'
+import { BusinessError } from '@kit.BasicServicesKit'
+import { ChatVideoDetailContent } from './ChatVideoDetailContent'
 
 /**
  * 聊天内容 View
@@ -35,8 +39,9 @@ export struct ChatItemView {
   //文字选中
   @State start: number = -1
   @State end: number = -1
+  @State bgPixel: image.PixelMap | undefined | Resource = undefined
 
-  aboutToAppear(): void {
+  aboutToAppear() {
     //配置图片信息
     if (this.item.textType === 1) {
       this.popItem = [...GeneralPopupItemConstant.CommonItem, ...GeneralPopupItemConstant.PicCommonItem]
@@ -69,6 +74,18 @@ export struct ChatItemView {
         this.picHeight = ChatItemView.maxWidth * this.item.videoCapHeight / this.item.videoCapWidth
         console.info(`lgwww ${this.picHeight}`)
       }
+
+      //获取缩略图
+      getFetchFrameByTime(0, this.item.videoUri, vp2px(this.picWidth), vp2px(this.picHeight))
+        .then((pix: image.PixelMap) => {
+          this.bgPixel = pix
+        })
+        .catch((err: BusinessError) => {
+          if (err) {
+            console.error(err.message)
+            this.bgPixel = $r('app.media.pre')
+          }
+        })
     } else if (this.item.textType === 0) {
       //文字
       this.popItem = [...GeneralPopupItemConstant.CommonItem, ...GeneralPopupItemConstant.TextCommonItem]
@@ -81,293 +98,13 @@ export struct ChatItemView {
   build() {
     Column() {
       if (this.item.messageType === 1) {
-        //横向布局
-        Row() {
-          Blank()
-          //内容
-          Column() {
-            if (this.item.ownerName !== '') {
-              Text(this.item.ownerName)
-                .fontColor($r('app.color.color_7B7B7B'))
-                .fontSize($r('app.float.font_10'))
-                .alignSelf(ItemAlign.End)
-            }
-            if (this.item.textType === 0) {
-              //发送方是文字
-              Text(this.item.text)
-                .backgroundColor($r('app.color.color_95EC69'))
-                .constraintSize({ maxWidth: SizeConstant.SIZE_PERCENT_60 })
-                .borderRadius(SizeConstant.SIZE_5)
-                .fontColor(Color.Black)
-                .margin({ top: SizeConstant.SIZE_5 })
-                .height('auto')
-                .padding(SizeConstant.SIZE_10)
-                .fontSize($r('app.float.font_15'))
-                .textAlign(TextAlign.Start)
-                .copyOption(CopyOptions.None)
-                .draggable(true)
-                .gesture(
-                  GestureGroup(
-                    GestureMode.Parallel,
-                    LongPressGesture().onAction((event) => {
-                      this.start = 0
-                      this.end = this.item.text.length - 1
-                      this.showPopup = !this.showPopup
-                    }),
-                    TapGesture({ count: 2 }).onAction((event) => {
-                      //双击,展示详情页
-                      this.showTextContent = true
-                    })
-                  )
-
-                )
-                .bindPopup(this.showPopup, {
-                  builder: this.popupCustomView(),
-                  popupColor: $r('app.color.color_4C4C4C'),
-                  backgroundBlurStyle: BlurStyle.NONE,
-                  radius: SizeConstant.SIZE_10,
-                  onStateChange: (e) => {
-                    if (!e.isVisible) {
-                      //气泡状态
-                      this.showPopup = false
-                    }
-                  }
-                })
-                .bindContentCover(this.showTextContent, this.contentTextCover(this.item), {
-                  onDisappear: () => {
-                    this.showTextContent = false
-                  }
-                })
-            } else if (this.item.textType === 1) {
-              //图片
-              Image(this.item.imageUri)
-                .borderRadius(SizeConstant.SIZE_5)
-                .backgroundColor($r('app.color.color_95EC69'))
-                .borderWidth(1)
-                .borderColor(Color.Gray)
-                .objectFit(ImageFit.Contain)
-                .width(this.picWidth)
-                .height(this.picHeight)//移除自带的拖拽事件
-                .draggable(false)
-                .gesture(
-                  GestureGroup(
-                    GestureMode.Parallel,
-                    LongPressGesture({ repeat: false }).onAction((event) => {
-                      this.showPopup = !this.showPopup
-                    }),
-                    TapGesture({ count: 1 }).onAction((event) => {
-                      this.showPicContent = true
-                    })
-                  )
-                )
-                .bindPopup(this.showPopup, {
-                  builder: this.popupCustomView(),
-                  popupColor: Color.Black,
-                  backgroundBlurStyle: BlurStyle.NONE,
-                  radius: SizeConstant.SIZE_10,
-                  onStateChange: (e) => {
-                    if (!e.isVisible) {
-                      //气泡状态
-                      this.showPopup = false
-                    }
-                  }
-                })
-                .bindContentCover(this.showPicContent, this.contentPicCover(this.item), {
-                  onDisappear: () => {
-                    this.showPicContent = false
-                  }
-                })
-            } else if (this.item.textType === 2) {
-              //视频
-              Stack() {
-                Image($r('app.media.icon_play'))
-                  .width(SizeConstant.SIZE_50)
-                  .aspectRatio(1)
-                  .align(Alignment.Center)
-
-                Text(this.videoTime)
-                  .fontSize($r('app.float.font_8'))
-                  .fontColor(Color.White)
-                  .align(Alignment.BottomEnd)
-                  .margin({ bottom: SizeConstant.SIZE_2, right: SizeConstant.SIZE_2 })
-              }
-              .width(this.picWidth)
-              .height(this.picHeight)
-              .backgroundColor(Color.Black)
-              .borderRadius(SizeConstant.SIZE_5)
-              .borderColor(Color.Gray)
-              .borderWidth(1)
-              .gesture(
-                GestureGroup(GestureMode.Parallel,
-                  LongPressGesture().onAction((event) => {
-                    this.showPopup = !this.showPopup
-                  }),
-                  TapGesture({ count: 1 }).onAction((event) => {
-                    this.showVideoContent = true
-                  })
-                )
-              )
-              .bindPopup(this.showPopup, {
-                builder: this.popupCustomView(),
-                popupColor: Color.Black,
-                backgroundBlurStyle: BlurStyle.NONE,
-                radius: SizeConstant.SIZE_10,
-                onStateChange: (e) => {
-                  if (!e.isVisible) {
-                    //气泡状态
-                    this.showPopup = false
-                  }
-                }
-              })
-              .bindContentCover(this.showVideoContent, this.contentVideoCover(), {
-                onDisappear: () => {
-                  this.showVideoContent = false
-                }
-              })
-            } else if (this.item.textType === 3) {
-              //语音
-              ChatAudioView({
-                item: this.item,
-                showPopup: this.showPopup
-              })
-                .margin({ top: SizeConstant.SIZE_5 })
-                .width(SizeConstant.SIZE_PERCENT_40)
-                .bindPopup(this.showPopup, {
-                  builder: this.popupCustomView(),
-                  popupColor: Color.Black,
-                  backgroundBlurStyle: BlurStyle.NONE,
-                  radius: SizeConstant.SIZE_10,
-                  onStateChange: (e) => {
-                    if (!e.isVisible) {
-                      //气泡状态
-                      this.showPopup = false
-                    }
-                  }
-                })
-            }
-
-            //翻译
-            if (this.item.translateEnable) {
-              //展示翻译内容
-              TranslateView({
-                isLoading: this.item.translateLoading,
-                translateText: this.item.translateText
-              })
-            }
-            if (this.item.referEnable) {
-              //展示引用信息
-              ReferenceChatView({
-                referText: this.item.referText
-              })
-            }
-          }
-          .alignItems(HorizontalAlign.End)
-          .margin({ right: this.item.textType === 0 || this.item.textType === 3 ? 0 : SizeConstant.SIZE_10 })
-
-          if (this.item.textType === 0 || this.item.textType === 3) {
-            Shape() {
-              Path()
-                .commands('M0 100 L15 115 L0 130 Z')
-                .fill($r('app.color.color_95EC69'))
-                .strokeOpacity(0)
-            }.margin({ right: SizeConstant.SIZE_10 })
-          }
-
-          Image(this.item.ownerIcon)
-            .width(SizeConstant.SIZE_40)
-            .height(SizeConstant.SIZE_40)
-            .objectFit(ImageFit.Cover)
-            .borderRadius(SizeConstant.SIZE_5)
-            .margin({ right: SizeConstant.SIZE_15 })
-            .id("sendIconId")
-            .backgroundColor(Color.Black)
-        }.width(SizeConstant.FULL_SIZE)
-        .alignItems(VerticalAlign.Top)
-        .margin({ top: SizeConstant.SIZE_5, bottom: SizeConstant.SIZE_5 })
-        .height('auto')
+        //发送方
+        this.sendMessageItem()
       } else if (this.item.messageType === 2) {
-
-        Row() {
-          Image(this.item.ownerIcon)
-            .width(SizeConstant.SIZE_40)
-            .height(SizeConstant.SIZE_40)
-            .borderRadius(SizeConstant.SIZE_5)
-            .objectFit(ImageFit.Cover)
-            .margin({ left: SizeConstant.SIZE_15 })
-            .id("receiverIconId")
-            .backgroundColor(Color.Black)
-
-          Shape() {
-            Path()
-              .commands('M15 100 L0 115 L15 130 Z')
-              .fill($r('app.color.color_FFFFFF'))
-              .strokeOpacity(0)
-          }.margin({ left: SizeConstant.SIZE_10 })
-
-          Column() {
-            if (this.item.ownerName !== '') {
-              Text(this.item.ownerName)
-                .fontColor($r('app.color.color_7B7B7B'))
-                .fontSize($r('app.float.font_10'))
-                .alignSelf(ItemAlign.Start)
-            }
-            if (this.item.messageStatus == 0) {
-              //加载中
-              Text("数据加载中。")
-                .backgroundColor($r('app.color.color_FFFFFF'))
-                .constraintSize({ maxWidth: SizeConstant.SIZE_PERCENT_60 })
-                .borderRadius(SizeConstant.SIZE_5)
-                .fontColor(Color.Black)
-                .padding(SizeConstant.SIZE_10)
-                .margin({ top: SizeConstant.SIZE_5 })
-                .height('auto')
-                .fontSize($r('app.float.font_15'))
-                .textAlign(TextAlign.Start)
-                .copyOption(CopyOptions.InApp)
-            } else if (this.item.messageStatus == 1) {
-              //加载成功
-              Text(this.item.text)
-                .backgroundColor($r('app.color.color_FFFFFF'))
-                .constraintSize({ maxWidth: SizeConstant.SIZE_PERCENT_60 })
-                .borderRadius(SizeConstant.SIZE_5)
-                .fontColor(Color.Black)
-                .padding(SizeConstant.SIZE_10)
-                .margin({ top: SizeConstant.SIZE_5 })
-                .height('auto')
-                .fontSize($r('app.float.font_15'))
-                .textAlign(TextAlign.Start)
-                .copyOption(CopyOptions.None)
-                .gesture(
-                  TapGesture({ count: 2 }).onAction((event) => {
-                    this.showTextContent = true
-                  })
-                )
-                .bindContentCover(this.showTextContent, this.contentTextCover(this.item), {
-                  onDisappear: () => {
-                    this.showTextContent = false
-                  }
-                })
-            } else {
-              //加载失败
-              Text(this.item.errorMessage)
-                .backgroundColor($r('app.color.color_FFFFFF'))
-                .constraintSize({ maxWidth: SizeConstant.SIZE_PERCENT_60 })
-                .borderRadius(SizeConstant.SIZE_5)
-                .fontColor(Color.Black)
-                .padding(SizeConstant.SIZE_10)
-                .margin({ top: SizeConstant.SIZE_5 })
-                .height('auto')
-                .fontSize($r('app.float.font_15'))
-                .textAlign(TextAlign.Start)
-                .copyOption(CopyOptions.InApp)
-            }
-          }.alignItems(HorizontalAlign.Start)
-
-        }.width(SizeConstant.FULL_SIZE)
-        .margin({ top: SizeConstant.SIZE_5, bottom: SizeConstant.SIZE_5 })
-        .alignItems(VerticalAlign.Top)
-        .height('auto')
+        //接收方
+        this.receiverMessageItem()
       } else {
+        //时间
         Column() {
           Text(this.item.text)
             .fontColor($r('app.color.color_A5A5A5'))
@@ -377,6 +114,353 @@ export struct ChatItemView {
         .width(SizeConstant.FULL_SIZE)
       }
     }
+  }
+
+  /**
+   * 发送方消息
+   */
+  @Builder
+  sendMessageItem() {
+    //横向布局
+    Row() {
+      Blank()
+      //内容
+      Column() {
+        if (this.item.ownerName !== '') {
+          Text(this.item.ownerName)
+            .fontColor($r('app.color.color_7B7B7B'))
+            .fontSize($r('app.float.font_10'))
+            .alignSelf(ItemAlign.End)
+        }
+        if (this.item.textType === 0) {
+          this.sendTextMessage()
+        } else if (this.item.textType === 1) {
+          this.sendPicMessage()
+        } else if (this.item.textType === 2) {
+          this.sendVideoMessage()
+        } else if (this.item.textType === 3) {
+          this.sendAudioMessage()
+        }
+
+        //翻译
+        if (this.item.translateEnable) {
+          //展示翻译内容
+          TranslateView({
+            isLoading: this.item.translateLoading,
+            translateText: this.item.translateText
+          })
+        }
+        if (this.item.referEnable) {
+          //展示引用信息
+          ReferenceChatView({
+            referText: this.item.referText
+          })
+        }
+      }
+      .alignItems(HorizontalAlign.End)
+      .margin({ right: this.item.textType === 0 || this.item.textType === 3 ? 0 : SizeConstant.SIZE_10 })
+
+      if (this.item.textType === 0 || this.item.textType === 3) {
+        Shape() {
+          Path()
+            .commands('M0 100 L15 115 L0 130 Z')
+            .fill($r('app.color.color_95EC69'))
+            .strokeOpacity(0)
+        }.margin({ right: SizeConstant.SIZE_10 })
+      }
+
+      Image(this.item.ownerIcon)
+        .width(SizeConstant.SIZE_40)
+        .height(SizeConstant.SIZE_40)
+        .objectFit(ImageFit.Cover)
+        .borderRadius(SizeConstant.SIZE_5)
+        .margin({ right: SizeConstant.SIZE_15 })
+        .id("sendIconId")
+        .backgroundColor(Color.Black)
+    }.width(SizeConstant.FULL_SIZE)
+    .alignItems(VerticalAlign.Top)
+    .margin({ top: SizeConstant.SIZE_5, bottom: SizeConstant.SIZE_5 })
+    .height('auto')
+  }
+
+  @Builder
+  sendAudioMessage() {
+    //语音
+    ChatAudioView({
+      item: this.item,
+      showPopup: this.showPopup
+    })
+      .margin({ top: SizeConstant.SIZE_5 })
+      .width(SizeConstant.SIZE_PERCENT_40)
+      .bindPopup(this.showPopup, {
+        builder: this.popupCustomView(),
+        popupColor: Color.Black,
+        backgroundBlurStyle: BlurStyle.NONE,
+        radius: SizeConstant.SIZE_10,
+        onStateChange: (e) => {
+          if (!e.isVisible) {
+            //气泡状态
+            this.showPopup = false
+          }
+        }
+      })
+  }
+
+  /**
+   * 发送视频
+   */
+  @Builder
+  sendVideoMessage() {
+    //视频
+    RelativeContainer() {
+      Image($r('app.media.icon_play'))
+        .width(SizeConstant.SIZE_50)
+        .aspectRatio(1)
+        .align(Alignment.Center)
+        .alignRules({
+          middle: {
+            anchor: "__container__", align: HorizontalAlign.Center
+          },
+          center: {
+            anchor: "__container__", align: VerticalAlign.Center
+          }
+        })
+
+      Text(this.videoTime)
+        .fontSize($r('app.float.font_8'))
+        .fontColor(Color.White)
+        .margin({ bottom: SizeConstant.SIZE_2, right: SizeConstant.SIZE_2 })
+        .alignRules({
+          bottom: {
+            anchor: "__container__", align: VerticalAlign.Bottom
+          },
+          end: {
+            anchor: "__container__", align: HorizontalAlign.End
+          }
+        })
+    }
+    .width(this.picWidth)
+    .height(this.picHeight)
+    .backgroundImage(this.bgPixel)
+    .backgroundImageSize({
+      width: this.picWidth,
+      height: this.picHeight
+    })
+    .backgroundImagePosition(Alignment.Center)
+    .borderRadius(SizeConstant.SIZE_5)
+    .borderColor(Color.Gray)
+    .borderWidth(1)
+    .gesture(
+      GestureGroup(GestureMode.Parallel,
+        LongPressGesture().onAction((event) => {
+          this.showPopup = !this.showPopup
+        }),
+        TapGesture({ count: 1 }).onAction((event) => {
+          this.showVideoContent = true
+        })
+      )
+    )
+    .bindPopup(this.showPopup, {
+      builder: this.popupCustomView(),
+      popupColor: Color.Black,
+      backgroundBlurStyle: BlurStyle.NONE,
+      radius: SizeConstant.SIZE_10,
+      onStateChange: (e) => {
+        if (!e.isVisible) {
+          //气泡状态
+          this.showPopup = false
+        }
+      }
+    })
+    .bindContentCover(this.showVideoContent, this.contentVideoCover(this.item), {
+      onDisappear: () => {
+        this.showVideoContent = false
+      }
+    })
+  }
+
+  /**
+   * 发送方图片
+   */
+  @Builder
+  sendPicMessage() {
+    //图片
+    Image(this.item.imageUri)
+      .borderRadius(SizeConstant.SIZE_5)
+      .backgroundColor($r('app.color.color_95EC69'))
+      .borderWidth(1)
+      .borderColor(Color.Gray)
+      .objectFit(ImageFit.Contain)
+      .width(this.picWidth)
+      .height(this.picHeight)//移除自带的拖拽事件
+      .draggable(false)
+      .gesture(
+        GestureGroup(
+          GestureMode.Parallel,
+          LongPressGesture({ repeat: false }).onAction((event) => {
+            this.showPopup = !this.showPopup
+          }),
+          TapGesture({ count: 1 }).onAction((event) => {
+            this.showPicContent = true
+          })
+        )
+      )
+      .bindPopup(this.showPopup, {
+        builder: this.popupCustomView(),
+        popupColor: Color.Black,
+        backgroundBlurStyle: BlurStyle.NONE,
+        radius: SizeConstant.SIZE_10,
+        onStateChange: (e) => {
+          if (!e.isVisible) {
+            //气泡状态
+            this.showPopup = false
+          }
+        }
+      })
+      .bindContentCover(this.showPicContent, this.contentPicCover(this.item), {
+        onDisappear: () => {
+          this.showPicContent = false
+        }
+      })
+  }
+
+  /**
+   * 发送方文字
+   */
+  @Builder
+  sendTextMessage() {
+    //发送方是文字
+    Text(this.item.text)
+      .backgroundColor($r('app.color.color_95EC69'))
+      .constraintSize({ maxWidth: SizeConstant.SIZE_PERCENT_60 })
+      .borderRadius(SizeConstant.SIZE_5)
+      .fontColor(Color.Black)
+      .margin({ top: SizeConstant.SIZE_5 })
+      .height('auto')
+      .padding(SizeConstant.SIZE_10)
+      .fontSize($r('app.float.font_15'))
+      .textAlign(TextAlign.Start)
+      .copyOption(CopyOptions.None)
+      .draggable(true)
+      .gesture(
+        GestureGroup(
+          GestureMode.Parallel,
+          LongPressGesture().onAction((event) => {
+            this.start = 0
+            this.end = this.item.text.length - 1
+            this.showPopup = !this.showPopup
+          }),
+          TapGesture({ count: 2 }).onAction((event) => {
+            //双击,展示详情页
+            this.showTextContent = true
+          })
+        )
+
+      )
+      .bindPopup(this.showPopup, {
+        builder: this.popupCustomView(),
+        popupColor: $r('app.color.color_4C4C4C'),
+        backgroundBlurStyle: BlurStyle.NONE,
+        radius: SizeConstant.SIZE_10,
+        onStateChange: (e) => {
+          if (!e.isVisible) {
+            //气泡状态
+            this.showPopup = false
+          }
+        }
+      })
+      .bindContentCover(this.showTextContent, this.contentTextCover(this.item), {
+        onDisappear: () => {
+          this.showTextContent = false
+        }
+      })
+  }
+
+  /**
+   * 接收方文字
+   */
+  @Builder
+  receiverMessageItem() {
+    Row() {
+      Image(this.item.ownerIcon)
+        .width(SizeConstant.SIZE_40)
+        .height(SizeConstant.SIZE_40)
+        .borderRadius(SizeConstant.SIZE_5)
+        .objectFit(ImageFit.Cover)
+        .margin({ left: SizeConstant.SIZE_15 })
+        .id("receiverIconId")
+        .backgroundColor(Color.Black)
+
+      Shape() {
+        Path()
+          .commands('M15 100 L0 115 L15 130 Z')
+          .fill($r('app.color.color_FFFFFF'))
+          .strokeOpacity(0)
+      }.margin({ left: SizeConstant.SIZE_10 })
+
+      Column() {
+        if (this.item.ownerName !== '') {
+          Text(this.item.ownerName)
+            .fontColor($r('app.color.color_7B7B7B'))
+            .fontSize($r('app.float.font_10'))
+            .alignSelf(ItemAlign.Start)
+        }
+        if (this.item.messageStatus == 0) {
+          //加载中
+          Text("数据加载中。")
+            .backgroundColor($r('app.color.color_FFFFFF'))
+            .constraintSize({ maxWidth: SizeConstant.SIZE_PERCENT_60 })
+            .borderRadius(SizeConstant.SIZE_5)
+            .fontColor(Color.Black)
+            .padding(SizeConstant.SIZE_10)
+            .margin({ top: SizeConstant.SIZE_5 })
+            .height('auto')
+            .fontSize($r('app.float.font_15'))
+            .textAlign(TextAlign.Start)
+            .copyOption(CopyOptions.InApp)
+        } else if (this.item.messageStatus == 1) {
+          //加载成功
+          Text(this.item.text)
+            .backgroundColor($r('app.color.color_FFFFFF'))
+            .constraintSize({ maxWidth: SizeConstant.SIZE_PERCENT_60 })
+            .borderRadius(SizeConstant.SIZE_5)
+            .fontColor(Color.Black)
+            .padding(SizeConstant.SIZE_10)
+            .margin({ top: SizeConstant.SIZE_5 })
+            .height('auto')
+            .fontSize($r('app.float.font_15'))
+            .textAlign(TextAlign.Start)
+            .copyOption(CopyOptions.None)
+            .gesture(
+              TapGesture({ count: 2 }).onAction((event) => {
+                this.showTextContent = true
+              })
+            )
+            .bindContentCover(this.showTextContent, this.contentTextCover(this.item), {
+              onDisappear: () => {
+                this.showTextContent = false
+              }
+            })
+        } else {
+          //加载失败
+          Text(this.item.errorMessage)
+            .backgroundColor($r('app.color.color_FFFFFF'))
+            .constraintSize({ maxWidth: SizeConstant.SIZE_PERCENT_60 })
+            .borderRadius(SizeConstant.SIZE_5)
+            .fontColor(Color.Black)
+            .padding(SizeConstant.SIZE_10)
+            .margin({ top: SizeConstant.SIZE_5 })
+            .height('auto')
+            .fontSize($r('app.float.font_15'))
+            .textAlign(TextAlign.Start)
+            .copyOption(CopyOptions.InApp)
+        }
+      }.alignItems(HorizontalAlign.Start)
+
+    }.width(SizeConstant.FULL_SIZE)
+    .margin({ top: SizeConstant.SIZE_5, bottom: SizeConstant.SIZE_5 })
+    .alignItems(VerticalAlign.Top)
+    .height('auto')
   }
 
   @Builder
@@ -445,11 +529,11 @@ export struct ChatItemView {
    * 视频模态页面
    */
   @Builder
-  contentVideoCover() {
-    Stack() {
-      Text("你好 我是模态")
-    }.width(SizeConstant.FULL_SIZE)
-    .height(SizeConstant.FULL_SIZE)
-    .backgroundColor(Color.White)
+  contentVideoCover(message: Message) {
+    ChatVideoDetailContent({
+      detailMessage: message,
+      chatVideoDetailContent: this.showVideoContent
+    }).width(SizeConstant.FULL_SIZE)
+      .height(SizeConstant.FULL_SIZE)
   }
 }
