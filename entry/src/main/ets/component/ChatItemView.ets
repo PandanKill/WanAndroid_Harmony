@@ -3,7 +3,7 @@ import { GeneralPopupItemConstant } from '../constants/GeneralPopupItemConstant'
 import SizeConstant from '../constants/SizeConstant'
 import { Message } from '../pages/ChatPage'
 import { ChatAudioView } from './ChatAudioView'
-import { curves, promptAction } from '@kit.ArkUI'
+import { componentUtils, curves, inspector, promptAction } from '@kit.ArkUI'
 import itemClickManager from '../componentManager/PopupItemClickManager'
 import { TranslateView } from './TranslateView'
 import { ReferenceChatView } from './ReferenceChatView'
@@ -13,6 +13,8 @@ import { image } from '@kit.ImageKit'
 import { getFetchFrameByTime } from '../utils/CommonUtils'
 import { BusinessError } from '@kit.BasicServicesKit'
 import { ChatVideoDetailContent } from './ChatVideoDetailContent'
+import { WindowUtils } from '../utils/WindowUtils'
+import { ComponentAttrUtils, RectInfoInPx } from '../utils/ComponentAttrUtils'
 
 /**
  * 聊天内容 View
@@ -20,6 +22,8 @@ import { ChatVideoDetailContent } from './ChatVideoDetailContent'
 @Component
 export struct ChatItemView {
   @ObjectLink item: Message
+  //索引
+  @Prop @Require index: number
   //图片的宽高
   @State picWidth: number = 0
   @State picHeight: number = 0
@@ -27,7 +31,7 @@ export struct ChatItemView {
   @State videoTime: string = ''
   //最大值
   static readonly maxHeight = 150
-  static readonly maxWidth = 100
+  static readonly maxWidth = 200
   //是否显示
   @State showPopup: boolean = false
   //是否显示全屏模态
@@ -40,12 +44,27 @@ export struct ChatItemView {
   @State start: number = -1
   @State end: number = -1
   @State bgPixel: image.PixelMap | undefined | Resource = undefined
+  // Capture the original location of the photo.
+  @State scaleValue: number = 1;
+  @State translateX: number = 0;
+  @State clipWidth: Dimension = 0;
+  @State clipHeight: Dimension = 0;
+  @State translateY: number = 0;
+  @State isAnimating: boolean = false;
+  // Transparency of the artwork.
+  @State opacityDegree: number = 1;
+  //监听模态页面
+  listener: inspector.ComponentObserver = inspector.createComponentObserver('imageDetail');
 
   aboutToAppear() {
+    this.initCoverListener()
     //配置图片信息
     if (this.item.textType === 1) {
       this.popItem = [...GeneralPopupItemConstant.CommonItem, ...GeneralPopupItemConstant.PicCommonItem]
-      if (this.item.imageHeight >= this.item.imageWidth) {
+      let widthScaleRatio = this.item.imageWidth / vp2px(ChatItemView.maxWidth);
+      let heightScaleRatio = this.item.imageHeight / vp2px(ChatItemView.maxHeight);
+      let isUseWidthScale = widthScaleRatio > heightScaleRatio;
+      if (!isUseWidthScale) {
         //高大于宽
         this.picHeight = ChatItemView.maxHeight
         this.picWidth = ChatItemView.maxHeight * this.item.imageWidth / this.item.imageHeight
@@ -93,6 +112,31 @@ export struct ChatItemView {
       //语音
       this.popItem = [...GeneralPopupItemConstant.CommonItem, ...GeneralPopupItemConstant.AudioCommonItem]
     }
+  }
+
+  initCoverListener() {
+    let onLayoutComplete = () => {
+      let targetInfo = ComponentAttrUtils.getRectInfoById(this.getUIContext(), 'imageDetail')
+      // Only half modes are correctly laid out and a mirror is triggered when there is no animation at this time.
+      if (!this.isAnimating) {
+        this.isAnimating = true;
+        // Property animation for a mirror to the bottom of a modal page.
+        animateTo({
+          duration: 1000,
+          curve: Curve.Friction,
+        }, () => {
+          // this.scaleValue = 2;
+          this.translateX = px2vp(WindowUtils.windowWidth_px / 2);
+          this.clipWidth = '100%';
+          this.clipHeight = '100%';
+          // Fixed height differences due to half-mode height and scaling.
+          this.translateY = px2vp(WindowUtils.windowHeight_px / 2);
+          console.info(`lgwwww animEnd::::scale: ${this.scaleValue}, translateX:${this.translateX}, translateY:${this.translateY}, clipWidth:${this.clipWidth}, clipHeight:${this.clipHeight}`)
+        })
+      }
+    }
+
+    // this.listener.on('layout', onLayoutComplete)
   }
 
   build() {
@@ -292,8 +336,10 @@ export struct ChatItemView {
       .borderColor(Color.Gray)
       .objectFit(ImageFit.Contain)
       .width(this.picWidth)
+      .opacity(this.opacityDegree)
       .height(this.picHeight)//移除自带的拖拽事件
       .draggable(false)
+      .id('imageChat')
       .gesture(
         GestureGroup(
           GestureMode.Parallel,
@@ -301,6 +347,12 @@ export struct ChatItemView {
             this.showPopup = !this.showPopup
           }),
           TapGesture({ count: 1 }).onAction((event) => {
+            // let originInfo = ComponentAttrUtils.getRectInfoById(this.getUIContext(), "imageChat")
+            // this.translateX = px2vp(originInfo.left - (WindowUtils.windowWidth_px - originInfo.width) / 2) - px2vp(WindowUtils.windowWidth_px / 2);
+            // this.translateY = px2vp(originInfo.top + originInfo.height / 2) - px2vp(WindowUtils.windowHeight_px / 2)
+            // this.clipWidth = this.picWidth
+            // this.clipHeight = this.picHeight
+            // this.opacityDegree = 0
             this.showPicContent = true
           })
         )
@@ -317,9 +369,11 @@ export struct ChatItemView {
           }
         }
       })
-      .bindContentCover(this.showPicContent, this.contentPicCover(this.item), {
+      .bindContentCover(this.showPicContent, this.contentPicCover(this.item, this.index), {
+        transition: TransitionEffect.IDENTITY,
         onDisappear: () => {
           this.showPicContent = false
+          this.opacityDegree = 1
         }
       })
   }
@@ -504,7 +558,9 @@ export struct ChatItemView {
    * 文字模态页面
    */
   @Builder
-  contentTextCover(message: Message) {
+  contentTextCover(message:
+    Message
+  ) {
     //文字详情页
     ChatTextDetailContent({
       detailMessage: message,
@@ -517,19 +573,36 @@ export struct ChatItemView {
    * 图片模态页面
    */
   @Builder
-  contentPicCover(message: Message) {
+  contentPicCover(message: Message, selectIndex: number) {
+    // Stack() {
+    // ImageNode()
     ChatPicDetailContent({
       detailMessage: message,
       chatPicDetailContent: this.showPicContent
     }).width(SizeConstant.FULL_SIZE)
       .height(SizeConstant.FULL_SIZE)
+    // }
+    // .id('imageDetail')
+    // .translate({
+    //   x: this.translateX,
+    //   y: this.translateY
+    // })
+    // .scale({
+    //   x: this.scaleValue,
+    //   y: this.scaleValue,
+    //   centerX: '50%',
+    //   centerY: '50%'
+    // })
+    // .clip(true)
   }
 
   /**
    * 视频模态页面
    */
   @Builder
-  contentVideoCover(message: Message) {
+  contentVideoCover(message:
+    Message
+  ) {
     ChatVideoDetailContent({
       detailMessage: message,
       chatVideoDetailContent: this.showVideoContent

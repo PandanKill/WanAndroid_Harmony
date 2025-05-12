@@ -1,11 +1,12 @@
 import { ChatPopupItem } from "../bean/ChatPopupItem";
-import { AISpeakBean, Message } from "../pages/ChatPage";
+import { Message } from "../pages/ChatPage";
 import { pasteboard } from "@kit.BasicServicesKit";
 import { common, Want } from "@kit.AbilityKit";
 import speechRecognizerUtil from "../utils/SpeechRecognizerUtil";
 import { CommonAiRequestUtil } from "../utils/CommonAiRequestUtil";
 import { JSON } from "@kit.ArkTS";
 import { fileToBase64 } from "../utils/FileUtil";
+import { AISpeakBean } from "../bean/AIResponseBean";
 
 /**
  * 聊天 Item 点击
@@ -17,7 +18,7 @@ class PopupItemClickManager {
    * 或者使用 state 监听状态变化，然后 watch 处理
    */
   //引用
-  onReferListener: (refItem: Message) => void = (refItem) => {
+  onReferListener: (refItem: Message, refType: number) => void = (refItem, refType) => {
   }
   //删除
   onDeleteListener: (deleteItem: Message) => void = (deleteItem) => {
@@ -39,28 +40,28 @@ class PopupItemClickManager {
         this.onDeleteListener(message)
         break
       case 2:
-        //图片推理
-        this.onPicReasoning(message)
-        break
       case 3:
+      case 5:
+      case 6:
+      case 8:
+      case 14:
+        //图片推理
+        this.onReferListener(message, item.itemId)
+        // this.onPicReasoning(message)
         //图片理解
-        this.onPicFollow(message)
+        // this.onPicFollow(message)
+        //视频理解
+        // this.onVideoFollow(message)
+        //视频推理
+        // this.onVideoReasoning(message)
+        //语音理解
+        // this.onAudioFollow(message)
+        //引用
+        // this.onReferListener(message, item.itemId)
         break
       case 4:
         //文字提取
         this.getTextForPic(message)
-        break
-      case 5:
-        //视频理解
-        this.onVideoFollow(message)
-        break
-      case 6:
-        //视频推理
-        this.onVideoReasoning(message)
-        break
-      case 8:
-        //语音理解
-        this.onAudioFollow(message)
         break
       case 9:
         //转文字
@@ -80,10 +81,6 @@ class PopupItemClickManager {
         //复制
         this.savePasteboardData(message.text)
         break
-      case 14:
-        //引用
-        this.onReferListener(message)
-        break
       case 15:
         //重发
         this.onResendListener(message)
@@ -102,7 +99,7 @@ class PopupItemClickManager {
     client.sendStreamRequest(client.getAudioJsonContent("input_audio", `data:audio/wav;base64,${base64Url}`, "pcm",
       "这段音频在说什么"), {
       onDataReceived: (aiSpeakBean: AISpeakBean) => {
-        console.info(`onVideoReasoning data: ${JSON.stringify(aiSpeakBean)}`)
+        console.info(`onAudioFollow data: ${JSON.stringify(aiSpeakBean)}`)
       },
       onComplete: () => {
         console.info(`translate data: onComplete`)
@@ -156,6 +153,7 @@ class PopupItemClickManager {
       "视频的内容是什么"), {
       onDataReceived: (aiSpeakBean: AISpeakBean) => {
         //加载成功
+        console.info(`onVideoFollow data: ${JSON.stringify(aiSpeakBean)}`)
         // receiverMessage.messageStatus = 1
         // let ch = aiSpeakBean.choices
         // if (ch !== undefined) {
@@ -227,6 +225,8 @@ class PopupItemClickManager {
       "图中描绘的是什么景象？"), {
       onDataReceived: (aiSpeakBean: AISpeakBean) => {
         //加载成功
+        console.info(`onPicFollow data: ${JSON.stringify(aiSpeakBean)}`)
+
         // receiverMessage.messageStatus = 1
         // let ch = aiSpeakBean.choices
         // if (ch !== undefined) {
@@ -291,6 +291,7 @@ class PopupItemClickManager {
    */
   translateData(message: Message) {
     //显示翻译内容
+    console.info(`translate data: ${JSON.stringify(message)}`)
     message.translateEnable = true
     message.translateLoading = true
     const client = new CommonAiRequestUtil({

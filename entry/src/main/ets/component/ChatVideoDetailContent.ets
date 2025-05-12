@@ -114,7 +114,6 @@ export struct ChatVideoDetailContent {
               min: 0,
               max: this.totalDuration
             })
-
               .selectedColor(Color.White)
               .trackColor($r('app.color.color_79898F'))
               .width(SizeConstant.FULL_SIZE)

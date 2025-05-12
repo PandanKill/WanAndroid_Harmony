@@ -3,6 +3,8 @@ import { hilog } from '@kit.PerformanceAnalysisKit';
 import { fileIo } from '@kit.CoreFileKit';
 import { image } from '@kit.ImageKit';
 import { media } from '@kit.MediaKit';
+import { ComponentAttrUtils, RectInfoInPx } from './ComponentAttrUtils';
+import { WindowUtils } from './WindowUtils';
 
 const TAG: string = '[CommonUtils]';
 

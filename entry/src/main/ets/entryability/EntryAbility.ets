@@ -5,6 +5,7 @@ import { BreakpointConstants } from '../constants/BreakpointConstants';
 import { StorageKey } from '../constants/StorageKey';
 import { BusinessError } from '@kit.BasicServicesKit';
 import dbUtil, { DBUtil } from '../utils/DBUtil';
+import { WindowUtils } from '../utils/WindowUtils';
 
 export default class EntryAbility extends UIAbility {
   private window?: window.Window
@@ -36,6 +37,9 @@ export default class EntryAbility extends UIAbility {
     //获取窗口信息
     windowStage.getMainWindow().then((window1: window.Window) => {
       this.window = window1
+      WindowUtils.window = window1
+      WindowUtils.windowWidth_px = window1.getWindowProperties().windowRect.width
+      WindowUtils.windowHeight_px = window1.getWindowProperties().windowRect.height
       //设置沉浸式
       window1.setWindowLayoutFullScreen(true).then(() => {
         console.info('Succeeded in setting the window layout to full-screen mode.');
@@ -44,8 +48,10 @@ export default class EntryAbility extends UIAbility {
           console.error('Failed to set the window layout to full-screen mode. Cause:' + JSON.stringify(err));
         });
       //获取导航栏高度
-      let navHeight = window1.getWindowAvoidArea(window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR).bottomRect.height
+      let navAvoid = window1.getWindowAvoidArea(window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR)
+      let navHeight = navAvoid.bottomRect.height
       AppStorage.setOrCreate("navHeight", navHeight)
+      WindowUtils.navigationIndicatorHeight_px = navAvoid.topRect.height;
 
       let winRect = window1.getWindowProperties().windowRect
       let winWidth = winRect.width
@@ -54,8 +60,10 @@ export default class EntryAbility extends UIAbility {
       AppStorage.setOrCreate("winHeight", winHeight)
 
       //获取状态栏高度
-      let statusHeight = window1.getWindowAvoidArea(window.AvoidAreaType.TYPE_SYSTEM).topRect.height
+      let avoidArea = window1.getWindowAvoidArea(window.AvoidAreaType.TYPE_SYSTEM)
+      let statusHeight = avoidArea.topRect.height
       AppStorage.setOrCreate('topRectHeight', statusHeight);
+      WindowUtils.topAvoidAreaHeight_px = avoidArea.topRect.height;
 
       //安全区域监听
       window1.on('avoidAreaChange', (data) => {

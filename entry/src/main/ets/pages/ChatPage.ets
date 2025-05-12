@@ -17,6 +17,8 @@ import { checkPermissionGrant, requestPermissionForUser } from '../utils/Permiss
 import { abilityAccessCtrl, common } from '@kit.AbilityKit';
 import itemClickManager from '../componentManager/PopupItemClickManager';
 import { CommonAiRequestUtil } from '../utils/CommonAiRequestUtil';
+import { RefTypeView } from '../component/RefTypeView';
+import { AISpeakBean } from '../bean/AIResponseBean';
 
 @Observed
 export class Message {
@@ -91,6 +93,7 @@ struct AIChatPage {
   @State isRefer: boolean = false
   //引用消息
   private referMessage: Message | null = null
+  private referType: number | undefined = undefined
   @State recordUI: ResourceColor = Color.White
   private textAreaController: TextAreaController = new TextAreaController()
   private timeId: number = 0
@@ -176,10 +179,11 @@ struct AIChatPage {
 
   aboutToAppear(): void {
     //引用
-    itemClickManager.onReferListener = (refItem) => {
+    itemClickManager.onReferListener = (refItem, refType) => {
       //引用回调
       this.referMessage = refItem
       this.isRefer = true
+      this.referType = refType
     }
 
     itemClickManager.onDeleteListener = (deleteMessage) => {
@@ -360,7 +364,8 @@ struct AIChatPage {
                   ForEach(this.messageArr, (item: Message, index: number) => {
                     ListItem() {
                       ChatItemView({
-                        item: item
+                        item: item,
+                        index: index
                       })
                     }.width(SizeConstant.FULL_SIZE)
                     .height('auto')
@@ -404,43 +409,56 @@ struct AIChatPage {
                     //输入框
                     Column() {
                       if (this.isSendText) {
-                        //编写文字
-                        TextArea({
-                          text: this.editValue,
-                          controller: this.textAreaController
-                        })
-                          .id('sendText')
-                          .backgroundColor(Color.White)
-                          .borderRadius(SizeConstant.SIZE_5)
-                          .width(SizeConstant.SIZE_PERCENT_65)
-                          .margin({ left: SizeConstant.SIZE_10, top: SizeConstant.SIZE_5, bottom: SizeConstant.SIZE_3 })
-                          .enterKeyType(EnterKeyType.Send)
-                          .onAppear(() => {
-                            //首次不需要弹软键盘
-                            if (!this.isFirstShowUI && !this.isEmoji && !this.isPhoto) {
-                              //非首次 Appear 的时候，才需要弹出软件盘
-                              this.getUIContext().getFocusController().requestFocus('sendText')
-                            }
-                          })
-                          .onSubmit((eventType: EnterKeyType) => {
-                            //发送
-                            this.toGetAi(this.editValue)
-                            this.editValue = ''
-                          })
-                          .onChange((value: string) => {
-                            //获取输入框内容
-                            console.info(value)
-                            this.editValue = value
-                          })
-                          .onFocus(() => {
-                            this.getUIContext().animateTo({
-                              duration: 100,
-                              curve: Curve.Linear
-                            }, () => {
-                              this.isEmoji = false
-                              this.isPhoto = false
+
+                        Row() {
+                          if (this.isRefer) {
+                            RefTypeView({
+                              refType: this.getRefTypeString(this.referType)
                             })
+                          }
+
+                          //编写文字
+                          TextArea({
+                            text: this.editValue,
+                            controller: this.textAreaController
                           })
+                            .backgroundColor(Color.White)
+                            .id('sendText')
+                            .layoutWeight(1)
+                            .enterKeyType(EnterKeyType.Send)
+                            .onAppear(() => {
+                              //首次不需要弹软键盘
+                              if (!this.isFirstShowUI && !this.isEmoji && !this.isPhoto) {
+                                //非首次 Appear 的时候，才需要弹出软件盘
+                                this.getUIContext().getFocusController().requestFocus('sendText')
+                              }
+                            })
+                            .onSubmit((eventType: EnterKeyType) => {
+                              //发送
+                              this.toGetAi(this.editValue)
+                              this.editValue = ''
+                            })
+                            .onChange((value: string) => {
+                              //获取输入框内容
+                              console.info(value)
+                              this.editValue = value
+                            })
+                            .onFocus(() => {
+                              this.getUIContext().animateTo({
+                                duration: 100,
+                                curve: Curve.Linear
+                              }, () => {
+                                this.isEmoji = false
+                                this.isPhoto = false
+                              })
+                            })
+
+                        }
+                        .width(SizeConstant.SIZE_PERCENT_65)
+                        .backgroundColor(Color.White)
+                        .alignItems(VerticalAlign.Center)
+                        .margin({ left: SizeConstant.SIZE_10, top: SizeConstant.SIZE_5, bottom: SizeConstant.SIZE_3 })
+                        .borderRadius(SizeConstant.SIZE_5)
 
                       } else {
                         //编写语音
@@ -634,6 +652,33 @@ struct AIChatPage {
     .backgroundColor($r('app.color.color_EDEDED'))
   }
 
+  getRefTypeString(referType: number | undefined): string {
+    let refText = '引用'
+    if (referType !== undefined) {
+      switch (referType) {
+        case 2:
+          refText = "图片推理"
+          break
+        case 3:
+          refText = "图片理解"
+          break
+        case 5:
+          refText = "视频理解"
+          break
+        case 6:
+          refText = "视频推理"
+          break
+        case 8:
+          refText = "语音理解"
+          break
+        case 14:
+          refText = "多轮对话"
+          break
+      }
+    }
+    return refText
+  }
+
   /**
    * 展示引用内容
    * @param text
@@ -686,7 +731,7 @@ struct AIChatPage {
       sendMessage.referEnable = true
       sendMessage.referId = this.referMessage.id
       sendMessage.referType = this.referMessage.textType
-      sendMessage.referText = this.getShowReferText(this.referMessage!)
+      sendMessage.referText = this.getRefTypeString(this.referType) + ": " + this.getShowReferText(this.referMessage!)
     }
     this.messageArr.push(sendMessage)
     //重置引用
@@ -771,39 +816,6 @@ struct AIChatPage {
   //     this.controller.caretPosition(targetSegment.index); // 调整光标位置
   //   }
   // }
-}
-
-interface AIRequestBean {
-  model: string,
-  messages: Array<MessageBean>,
-  stream: boolean,
-  stream_options: StreamOptions
-}
-
-interface StreamOptions {
-  include_usage: boolean
-}
-
-interface MessageBean {
-  role: string,
-  content: string
-}
-
-export interface AISpeakBean {
-  choices: Array<DeltaBean | null> | undefined,
-  model: string,
-
-  //speek id
-  id: string
-}
-
-interface DeltaBean {
-  delta: DeltaContentBean
-}
-
-interface DeltaContentBean {
-  content: string | null,
-  reasoning_content: string | null
 }
 
 
