@@ -182,8 +182,8 @@ struct AIChatPage {
     itemClickManager.onReferListener = (refItem, refType) => {
       //引用回调
       this.referMessage = refItem
-      this.isRefer = true
       this.referType = refType
+      this.isRefer = true
     }
 
     itemClickManager.onDeleteListener = (deleteMessage) => {
@@ -483,6 +483,7 @@ struct AIChatPage {
                           onCancel: () => {
                             this.isRefer = false
                             this.referMessage = null
+                            this.referType = undefined
                           }
                         }).width(SizeConstant.SIZE_PERCENT_65)
                           .margin({ left: SizeConstant.SIZE_10 })
@@ -736,8 +737,303 @@ struct AIChatPage {
     this.messageArr.push(sendMessage)
     //重置引用
     this.isRefer = false
+    //todo 存在问题
+    let tempReferMessage = this.referMessage
+    let tempReferType = this.referType
     this.referMessage = null
+    this.referType = undefined
 
+    //接收
+    const receiverMessage = this.getReceiverMessage()
+    receiverMessage.messageStatus = 0
+    this.messageArr.push(receiverMessage)
+
+    this.toGetAiByType(receiverMessage, tempReferType, editValue, tempReferMessage)
+  }
+
+  /**
+   * 通过 referType 解析
+   * @param receiverMessage
+   * @param referType
+   */
+  toGetAiByType(receiverMessage: Message, referType: number | undefined, editValue: string,
+    tempReferMessage: Message | null) {
+    if (referType === undefined || !tempReferMessage) {
+      this.toGetTextNormalAi(receiverMessage, editValue)
+      return
+    }
+    switch (referType) {
+      case 2:
+        this.onPicReasoning(receiverMessage, editValue, tempReferMessage)
+        break
+      case 3:
+        this.onPicFollow(receiverMessage, editValue, tempReferMessage)
+        break
+      case 5:
+        this.onVideoFollow(receiverMessage, editValue, tempReferMessage)
+        break
+      case 6:
+        this.onVideoReasoning(receiverMessage, editValue, tempReferMessage)
+        break
+      case 8:
+        this.onAudioFollow(receiverMessage, editValue, tempReferMessage)
+        break
+      case 14:
+        //多轮对话
+        // this.onReferListener(receiverMessage, editValue)
+        break
+    }
+  }
+
+  /**
+   * 语音理解
+   * @param message
+   */
+  async onAudioFollow(receiverMessage: Message, editValue: string, tempReferMessage: Message) {
+    if (editValue === "nihao") {
+      editValue = "这段音频在说什么"
+    }
+    let base64Url = await fileToBase64(tempReferMessage?.audioUri ?? "")
+    const client = new CommonAiRequestUtil({
+      model: "qwen-omni-turbo",
+      endpoint: 'https://dashscope.aliyuncs.com',
+      api_key: "sk-c1d2d4ae26e44c61b098a719f98bc40d"
+    })
+
+    client.sendStreamRequest(client.getAudioJsonContent("input_audio", `data:audio/wav;base64,${base64Url}`, "pcm",
+      editValue), {
+      onDataReceived: (aiSpeakBean: AISpeakBean) => {
+        console.info(`onAudioFollow data: ${JSON.stringify(aiSpeakBean)}`)
+        receiverMessage.messageStatus = 1
+        let ch = aiSpeakBean.choices
+        if (ch !== undefined) {
+          let delta = ch[0]
+          if (delta && delta.delta) {
+            if (delta.delta.reasoning_content) {
+              let text = receiverMessage.text
+              let newText = text + delta.delta.reasoning_content
+              receiverMessage.text = newText
+            }
+            if (delta.delta.content) {
+              let text = receiverMessage.text
+              let newText = text + delta.delta.content
+              receiverMessage.text = newText
+            }
+          }
+        }
+      },
+      onComplete: () => {
+        console.info(`onAudioFollow data: onComplete`)
+      },
+      onError: (err) => {
+        console.info(`onAudioFollow data: onError`)
+        receiverMessage.messageStatus = 2
+        receiverMessage.errorMessage = err.message
+      }
+    })
+  }
+
+  /**
+   * 视频推理
+   * @param message
+   */
+  async onVideoReasoning(receiverMessage: Message, editValue: string, tempReferMessage: Message) {
+    if (editValue === 'nihao') {
+      editValue = "这是视频的开头部分，请分析并猜测该视频在讲解什么知识。"
+    }
+    let base64Url = await fileToBase64(tempReferMessage?.videoUri ?? "")
+    const client = new CommonAiRequestUtil({
+      model: "qvq-max",
+      endpoint: 'https://dashscope.aliyuncs.com',
+      api_key: "sk-c1d2d4ae26e44c61b098a719f98bc40d"
+    })
+
+    client.sendStreamRequest(client.getPicReasoningJsonContent("video_url", `data:video/mp4;base64,${base64Url}`,
+      editValue), {
+      onDataReceived: (aiSpeakBean: AISpeakBean) => {
+        console.info(`onVideoReasoning data: ${JSON.stringify(aiSpeakBean)}`)
+        receiverMessage.messageStatus = 1
+        let ch = aiSpeakBean.choices
+        if (ch !== undefined) {
+          let delta = ch[0]
+          if (delta && delta.delta) {
+            if (delta.delta.reasoning_content) {
+              let text = receiverMessage.text
+              let newText = text + delta.delta.reasoning_content
+              receiverMessage.text = newText
+            }
+            if (delta.delta.content) {
+              let text = receiverMessage.text
+              let newText = text + delta.delta.content
+              receiverMessage.text = newText
+            }
+          }
+        }
+      },
+      onComplete: () => {
+        console.info(`onVideoReasoning data: onComplete`)
+      },
+      onError: (err) => {
+        console.info(`onVideoReasoning data: onError`)
+        receiverMessage.messageStatus = 2
+        receiverMessage.errorMessage = err.message
+      }
+    })
+  }
+
+  /**
+   * 视频理解
+   * @param message
+   */
+  async onVideoFollow(receiverMessage: Message, editValue: string, tempReferMessage: Message) {
+    if (editValue === 'nihao') {
+      editValue = "视频的内容是什么"
+    }
+    let base64Url = await fileToBase64(tempReferMessage?.videoUri ?? "")
+    //获取到图片信息,全模态
+    let fileAi = new CommonAiRequestUtil({
+      endpoint: 'https://dashscope.aliyuncs.com',
+      api_key: "sk-c1d2d4ae26e44c61b098a719f98bc40d",
+      model: 'qwen-omni-turbo'
+    })
+
+    fileAi.sendStreamRequest(fileAi.getFileJsonContent("video_url", `data:video/mp4;base64,${base64Url}`,
+      editValue), {
+      onDataReceived: (aiSpeakBean: AISpeakBean) => {
+        //加载成功
+        console.info(`onVideoFollow data: ${JSON.stringify(aiSpeakBean)}`)
+        receiverMessage.messageStatus = 1
+        let ch = aiSpeakBean.choices
+        if (ch !== undefined) {
+          let delta = ch[0]
+          if (delta && delta.delta) {
+            if (delta.delta.reasoning_content) {
+              let text = receiverMessage.text
+              let newText = text + delta.delta.reasoning_content
+              receiverMessage.text = newText
+            }
+            if (delta.delta.content) {
+              let text = receiverMessage.text
+              let newText = text + delta.delta.content
+              receiverMessage.text = newText
+            }
+          }
+        }
+      },
+      onError: (err) => {
+        console.info(`onVideoFollow data: onError`)
+        receiverMessage.messageStatus = 2
+        receiverMessage.errorMessage = err.message
+      },
+      onComplete: () => {
+        console.info(`onVideoFollow data: onComplete`)
+
+      }
+    })
+  }
+
+  /**
+   * 图片理解
+   * @param message
+   */
+  async onPicFollow(receiverMessage: Message, editValue: string, tempReferMessage: Message) {
+    if (editValue === 'nihao') {
+      editValue = "图中描绘的是什么景象？"
+    }
+    let base64Url = await fileToBase64(tempReferMessage?.imageUri ?? "")
+    //获取到图片信息,全模态
+    let fileAi = new CommonAiRequestUtil({
+      endpoint: 'https://dashscope.aliyuncs.com',
+      api_key: "sk-c1d2d4ae26e44c61b098a719f98bc40d",
+      model: 'qwen-omni-turbo'
+    })
+
+    fileAi.sendStreamRequest(fileAi.getFileJsonContent("image_url", `data:image/png;base64,${base64Url}`,
+      editValue), {
+      onDataReceived: (aiSpeakBean: AISpeakBean) => {
+        //加载成功
+        console.info(`onPicFollow data: ${JSON.stringify(aiSpeakBean)}`)
+        //加载成功
+        receiverMessage.messageStatus = 1
+        let ch = aiSpeakBean.choices
+        if (ch !== undefined) {
+          let delta = ch[0]
+          if (delta && delta.delta) {
+            if (delta.delta.reasoning_content) {
+              let text = receiverMessage.text
+              let newText = text + delta.delta.reasoning_content
+              receiverMessage.text = newText
+            }
+            if (delta.delta.content) {
+              let text = receiverMessage.text
+              let newText = text + delta.delta.content
+              receiverMessage.text = newText
+            }
+          }
+        }
+      },
+      onError: (err) => {
+        console.info(`onPicFollow data: onError`)
+        receiverMessage.messageStatus = 2
+        receiverMessage.errorMessage = err.message
+      },
+      onComplete: () => {
+        console.info(`onPicFollow data: onComplete`)
+
+      }
+    })
+  }
+
+  /**
+   * 图片推理
+   * @param message
+   */
+  async onPicReasoning(receiverMessage: Message, editValue: string, tempReferMessage: Message) {
+    if (editValue === 'nihao') {
+      editValue = "这道题怎么解答？"
+    }
+    let base64Url = await fileToBase64(tempReferMessage?.imageUri ?? "")
+    const client = new CommonAiRequestUtil({
+      model: "qvq-max",
+      endpoint: 'https://dashscope.aliyuncs.com',
+      api_key: "sk-c1d2d4ae26e44c61b098a719f98bc40d"
+    })
+
+    client.sendStreamRequest(client.getPicReasoningJsonContent("image_url", `data:image/png;base64,${base64Url}`,
+      editValue), {
+      onDataReceived: (aiSpeakBean: AISpeakBean) => {
+        console.info(`onPicReasoning data: ${JSON.stringify(aiSpeakBean)}`)
+        //加载成功
+        receiverMessage.messageStatus = 1
+        let ch = aiSpeakBean.choices
+        if (ch !== undefined) {
+          let delta = ch[0]
+          if (delta && delta.delta) {
+            if (delta.delta.reasoning_content) {
+              let text = receiverMessage.text
+              let newText = text + delta.delta.reasoning_content
+              receiverMessage.text = newText
+            }
+            if (delta.delta.content) {
+              let text = receiverMessage.text
+              let newText = text + delta.delta.content
+              receiverMessage.text = newText
+            }
+          }
+        }
+      },
+      onComplete: () => {
+        console.info(`onPicReasoning data: onComplete`)
+      },
+      onError: (error) => {
+        console.info(`onPicReasoning data: onError`)
+        receiverMessage.messageStatus = 2
+        receiverMessage.errorMessage = error.message
+      }
+    })
+  }
+
+  toGetTextNormalAi(receiverMessage: Message, editValue: string) {
     //请求
     const client = new CommonAiRequestUtil({
       endpoint: 'https://dashscope.aliyuncs.com',
@@ -745,13 +1041,9 @@ struct AIChatPage {
       model: 'deepseek-r1'
     });
 
-    //接收
-    const receiverMessage = this.getReceiverMessage()
-    receiverMessage.messageStatus = 0
-    this.messageArr.push(receiverMessage)
-
-    client.sendStreamRequest(client.getTextJsonContent(this.editValue), {
+    client.sendStreamRequest(client.getTextJsonContent(editValue), {
       onDataReceived: (aiSpeakBean: AISpeakBean): void => {
+        console.info(`toGetTextNormalAi data: ${JSON.stringify(aiSpeakBean)}`)
         //加载成功
         receiverMessage.messageStatus = 1
         let ch = aiSpeakBean.choices
@@ -772,11 +1064,13 @@ struct AIChatPage {
         }
       },
       onError: (error: Error): void => {
+        console.info(`toGetTextNormalAi data: onError`)
         receiverMessage.messageStatus = 2
         receiverMessage.errorMessage = error.message
       },
       onComplete: (): void => {
         //写到数据库
+        console.info(`toGetTextNormalAi data: onComplete`)
 
       }
     })

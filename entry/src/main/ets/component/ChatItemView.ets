@@ -295,7 +295,7 @@ export struct ChatItemView {
     .borderColor(Color.Gray)
     .borderWidth(1)
     .gesture(
-      GestureGroup(GestureMode.Parallel,
+      GestureGroup(GestureMode.Exclusive,
         LongPressGesture().onAction((event) => {
           this.showPopup = !this.showPopup
         }),
@@ -342,7 +342,7 @@ export struct ChatItemView {
       .id('imageChat')
       .gesture(
         GestureGroup(
-          GestureMode.Parallel,
+          GestureMode.Exclusive,
           LongPressGesture({ repeat: false }).onAction((event) => {
             this.showPopup = !this.showPopup
           }),
@@ -398,7 +398,7 @@ export struct ChatItemView {
       .draggable(true)
       .gesture(
         GestureGroup(
-          GestureMode.Parallel,
+          GestureMode.Exclusive,
           LongPressGesture().onAction((event) => {
             this.start = 0
             this.end = this.item.text.length - 1
