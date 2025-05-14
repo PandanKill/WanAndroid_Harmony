@@ -53,6 +53,8 @@ export struct ChatItemView {
   @State isAnimating: boolean = false;
   // Transparency of the artwork.
   @State opacityDegree: number = 1;
+  //size 更新
+  @Consume('itemSizeChange') itemSizeChange: boolean
   //监听模态页面
   listener: inspector.ComponentObserver = inspector.createComponentObserver('imageDetail');
 
@@ -485,6 +487,17 @@ export struct ChatItemView {
             .fontSize($r('app.float.font_15'))
             .textAlign(TextAlign.Start)
             .copyOption(CopyOptions.None)
+            // .onAreaChange((oldVal, newVal) => {
+            //   this.itemSizeChange = oldVal.height !== newVal.height
+            //   console.info(`onAreaChange oldVal height: ${oldVal.height}, newVal: ${newVal.height}`)
+            // })
+            .onSizeChange((oldVal, newVal)=>{
+              this.itemSizeChange = oldVal.height?.valueOf() !== newVal.height?.valueOf()
+              console.info(`onSizeChange oldVal height: ${oldVal.height}, newVal: ${newVal.height}`)
+            })
+            .onTextSelectionChange((start, end) => {
+
+            })
             .gesture(
               TapGesture({ count: 2 }).onAction((event) => {
                 this.showTextContent = true

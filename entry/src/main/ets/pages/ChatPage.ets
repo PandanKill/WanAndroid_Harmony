@@ -99,6 +99,7 @@ struct AIChatPage {
   private timeId: number = 0
   @State eventAudio: EventState = new EventState()
   private context: common.UIAbilityContext = getContext(this) as common.UIAbilityContext
+  @Provide('itemSizeChange') @Watch('itemSizeChangeListener') itemSizeChange: boolean = false
   //事件回调
   onAudioTouch = async (event: TouchEvent) => {
     // const eventState: EventState = new EventState()
@@ -120,6 +121,16 @@ struct AIChatPage {
       this.eventAudio.y = event.touches[0].displayY
     } else if (event.type === TouchType.Cancel) {
       this.eventAudio.type = CustomTouchType.Cancel
+    }
+  }
+
+  /**
+   * size change
+   */
+  itemSizeChangeListener() {
+    if (this.itemSizeChange) {
+      console.info(`itemSizeChangeListener`)
+      this.scrollEnd()
     }
   }
 
@@ -366,6 +377,7 @@ struct AIChatPage {
                       ChatItemView({
                         item: item,
                         index: index
+                        // itemSizeChange:this.itemSizeChange
                       })
                     }.width(SizeConstant.FULL_SIZE)
                     .height('auto')
@@ -450,6 +462,7 @@ struct AIChatPage {
                               }, () => {
                                 this.isEmoji = false
                                 this.isPhoto = false
+                                this.scrollEnd()
                               })
                             })
 
@@ -502,6 +515,7 @@ struct AIChatPage {
                         }, () => {
                           this.isPhoto = false
                           this.isEmoji = !this.isEmoji
+                          this.scrollEnd()
                         })
                         this.isSendText = true
                         if (this.isEmoji) {
@@ -530,6 +544,7 @@ struct AIChatPage {
                         }, () => {
                           this.isEmoji = false
                           this.isPhoto = !this.isPhoto
+                          this.scrollEnd()
                         })
                         this.isSendText = true
                         if (this.isPhoto) {
@@ -651,6 +666,10 @@ struct AIChatPage {
     }.width(SizeConstant.FULL_SIZE)
     .height(SizeConstant.FULL_SIZE)
     .backgroundColor($r('app.color.color_EDEDED'))
+  }
+
+  scrollEnd() {
+    this.scroller.scrollToIndex(this.messageArr.length - 1, true, ScrollAlign.END,)
   }
 
   getRefTypeString(referType: number | undefined): string {
