@@ -85,6 +85,8 @@ struct AIChatPage {
   @State emojiIconResource: Resource = $r('app.media.icon_biaoqing')
   //相册、相机
   @State isPhoto: boolean = false
+  //判断当前是否软键盘弹出
+  isSoftwareInput: boolean = false
   //是否正在录音
   @State isRecording: boolean = false
   //音频解析
@@ -128,10 +130,8 @@ struct AIChatPage {
    * size change
    */
   itemSizeChangeListener() {
-    if (this.itemSizeChange) {
-      console.info(`itemSizeChangeListener`)
-      this.scrollEnd()
-    }
+    console.info(`itemSizeChangeListener`)
+    this.scrollEnd()
   }
 
   /**

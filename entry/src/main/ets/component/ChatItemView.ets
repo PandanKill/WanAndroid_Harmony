@@ -486,13 +486,15 @@ export struct ChatItemView {
             .height('auto')
             .fontSize($r('app.float.font_15'))
             .textAlign(TextAlign.Start)
-            .copyOption(CopyOptions.None)
-            // .onAreaChange((oldVal, newVal) => {
-            //   this.itemSizeChange = oldVal.height !== newVal.height
-            //   console.info(`onAreaChange oldVal height: ${oldVal.height}, newVal: ${newVal.height}`)
-            // })
-            .onSizeChange((oldVal, newVal)=>{
-              this.itemSizeChange = oldVal.height?.valueOf() !== newVal.height?.valueOf()
+            .copyOption(CopyOptions.None)// .onAreaChange((oldVal, newVal) => {
+              //   this.itemSizeChange = oldVal.height !== newVal.height
+              //   console.info(`onAreaChange oldVal height: ${oldVal.height}, newVal: ${newVal.height}`)
+              // })
+            .onSizeChange((oldVal, newVal) => {
+              let changeVal = oldVal.height?.valueOf() !== newVal.height?.valueOf()
+              if (changeVal) {
+                this.itemSizeChange = !this.itemSizeChange
+              }
               console.info(`onSizeChange oldVal height: ${oldVal.height}, newVal: ${newVal.height}`)
             })
             .onTextSelectionChange((start, end) => {
