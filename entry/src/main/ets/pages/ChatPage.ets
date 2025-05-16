@@ -189,6 +189,7 @@ struct AIChatPage {
   }
 
   aboutToAppear(): void {
+    //todo 数据库操作
     //引用
     itemClickManager.onReferListener = (refItem, refType) => {
       //引用回调
@@ -395,6 +396,20 @@ struct AIChatPage {
                   })
                   this.getUIContext().getFocusController().clearFocus()
                 })
+                .onWillScroll(() => {
+                  if (this.isSoftwareInput) {
+                    //只有显示软键盘、表情包、图片时候才需要
+                    this.getUIContext().getFocusController().clearFocus()
+                  }
+
+                  if (this.isPhoto) {
+                    this.isPhoto = false
+                  }
+
+                  if (this.isEmoji) {
+                    this.isEmoji = false
+                  }
+                })
 
                 //底部栏
                 Column() {
@@ -442,6 +457,7 @@ struct AIChatPage {
                               //首次不需要弹软键盘
                               if (!this.isFirstShowUI && !this.isEmoji && !this.isPhoto) {
                                 //非首次 Appear 的时候，才需要弹出软件盘
+                                this.isSoftwareInput = true
                                 this.getUIContext().getFocusController().requestFocus('sendText')
                               }
                             })
@@ -460,6 +476,7 @@ struct AIChatPage {
                                 duration: 100,
                                 curve: Curve.Linear
                               }, () => {
+                                this.isSoftwareInput = true
                                 this.isEmoji = false
                                 this.isPhoto = false
                                 this.scrollEnd()
@@ -524,6 +541,7 @@ struct AIChatPage {
                         } else {
                           //弹出软键盘
                           setTimeout(() => {
+                            this.isSoftwareInput = true
                             //需要延迟50ms，避免无法无法获取到焦点
                             this.getUIContext().getFocusController().requestFocus('sendText')
                           }, 50)
@@ -554,6 +572,7 @@ struct AIChatPage {
                         } else {
                           //弹出软键盘
                           setTimeout(() => {
+                            this.isSoftwareInput = true
                             //需要延迟50ms，避免无法无法获取到焦点
                             this.getUIContext().getFocusController().requestFocus('sendText')
                           }, 50)
@@ -756,7 +775,6 @@ struct AIChatPage {
     this.messageArr.push(sendMessage)
     //重置引用
     this.isRefer = false
-    //todo 存在问题
     let tempReferMessage = this.referMessage
     let tempReferType = this.referType
     this.referMessage = null
