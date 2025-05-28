@@ -11,6 +11,7 @@
     "pages/PointRankPage",
     "pages/CollectPage",
     "pages/ChatPage",
-    "pages/PhotoPickerComponentPage"
+    "pages/PhotoPickerComponentPage",
+    "pages/PicEditPage"
   ]
 }

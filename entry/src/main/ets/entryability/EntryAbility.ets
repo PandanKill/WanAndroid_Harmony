@@ -4,8 +4,9 @@ import { display, KeyboardAvoidMode, window } from '@kit.ArkUI';
 import { BreakpointConstants } from '../constants/BreakpointConstants';
 import { StorageKey } from '../constants/StorageKey';
 import { BusinessError } from '@kit.BasicServicesKit';
-import dbUtil, { DBUtil } from '../utils/DBUtil';
 import { WindowUtils } from '../utils/WindowUtils';
+import databaseUtil from '../utils/DatabaseUtil';
+import { taskpool } from '@kit.ArkTS';
 
 export default class EntryAbility extends UIAbility {
   private window?: window.Window
@@ -32,7 +33,7 @@ export default class EntryAbility extends UIAbility {
     hilog.info(0x0000, 'testTag', '%{public}s', 'Ability onWindowStageCreate');
 
     //创建表
-    // dbUtil.createDB()
+    databaseUtil.initData(this.context)
 
     //获取窗口信息
     windowStage.getMainWindow().then((window1: window.Window) => {

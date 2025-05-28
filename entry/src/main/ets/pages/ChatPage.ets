@@ -2,7 +2,7 @@ import { ChatOtherFunView } from '../component/ChatOtherFunView';
 import { EmojiListView } from '../component/EmojiListView';
 import { NavHeaderView } from '../component/NavHeaderView';
 import SizeConstant from '../constants/SizeConstant';
-import { JSON } from '@kit.ArkTS';
+import { JSON, taskpool } from '@kit.ArkTS';
 import hilog from '@ohos.hilog';
 import { componentUtils, promptAction, router, window } from '@kit.ArkUI';
 import { ChatItemView } from '../component/ChatItemView';
@@ -190,6 +190,7 @@ struct AIChatPage {
 
   aboutToAppear(): void {
     //todo 数据库操作
+    this.getChatData()
     //引用
     itemClickManager.onReferListener = (refItem, refType) => {
       //引用回调
@@ -210,6 +211,13 @@ struct AIChatPage {
     itemClickManager.onResendListener = (message) => {
       this.toGetAi(message.text)
     }
+  }
+
+  /**
+   * 获取消息数据
+   */
+  getChatData() {
+    // taskpool.execute()
   }
 
   async onPageShow(): Promise<void> {
