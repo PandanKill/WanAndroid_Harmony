@@ -19,6 +19,8 @@ import itemClickManager from '../componentManager/PopupItemClickManager';
 import { CommonAiRequestUtil } from '../utils/CommonAiRequestUtil';
 import { RefTypeView } from '../component/RefTypeView';
 import { AISpeakBean } from '../bean/AIResponseBean';
+import databaseUtil from '../utils/DatabaseUtil';
+import { BusinessError } from '@kit.BasicServicesKit';
 
 @Observed
 export class Message {
@@ -216,8 +218,15 @@ struct AIChatPage {
   /**
    * 获取消息数据
    */
-  getChatData() {
-    // taskpool.execute()
+  async getChatData() {
+    // databaseUtil.query(this.context).then((data) => {
+    //   console.info(`messageArr, ${JSON.stringify(data)}`)
+    //   this.messageArr = data
+    // }).catch((err: BusinessError) => {
+    //   console.error(`getChatData, ${err.message}`)
+    // })
+    let a = await databaseUtil.query(this.context)
+    this.messageArr = a
   }
 
   async onPageShow(): Promise<void> {
@@ -249,11 +258,14 @@ struct AIChatPage {
     //判断上一次聊天时间小于
     let currentMill = Date.now()
     if (currentMill - this.lastSendMessage > 5 * 60 * 1000) {
-      this.messageArr.push(this.getDateMessage())
+      let messageTemp = this.getDateMessage()
+      this.messageArr.push(messageTemp)
+      databaseUtil.insert(messageTemp, this.context)
     }
 
     const sendMessage = this.getSendVideoMessage(itemInfo)
     this.messageArr.push(sendMessage)
+    databaseUtil.insert(sendMessage, this.context)
     //接收
     // const receiverMessage = this.getReceiverMessage()
     // receiverMessage.messageStatus = 0
@@ -268,11 +280,14 @@ struct AIChatPage {
     //判断上一次聊天时间小于
     let currentMill = Date.now()
     if (currentMill - this.lastSendMessage > 5 * 60 * 1000) {
-      this.messageArr.push(this.getDateMessage())
+      let messageTemp = this.getDateMessage()
+      this.messageArr.push(messageTemp)
+      databaseUtil.insert(messageTemp, this.context)
     }
 
     const sendMessage = this.getSendPicMessage(itemInfo)
     this.messageArr.push(sendMessage)
+    databaseUtil.insert(sendMessage, this.context)
     //接收
     // const receiverMessage = this.getReceiverMessage()
     // receiverMessage.messageStatus = 0
@@ -664,9 +679,12 @@ struct AIChatPage {
                     if (textType === 0) {
                       let message = this.getSendMessage("文字发送")
                       this.messageArr.push(message)
+                      databaseUtil.insert(message, this.context)
+
                     } else if (textType === 3) {
                       let message = this.getSendAudioMessage()
                       this.messageArr.push(message)
+                      databaseUtil.insert(message, this.context)
                     }
                   }
                 })
@@ -770,7 +788,9 @@ struct AIChatPage {
     //判断上一次聊天时间小于
     let currentMill = Date.now()
     if (currentMill - this.lastSendMessage > 5 * 60 * 1000) {
-      this.messageArr.push(this.getDateMessage())
+      let message = this.getDateMessage()
+      this.messageArr.push(message)
+      databaseUtil.insert(message, this.context)
     }
     //""
     let sendMessage = this.getSendMessage(editValue)
@@ -781,6 +801,7 @@ struct AIChatPage {
       sendMessage.referText = this.getRefTypeString(this.referType) + ": " + this.getShowReferText(this.referMessage!)
     }
     this.messageArr.push(sendMessage)
+    databaseUtil.insert(sendMessage, this.context)
     //重置引用
     this.isRefer = false
     let tempReferMessage = this.referMessage
@@ -869,11 +890,13 @@ struct AIChatPage {
       },
       onComplete: () => {
         console.info(`onAudioFollow data: onComplete`)
+        databaseUtil.insert(receiverMessage, this.context)
       },
       onError: (err) => {
         console.info(`onAudioFollow data: onError`)
         receiverMessage.messageStatus = 2
         receiverMessage.errorMessage = err.message
+        databaseUtil.insert(receiverMessage, this.context)
       }
     })
   }
@@ -917,11 +940,13 @@ struct AIChatPage {
       },
       onComplete: () => {
         console.info(`onVideoReasoning data: onComplete`)
+        databaseUtil.insert(receiverMessage, this.context)
       },
       onError: (err) => {
         console.info(`onVideoReasoning data: onError`)
         receiverMessage.messageStatus = 2
         receiverMessage.errorMessage = err.message
+        databaseUtil.insert(receiverMessage, this.context)
       }
     })
   }
@@ -969,10 +994,11 @@ struct AIChatPage {
         console.info(`onVideoFollow data: onError`)
         receiverMessage.messageStatus = 2
         receiverMessage.errorMessage = err.message
+        databaseUtil.insert(receiverMessage, this.context)
       },
       onComplete: () => {
         console.info(`onVideoFollow data: onComplete`)
-
+        databaseUtil.insert(receiverMessage, this.context)
       }
     })
   }
@@ -1021,10 +1047,11 @@ struct AIChatPage {
         console.info(`onPicFollow data: onError`)
         receiverMessage.messageStatus = 2
         receiverMessage.errorMessage = err.message
+        databaseUtil.insert(receiverMessage, this.context)
       },
       onComplete: () => {
         console.info(`onPicFollow data: onComplete`)
-
+        databaseUtil.insert(receiverMessage, this.context)
       }
     })
   }
@@ -1069,11 +1096,13 @@ struct AIChatPage {
       },
       onComplete: () => {
         console.info(`onPicReasoning data: onComplete`)
+        databaseUtil.insert(receiverMessage, this.context)
       },
       onError: (error) => {
         console.info(`onPicReasoning data: onError`)
         receiverMessage.messageStatus = 2
         receiverMessage.errorMessage = error.message
+        databaseUtil.insert(receiverMessage, this.context)
       }
     })
   }
@@ -1112,11 +1141,12 @@ struct AIChatPage {
         console.info(`toGetTextNormalAi data: onError`)
         receiverMessage.messageStatus = 2
         receiverMessage.errorMessage = error.message
+        databaseUtil.insert(receiverMessage, this.context)
       },
       onComplete: (): void => {
         //写到数据库
         console.info(`toGetTextNormalAi data: onComplete`)
-
+        databaseUtil.insert(receiverMessage, this.context)
       }
     })
   }

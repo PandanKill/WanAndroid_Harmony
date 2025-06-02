@@ -5,13 +5,13 @@ export class DatabaseConstant {
     //消息方
     'MESSAGETYPE INTEGER NOT NULL, ' +
     //姓名
-    'OWNERNAME TEXT NOT NULL, ' +
+    'OWNERNAME TEXT, ' +
     //消息状态
     'MESSAGESTATUS INTEGER,' +
     //异常信息
     'ERRORMESSAGE TEXT,' +
     //消息类型
-    'TEXTTYPE INTEGER NOT NULL,' +
+    'TEXTTYPE INTEGER,' +
     //文字内容
     'TEXTVAL TEXT, ' +
     //图片 uri
@@ -49,5 +49,5 @@ export class DatabaseConstant {
   /**
    * 消息表名
    */
-  static readonly CHAT_TABLE = 'chat_table'
+  static readonly CHAT_TABLE = 'CHAT_MESSAGE'
 }

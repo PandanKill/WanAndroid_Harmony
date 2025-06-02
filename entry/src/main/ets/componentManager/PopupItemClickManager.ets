@@ -7,6 +7,7 @@ import { CommonAiRequestUtil } from "../utils/CommonAiRequestUtil";
 import { JSON } from "@kit.ArkTS";
 import { fileToBase64 } from "../utils/FileUtil";
 import { AISpeakBean } from "../bean/AIResponseBean";
+import databaseUtil from "../utils/DatabaseUtil";
 
 /**
  * 聊天 Item 点击
@@ -316,6 +317,7 @@ class PopupItemClickManager {
       },
       onComplete: () => {
         console.info(`translate data: onComplete`)
+        // databaseUtil.updateTranslate(message)
       },
       onError: (err) => {
         console.info(`translate data: onError`)
