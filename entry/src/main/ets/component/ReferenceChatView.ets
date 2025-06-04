@@ -3,6 +3,8 @@ import SizeConstant from "../constants/SizeConstant";
 @Component
 export struct ReferenceChatView {
   @State referText: string = ''
+  onClickItem: () => void = () => {
+  }
 
   build() {
     Stack() {
@@ -18,6 +20,7 @@ export struct ReferenceChatView {
         .maxLines(2)
         .textOverflow({ overflow: TextOverflow.Ellipsis })
         .textAlign(TextAlign.Start)
+        .onClick(this.onClickItem)
     }.constraintSize({ maxWidth: SizeConstant.SIZE_PERCENT_60 })
   }
 }

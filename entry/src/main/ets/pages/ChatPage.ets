@@ -59,6 +59,10 @@ export class Message {
   referEnable: boolean = false
   referId: string = ''
   referType: number = 0
+  //引用内容 uri，只限语音、视频、图片
+  referUri: string = ''
+  referWidth: number = 0
+  referHeight: number = 0
   referText: string = ''
   /**
    * 翻译
@@ -266,6 +270,7 @@ struct AIChatPage {
     const sendMessage = this.getSendVideoMessage(itemInfo)
     this.messageArr.push(sendMessage)
     databaseUtil.insert(sendMessage, this.context)
+    this.scrollEnd()
     //接收
     // const receiverMessage = this.getReceiverMessage()
     // receiverMessage.messageStatus = 0
@@ -288,6 +293,7 @@ struct AIChatPage {
     const sendMessage = this.getSendPicMessage(itemInfo)
     this.messageArr.push(sendMessage)
     databaseUtil.insert(sendMessage, this.context)
+    this.scrollEnd()
     //接收
     // const receiverMessage = this.getReceiverMessage()
     // receiverMessage.messageStatus = 0
@@ -502,7 +508,9 @@ struct AIChatPage {
                                 this.isSoftwareInput = true
                                 this.isEmoji = false
                                 this.isPhoto = false
-                                this.scrollEnd()
+                                if (!this.scroller.isAtEnd()) {
+                                  this.scrollEnd()
+                                }
                               })
                             })
 
@@ -680,11 +688,13 @@ struct AIChatPage {
                       let message = this.getSendMessage("文字发送")
                       this.messageArr.push(message)
                       databaseUtil.insert(message, this.context)
+                      this.scrollEnd()
 
                     } else if (textType === 3) {
                       let message = this.getSendAudioMessage()
                       this.messageArr.push(message)
                       databaseUtil.insert(message, this.context)
+                      this.scrollEnd()
                     }
                   }
                 })
@@ -798,10 +808,23 @@ struct AIChatPage {
       sendMessage.referEnable = true
       sendMessage.referId = this.referMessage.id
       sendMessage.referType = this.referMessage.textType
+      if (this.referMessage.textType == 1) {
+        sendMessage.referUri = this.referMessage.imageUri
+        sendMessage.referWidth = this.referMessage.imageWidth
+        sendMessage.referHeight = this.referMessage.imageHeight
+      } else if (this.referMessage.textType == 2) {
+        sendMessage.referUri = this.referMessage.videoUri
+        sendMessage.referWidth = this.referMessage.videoCapWidth
+        sendMessage.referHeight = this.referMessage.videoCapHeight
+      } else if (this.referMessage.textType == 3) {
+        sendMessage.referUri = this.referMessage.audioUri
+      }
       sendMessage.referText = this.getRefTypeString(this.referType) + ": " + this.getShowReferText(this.referMessage!)
     }
     this.messageArr.push(sendMessage)
     databaseUtil.insert(sendMessage, this.context)
+    //滚动底部
+    this.scrollEnd()
     //重置引用
     this.isRefer = false
     let tempReferMessage = this.referMessage

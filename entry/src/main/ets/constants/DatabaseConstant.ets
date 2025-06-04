@@ -40,8 +40,13 @@ export class DatabaseConstant {
     'REFERID TEXT, ' +
     //引用类型
     'REFERTYPE INTEGER, ' +
+    //引用内容宽高
+    'REFERWIDTH INTEGER, ' +
+    'REFERHEIGHT INTEGER, ' +
     //引用文字
     'REFERTEXT TEXT, ' +
+    //引用url
+    'REFERURI TEXT, ' +
     //是否翻译
     'TRANSLATEENABLE BOOLEAN, ' +
     //翻译内容

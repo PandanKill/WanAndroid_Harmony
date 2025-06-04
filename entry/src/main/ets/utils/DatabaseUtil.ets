@@ -6,7 +6,7 @@ import { common, Context } from "@kit.AbilityKit"
 import { Message } from "../pages/ChatPage"
 import { BusinessError } from "@kit.BasicServicesKit"
 import { DatabaseConstant } from "../constants/DatabaseConstant"
-import { taskpool } from "@kit.ArkTS"
+import { JSON, taskpool } from "@kit.ArkTS"
 
 const CONFIG: relationalStore.StoreConfig = {
   name: "wanandroid.db",
@@ -196,6 +196,9 @@ async function queryMessageData(context: Context, config: relationalStore.StoreC
     message.referId = resultSet.getString(resultSet.getColumnIndex('REFERID'))
     message.referType = resultSet.getLong(resultSet.getColumnIndex('REFERTYPE'))
     message.referText = resultSet.getString(resultSet.getColumnIndex('REFERTEXT'))
+    message.referUri = resultSet.getString(resultSet.getColumnIndex('REFERURI'))
+    message.referWidth = resultSet.getLong(resultSet.getColumnIndex('REFERWIDTH'))
+    message.referHeight = resultSet.getLong(resultSet.getColumnIndex('REFERHEIGHT'))
     message.translateText = resultSet.getString(resultSet.getColumnIndex('TRANSLATETEXT'))
     message.translateEnable = resultSet.getLong(resultSet.getColumnIndex('TRANSLATEENABLE')) === 0 ? false : true
 
@@ -212,8 +215,22 @@ class DatabaseUtil {
    */
   async query(context: Context): Promise<Message[]> {
     let mArr = await taskpool.execute(queryMessageData, context, CONFIG) as Message[]
+    for (let index = 0; index < mArr.length; index++) {
+      const element = mArr[index];
+      console.info(`nihao message: ${JSON.stringify(element)}`)
+    }
     return mArr
   }
+
+  /**
+   * 根据消息 id 查询指定留言
+   * @param context
+   * @param referId
+   * @returns
+   */
+  // async queryByReferId(context: Context, referId: string): Promise<Message> {
+  //
+  // }
 
   /**
    * 插入数据
@@ -261,6 +278,8 @@ class DatabaseUtil {
           'REFERENABLE': message.referEnable,
           'REFERID': message.referId,
           'REFERTYPE': message.referType,
+          'REFERTEXT': message.referText,
+          'REFERURI': message.referUri,
           'TRANSLATEENABLE': message.translateEnable,
           'TRANSLATETEXT': message.translateText
         }
@@ -282,6 +301,8 @@ class DatabaseUtil {
           'REFERENABLE': message.referEnable,
           'REFERID': message.referId,
           'REFERTYPE': message.referType,
+          'REFERTEXT': message.referText,
+          'REFERURI': message.referUri,
           'TRANSLATEENABLE': message.translateEnable,
           'TRANSLATETEXT': message.translateText
         }
@@ -303,6 +324,8 @@ class DatabaseUtil {
           'REFERENABLE': message.referEnable,
           'REFERID': message.referId,
           'REFERTYPE': message.referType,
+          'REFERTEXT': message.referText,
+          'REFERURI': message.referUri,
           'TRANSLATEENABLE': message.translateEnable,
           'TRANSLATETEXT': message.translateText
         }

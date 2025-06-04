@@ -3,7 +3,7 @@ import { Message } from "../pages/ChatPage"
 
 @Component
 export struct ChatVideoDetailContent {
-  @Prop detailMessage: Message
+  @Prop detailMessage: string
   @Link chatVideoDetailContent: boolean
   controller: VideoController = new VideoController()
   //播放状态
@@ -32,7 +32,7 @@ export struct ChatVideoDetailContent {
     }) {
       //视频
       Video({
-        src: this.detailMessage.videoUri,
+        src: this.detailMessage,
         currentProgressRate: this.curSpeed,
         controller: this.controller
       })

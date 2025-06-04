@@ -4,13 +4,13 @@ import { LengthMetrics } from "@kit.ArkUI";
 
 @Component
 export struct ChatTextDetailContent {
-  @Prop detailMessage: Message
+  @Prop @Require detailMessageText: string
   @Link chatTextDetailContent: boolean
 
   build() {
     Column() {
       Scroll() {
-        Text(this.detailMessage.text)
+        Text(this.detailMessageText)
           .fontSize($r('app.float.font_20'))
           .lineSpacing(LengthMetrics.vp(20))
       }

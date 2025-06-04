@@ -12,7 +12,9 @@ const TAG: string = '[ImageItemView]';
 
 @Component
 export struct ChatPicDetailContent {
-  @Prop detailMessage: Message
+  @Prop @Require detailMessageUri: string
+  @Prop @Require imageWidth: number
+  @Prop @Require imageHeight: number
   @Link chatPicDetailContent: boolean
   @State imageModel: ImageModel = new ImageModel()
   private context: common.UIAbilityContext = getContext(this) as common.UIAbilityContext
@@ -34,7 +36,7 @@ export struct ChatPicDetailContent {
   initCurrentImageInfo() {
     // let imageSource = image.createImageSource(this.detailMessage.imageUri)
     // imageSource.getImageInfo().then((data: image.ImageInfo) => {
-    this.imageWHRatio = this.detailMessage.imageWidth / this.detailMessage.imageHeight;
+    this.imageWHRatio = this.imageWidth / this.imageHeight;
     this.imageModel.imageWidth = this.imageModel.componentWidth
     this.imageModel.imageHeight = this.imageModel.imageWidth / this.imageWHRatio
     // }).catch((err: BusinessError) => {
@@ -44,7 +46,7 @@ export struct ChatPicDetailContent {
 
   build() {
     Stack() {
-      Image(this.detailMessage.imageUri)
+      Image(this.detailMessageUri)
         .width(this.imageModel.imageWidth)
         .height(this.imageModel.imageHeight)
         .aspectRatio(this.imageWHRatio)

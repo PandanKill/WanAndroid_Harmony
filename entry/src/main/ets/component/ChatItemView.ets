@@ -15,6 +15,7 @@ import { BusinessError } from '@kit.BasicServicesKit'
 import { ChatVideoDetailContent } from './ChatVideoDetailContent'
 import { WindowUtils } from '../utils/WindowUtils'
 import { ComponentAttrUtils, RectInfoInPx } from '../utils/ComponentAttrUtils'
+import databaseUtil from '../utils/DatabaseUtil'
 
 /**
  * 聊天内容 View
@@ -38,6 +39,10 @@ export struct ChatItemView {
   @State showTextContent: boolean = false
   @State showPicContent: boolean = false
   @State showVideoContent: boolean = false
+  //是否显示引用的全屏模态
+  @State showReferTextContent: boolean = false
+  @State showReferPicContent: boolean = false
+  @State showReferVideoContent: boolean = false
   //引用内容
   @State popItem: ChatPopupItem[] = []
   //文字选中
@@ -199,8 +204,25 @@ export struct ChatItemView {
         if (this.item.referEnable) {
           //展示引用信息
           ReferenceChatView({
-            referText: this.item.referText
+            referText: this.item.referText,
+            onClickItem: () => {
+              if (this.item.referType === 1) {
+                console.info(`click pic`)
+                this.showReferPicContent = true
+              } else if (this.item.referType === 2) {
+                console.info(`click video`)
+                this.showReferVideoContent = true
+              } else if (this.item.referType === 0) {
+                console.info(`click text`)
+                this.showReferTextContent = true
+              }
+            }
           })
+            .bindContentCover(this.showReferTextContent, this.contentTextCover(this.item.referText), {
+              onDisappear: () => {
+                this.showReferTextContent = false
+              }
+            })
         }
       }
       .alignItems(HorizontalAlign.End)
@@ -318,7 +340,7 @@ export struct ChatItemView {
         }
       }
     })
-    .bindContentCover(this.showVideoContent, this.contentVideoCover(this.item), {
+    .bindContentCover(this.showVideoContent, this.contentVideoCover(this.item.videoUri), {
       onDisappear: () => {
         this.showVideoContent = false
       }
@@ -371,13 +393,14 @@ export struct ChatItemView {
           }
         }
       })
-      .bindContentCover(this.showPicContent, this.contentPicCover(this.item, this.index), {
-        transition: TransitionEffect.IDENTITY,
-        onDisappear: () => {
-          this.showPicContent = false
-          this.opacityDegree = 1
-        }
-      })
+      .bindContentCover(this.showPicContent,
+        this.contentPicCover(this.item.imageUri, this.item.imageWidth, this.item.imageHeight, this.index), {
+          transition: TransitionEffect.IDENTITY,
+          onDisappear: () => {
+            this.showPicContent = false
+            this.opacityDegree = 1
+          }
+        })
   }
 
   /**
@@ -425,7 +448,7 @@ export struct ChatItemView {
           }
         }
       })
-      .bindContentCover(this.showTextContent, this.contentTextCover(this.item), {
+      .bindContentCover(this.showTextContent, this.contentTextCover(this.item.text), {
         onDisappear: () => {
           this.showTextContent = false
         }
@@ -505,7 +528,7 @@ export struct ChatItemView {
                 this.showTextContent = true
               })
             )
-            .bindContentCover(this.showTextContent, this.contentTextCover(this.item), {
+            .bindContentCover(this.showTextContent, this.contentTextCover(this.item.text), {
               onDisappear: () => {
                 this.showTextContent = false
               }
@@ -573,12 +596,10 @@ export struct ChatItemView {
    * 文字模态页面
    */
   @Builder
-  contentTextCover(message:
-    Message
-  ) {
+  contentTextCover(text: string, showContent: boolean) {
     //文字详情页
     ChatTextDetailContent({
-      detailMessage: message,
+      detailMessageText: text,
       chatTextDetailContent: this.showTextContent
     }).width(SizeConstant.FULL_SIZE)
       .height(SizeConstant.FULL_SIZE)
@@ -588,11 +609,13 @@ export struct ChatItemView {
    * 图片模态页面
    */
   @Builder
-  contentPicCover(message: Message, selectIndex: number) {
+  contentPicCover(picUri: string, picWidth: number, picHeight: number, selectIndex: number, showContext: boolean) {
     // Stack() {
     // ImageNode()
     ChatPicDetailContent({
-      detailMessage: message,
+      detailMessageUri: picUri,
+      imageWidth: picWidth,
+      imageHeight: picHeight,
       chatPicDetailContent: this.showPicContent
     }).width(SizeConstant.FULL_SIZE)
       .height(SizeConstant.FULL_SIZE)
@@ -615,11 +638,11 @@ export struct ChatItemView {
    * 视频模态页面
    */
   @Builder
-  contentVideoCover(message:
-    Message
+  contentVideoCover(videoUri:
+    string, showContent: boolean
   ) {
     ChatVideoDetailContent({
-      detailMessage: message,
+      detailMessage: videoUri,
       chatVideoDetailContent: this.showVideoContent
     }).width(SizeConstant.FULL_SIZE)
       .height(SizeConstant.FULL_SIZE)
