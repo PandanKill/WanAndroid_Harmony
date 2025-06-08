@@ -109,6 +109,7 @@ async function insertSendVideoMessageData(context: Context, message: relationalS
 async function insertSendAudioMessageData(context: Context, message: relationalStore.ValuesBucket,
   config: relationalStore.StoreConfig) {
   let store: relationalStore.RdbStore = await relationalStore.getRdbStore(context, config)
+  store.insert(DatabaseConstant.CHAT_TABLE, message)
 }
 
 /**
@@ -248,6 +249,7 @@ class DatabaseUtil {
       await taskpool.execute(insertTimeMessageData, context, valueB, CONFIG)
       return;
     } else if (message.messageType === 2) {
+      console.info(`insertReceiverMessageData ${JSON.stringify(message)}`)
       let valueB: relationalStore.ValuesBucket = {
         'MESSAGETYPE': message.messageType,
         'OWNERNAME': message.ownerName,
@@ -266,7 +268,7 @@ class DatabaseUtil {
       return;
     } else {
       if (message.textType === 0) {
-        console.info(`insertTimeMessageData ${JSON.stringify(message)}`)
+        console.info(`insertTextMessageData ${JSON.stringify(message)}`)
         let valueB: relationalStore.ValuesBucket = {
           'MESSAGETYPE': message.messageType,
           'OWNERNAME': message.ownerName,
@@ -285,11 +287,11 @@ class DatabaseUtil {
           'TRANSLATEENABLE': message.translateEnable,
           'TRANSLATETEXT': message.translateText
         }
-        console.info(`insertTimeMessageData valueB ${JSON.stringify(valueB)}`)
+        console.info(`insertTextMessageData valueB ${JSON.stringify(valueB)}`)
         await taskpool.execute(insertSendTextMessageData, context, valueB, CONFIG)
         return;
       } else if (message.textType === 1) {
-
+        console.info(`insertPicMessageData ${JSON.stringify(message)}`)
         let valueB: relationalStore.ValuesBucket = {
           'MESSAGETYPE': message.messageType,
           'OWNERNAME': message.ownerName,
@@ -313,7 +315,7 @@ class DatabaseUtil {
         await taskpool.execute(insertSendPicMessageData, context, valueB, CONFIG)
         return;
       } else if (message.textType === 2) {
-
+        console.info(`insertVideoMessageData ${JSON.stringify(message)}`)
         let valueB: relationalStore.ValuesBucket = {
           'MESSAGETYPE': message.messageType,
           'OWNERNAME': message.ownerName,
@@ -338,7 +340,27 @@ class DatabaseUtil {
         await taskpool.execute(insertSendVideoMessageData, context, valueB, CONFIG)
         return;
       } else if (message.textType === 3) {
-        await taskpool.execute(insertSendAudioMessageData, context, message, CONFIG)
+        console.info(`insertAudioMessageData ${JSON.stringify(message)}`)
+        let valueB: relationalStore.ValuesBucket = {
+          'MESSAGETYPE': message.messageType,
+          'OWNERNAME': message.ownerName,
+          'MESSAGESTATUS': message.messageStatus,
+          'ERRORMESSAGE': message.errorMessage,
+          'TEXTTYPE': message.textType,
+          'AUDIOURI': message.audioUri,
+          'AUDIOTIME': message.audioTime,
+          'MESSAGEID': message.id,
+          'REFERENABLE': message.referEnable,
+          'REFERID': message.referId,
+          'REFERTYPE': message.referType,
+          'REFERTEXT': message.referText,
+          'REFERURI': message.referUri,
+          'REFERWIDTH': message.referWidth,
+          'REFERHEIGHT': message.referHeight,
+          'TRANSLATEENABLE': message.translateEnable,
+          'TRANSLATETEXT': message.translateText
+        }
+        await taskpool.execute(insertSendAudioMessageData, context, valueB, CONFIG)
         return;
       }
     }

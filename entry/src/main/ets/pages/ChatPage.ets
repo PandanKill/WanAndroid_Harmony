@@ -21,6 +21,7 @@ import { RefTypeView } from '../component/RefTypeView';
 import { AISpeakBean } from '../bean/AIResponseBean';
 import databaseUtil from '../utils/DatabaseUtil';
 import { BusinessError } from '@kit.BasicServicesKit';
+import { AudioCaptureManager, RecordFile } from '../utils/AudioCaptureManager';
 
 @Observed
 export class Message {
@@ -108,17 +109,12 @@ struct AIChatPage {
   @State eventAudio: EventState = new EventState()
   private context: common.UIAbilityContext = getContext(this) as common.UIAbilityContext
   @Provide('itemSizeChange') @Watch('itemSizeChangeListener') itemSizeChange: boolean = false
-  //事件回调
+  //录音文件名
+  recordFileName: string = "" //事件回调
   onAudioTouch = async (event: TouchEvent) => {
     // const eventState: EventState = new EventState()
     if (event.type === TouchType.Down) {
-      //校验录音权限
-      let grant = await checkPermissionGrant('ohos.permission.MICROPHONE')
-      if (grant === abilityAccessCtrl.GrantStatus.PERMISSION_GRANTED) {
-        this.startRecord()
-      } else {
-        requestPermissionForUser(['ohos.permission.MICROPHONE'], this.context, this.startRecord, this.deniedWarning)
-      }
+      this.startRecord()
 
     } else if (event.type === TouchType.Up) {
       //抬起状态
@@ -167,6 +163,28 @@ struct AIChatPage {
     this.eventAudio.type = CustomTouchType.Down
     //震动
     startVibrator()
+
+    //开始录音
+    this.startAudio()
+
+    //开始实时语音转文字
+    this.startSpeechRecognize()
+  }
+
+  /**
+   * 语音转文字
+   */
+  startSpeechRecognize() {
+
+  }
+
+  /**
+   * 开始录音
+   */
+  startAudio() {
+    this.recordFileName = Date.now().toString()
+    console.info(`startRecord ${this.recordFileName}`)
+    AudioCaptureManager.startRecord(this.recordFileName)
   }
 
   getMMSS(): string {
@@ -316,9 +334,9 @@ struct AIChatPage {
    * 获取发送文字 message
    * @returns
    */
-  getSendMessage(sendText: string): Message {
+  getSendMessage(sendText?: string): Message {
     let message = new Message()
-    message.text = sendText
+    message.text = sendText ?? ""
     message.messageType = 1
     message.textType = 0
     message.ownerName = "Owner"
@@ -362,10 +380,10 @@ struct AIChatPage {
     return message
   }
 
-  getSendAudioMessage(): Message {
+  getSendAudioMessage(recordFile: RecordFile): Message {
     let message = new Message()
-    message.audioUri = ''
-    message.audioTime = 15
+    message.audioUri = recordFile.recordFilePath ?? ""
+    message.audioTime = Math.round((recordFile.endRecordTime! - recordFile.startRecordTime!) / 1000)
     message.messageType = 1
     message.textType = 3
     message.ownerName = "Owner"
@@ -451,15 +469,7 @@ struct AIChatPage {
                       .margin({ left: SizeConstant.SIZE_10 })
                       .onClick(() => {
                         //切换语音文字
-                        this.isFirstShowUI = false
-                        this.isSendText = !this.isSendText
-                        this.getUIContext().animateTo({
-                          duration: 100,
-                          curve: Curve.Linear
-                        }, () => {
-                          this.isEmoji = false
-                          this.isPhoto = false
-                        })
+                        this.showAudioView()
                       })
 
                     //输入框
@@ -686,16 +696,17 @@ struct AIChatPage {
                   event: this.eventAudio,
                   audioRecord: this.isRecording,
                   audioParse: this.isAudioParsing,
-                  onDataSend: (textType: number) => {
+                  onDataSend: (textType: number, recordFile: RecordFile) => {
                     this.isRecording = false
                     if (textType === 0) {
-                      let message = this.getSendMessage("文字发送")
+                      let message = this.getSendMessage(recordFile.recordText)
                       this.messageArr.push(message)
                       databaseUtil.insert(message, this.context)
                       this.scrollEnd()
 
                     } else if (textType === 3) {
-                      let message = this.getSendAudioMessage()
+                      let message = this.getSendAudioMessage(recordFile)
+                      console.info(`stopRecord onDataSend ${JSON.stringify(message)}`)
                       this.messageArr.push(message)
                       databaseUtil.insert(message, this.context)
                       this.scrollEnd()
@@ -727,10 +738,49 @@ struct AIChatPage {
     .backgroundColor($r('app.color.color_EDEDED'))
   }
 
+  /**
+   * 展示录音
+   */
+  async showAudioView() {
+    let grant = await checkPermissionGrant('ohos.permission.MICROPHONE')
+    if (grant === abilityAccessCtrl.GrantStatus.PERMISSION_GRANTED) {
+      this.isFirstShowUI = false
+      this.isSendText = !this.isSendText
+      this.getUIContext().animateTo({
+        duration: 100,
+        curve: Curve.Linear
+      }, () => {
+        this.isEmoji = false
+        this.isPhoto = false
+      })
+    } else {
+      requestPermissionForUser(['ohos.permission.MICROPHONE'], this.context, () => {
+        this.isFirstShowUI = false
+        this.isSendText = !this.isSendText
+        this.getUIContext().animateTo({
+          duration: 100,
+          curve: Curve.Linear
+        }, () => {
+          this.isEmoji = false
+          this.isPhoto = false
+        })
+      },
+        this.deniedWarning)
+    }
+  }
+
+  /**
+   * 滑动到地步
+   */
   scrollEnd() {
     this.scroller.scrollToIndex(this.messageArr.length - 1, true, ScrollAlign.END,)
   }
 
+  /**
+   * 引用简洁显示引用内容
+   * @param referType
+   * @returns
+   */
   getRefTypeString(referType: number | undefined): string {
     let refText = '引用'
     if (referType !== undefined) {

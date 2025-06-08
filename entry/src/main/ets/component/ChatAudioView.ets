@@ -19,7 +19,7 @@ export struct ChatAudioView {
         .margin({ right: SizeConstant.SIZE_PERCENT_10 })
     }
     .width(SizeConstant.FULL_SIZE)
-    .height(SizeConstant.SIZE_30)
+    .height(SizeConstant.SIZE_35)
     .alignItems(VerticalAlign.Center)
     .backgroundColor($r('app.color.color_95EC69'))
     .borderRadius(SizeConstant.SIZE_5)

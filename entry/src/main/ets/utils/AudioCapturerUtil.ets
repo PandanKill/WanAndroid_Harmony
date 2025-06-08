@@ -87,6 +87,7 @@ import fs from '@ohos.file.fs';
  * 特殊场景：
  * 1、当有多段小音频，切换的时候不希望唤醒其他焦点，此时可以激活会话，在会话停用之前，不会被唤醒
  */
+
 export function doAudioSession() {
   let audioManager = audio.getAudioManager()
   //创建会话管理器

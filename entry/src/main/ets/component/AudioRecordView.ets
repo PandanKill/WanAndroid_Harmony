@@ -4,6 +4,7 @@ import { EventState } from "../pages/ChatPage";
 import { CustomTouchType } from "../bean/TouchType";
 import { AudioParseTextView } from "./AudioParseTextView";
 import { startVibrator } from "../utils/VibratorUtil";
+import { AudioCaptureManager, RecordFile } from "../utils/AudioCaptureManager";
 
 /**
  * 录音页面
@@ -39,7 +40,11 @@ export struct AudioRecordView {
   @Link audioParse: boolean
   @Link audioRecord: boolean
   //数据发送(转文字或语音)
-  onDataSend: (textType: number) => void = () => {
+  /**
+   * 文字：语音文字内容
+   * 语音：语音 uri
+   */
+  onDataSend: (textType: number, recordFile: RecordFile) => void = () => {
   }
   //取消位置
   private xLocalPosition: ScreenOffset = {
@@ -121,7 +126,7 @@ export struct AudioRecordView {
   /**
    * 事件更新
    */
-  touchEvent() {
+  async touchEvent() {
     if (this.event.type !== undefined) {
       if (this.event.type === CustomTouchType.Down) {
         //手指按下
@@ -149,13 +154,17 @@ export struct AudioRecordView {
           this.voiceStatus = PressCancelVoicePostText.cancelVoice
         }
       } else if (this.event.type === CustomTouchType.Up) {
+        //取消录制
         if (this.voiceStatus === PressCancelVoicePostText.pressing) {
+          const res = await AudioCaptureManager.stopRecord()
+          console.info(`stopRecord: ${JSON.stringify(res)}`)
           //发送语音
-          this.onDataSend(3)
+          this.onDataSend(3, res)
         } else if (this.voiceStatus === PressCancelVoicePostText.postText) {
           //语音解析成文字
           this.audioRecord = false
           this.audioParse = true
+          this.onDataSend(0, {})
         } else if (this.voiceStatus === PressCancelVoicePostText.cancelVoice) {
           //取消
           this.audioRecord = false
