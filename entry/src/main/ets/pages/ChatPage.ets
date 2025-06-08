@@ -563,7 +563,9 @@ struct AIChatPage {
                         }, () => {
                           this.isPhoto = false
                           this.isEmoji = !this.isEmoji
-                          this.scrollEnd()
+                          if (!this.scroller.isAtEnd()) {
+                            this.scrollEnd()
+                          }
                         })
                         this.isSendText = true
                         if (this.isEmoji) {
@@ -593,7 +595,9 @@ struct AIChatPage {
                         }, () => {
                           this.isEmoji = false
                           this.isPhoto = !this.isPhoto
-                          this.scrollEnd()
+                          if (!this.scroller.isAtEnd()) {
+                            this.scrollEnd()
+                          }
                         })
                         this.isSendText = true
                         if (this.isPhoto) {

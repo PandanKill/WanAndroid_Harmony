@@ -280,6 +280,8 @@ class DatabaseUtil {
           'REFERTYPE': message.referType,
           'REFERTEXT': message.referText,
           'REFERURI': message.referUri,
+          'REFERWIDTH': message.referWidth,
+          'REFERHEIGHT': message.referHeight,
           'TRANSLATEENABLE': message.translateEnable,
           'TRANSLATETEXT': message.translateText
         }
@@ -303,6 +305,8 @@ class DatabaseUtil {
           'REFERTYPE': message.referType,
           'REFERTEXT': message.referText,
           'REFERURI': message.referUri,
+          'REFERWIDTH': message.referWidth,
+          'REFERHEIGHT': message.referHeight,
           'TRANSLATEENABLE': message.translateEnable,
           'TRANSLATETEXT': message.translateText
         }
@@ -326,6 +330,8 @@ class DatabaseUtil {
           'REFERTYPE': message.referType,
           'REFERTEXT': message.referText,
           'REFERURI': message.referUri,
+          'REFERWIDTH': message.referWidth,
+          'REFERHEIGHT': message.referHeight,
           'TRANSLATEENABLE': message.translateEnable,
           'TRANSLATETEXT': message.translateText
         }

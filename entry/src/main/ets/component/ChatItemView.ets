@@ -16,6 +16,7 @@ import { ChatVideoDetailContent } from './ChatVideoDetailContent'
 import { WindowUtils } from '../utils/WindowUtils'
 import { ComponentAttrUtils, RectInfoInPx } from '../utils/ComponentAttrUtils'
 import databaseUtil from '../utils/DatabaseUtil'
+import { it } from '@ohos/hypium'
 
 /**
  * 聊天内容 View
@@ -40,9 +41,7 @@ export struct ChatItemView {
   @State showPicContent: boolean = false
   @State showVideoContent: boolean = false
   //是否显示引用的全屏模态
-  @State showReferTextContent: boolean = false
-  @State showReferPicContent: boolean = false
-  @State showReferVideoContent: boolean = false
+  @State showReferContent: boolean = false
   //引用内容
   @State popItem: ChatPopupItem[] = []
   //文字选中
@@ -206,23 +205,16 @@ export struct ChatItemView {
           ReferenceChatView({
             referText: this.item.referText,
             onClickItem: () => {
-              if (this.item.referType === 1) {
-                console.info(`click pic`)
-                this.showReferPicContent = true
-              } else if (this.item.referType === 2) {
-                console.info(`click video`)
-                this.showReferVideoContent = true
-              } else if (this.item.referType === 0) {
-                console.info(`click text`)
-                this.showReferTextContent = true
-              }
+              console.info(`click`)
+              this.showReferContent = true
             }
           })
-            .bindContentCover(this.showReferTextContent, this.contentTextCover(this.item.referText), {
-              onDisappear: () => {
-                this.showReferTextContent = false
-              }
-            })
+            .bindContentCover(this.showReferContent,
+              this.contentReferCover(this.item), {
+                onDisappear: () => {
+                  this.showReferContent = false
+                }
+              })
         }
       }
       .alignItems(HorizontalAlign.End)
@@ -394,7 +386,7 @@ export struct ChatItemView {
         }
       })
       .bindContentCover(this.showPicContent,
-        this.contentPicCover(this.item.imageUri, this.item.imageWidth, this.item.imageHeight, this.index), {
+        this.contentPicCover(this.item.imageUri, this.item.imageWidth, this.item.imageHeight), {
           transition: TransitionEffect.IDENTITY,
           onDisappear: () => {
             this.showPicContent = false
@@ -596,7 +588,7 @@ export struct ChatItemView {
    * 文字模态页面
    */
   @Builder
-  contentTextCover(text: string, showContent: boolean) {
+  contentTextCover(text: string) {
     //文字详情页
     ChatTextDetailContent({
       detailMessageText: text,
@@ -606,10 +598,42 @@ export struct ChatItemView {
   }
 
   /**
+   * 引用文字模态页面
+   */
+  @Builder
+  contentReferCover(item: Message) {
+    Column() {
+      //文字详情页
+      if (item.referType === 0) {
+        ChatTextDetailContent({
+          detailMessageText: item.referText,
+          chatTextDetailContent: this.showReferContent
+        }).width(SizeConstant.FULL_SIZE)
+          .height(SizeConstant.FULL_SIZE)
+      } else if (item.referType === 1) {
+        ChatPicDetailContent({
+          detailMessageUri: item.referUri,
+          imageWidth: item.referWidth,
+          imageHeight: item.referHeight,
+          chatPicDetailContent: this.showReferContent
+        }).width(SizeConstant.FULL_SIZE)
+          .height(SizeConstant.FULL_SIZE)
+      } else if (item.referType === 2) {
+        ChatVideoDetailContent({
+          detailMessage: item.referUri,
+          chatVideoDetailContent: this.showReferContent
+        }).width(SizeConstant.FULL_SIZE)
+          .height(SizeConstant.FULL_SIZE)
+      }
+    }.width(SizeConstant.FULL_SIZE)
+    .height(SizeConstant.FULL_SIZE)
+  }
+
+  /**
    * 图片模态页面
    */
   @Builder
-  contentPicCover(picUri: string, picWidth: number, picHeight: number, selectIndex: number, showContext: boolean) {
+  contentPicCover(picUri: string, picWidth: number, picHeight: number) {
     // Stack() {
     // ImageNode()
     ChatPicDetailContent({
@@ -638,9 +662,7 @@ export struct ChatItemView {
    * 视频模态页面
    */
   @Builder
-  contentVideoCover(videoUri:
-    string, showContent: boolean
-  ) {
+  contentVideoCover(videoUri: string) {
     ChatVideoDetailContent({
       detailMessage: videoUri,
       chatVideoDetailContent: this.showVideoContent
