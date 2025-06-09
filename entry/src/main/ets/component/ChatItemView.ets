@@ -59,6 +59,8 @@ export struct ChatItemView {
   @State opacityDegree: number = 1;
   //size 更新
   @Consume('itemSizeChange') itemSizeChange: boolean
+  //popup高度
+  @State popupHeight: string = SizeConstant.SIZE_80
   //监听模态页面
   listener: inspector.ComponentObserver = inspector.createComponentObserver('imageDetail');
 
@@ -118,6 +120,24 @@ export struct ChatItemView {
       //语音
       this.popItem = [...GeneralPopupItemConstant.CommonItem, ...GeneralPopupItemConstant.AudioCommonItem]
     }
+
+    //获取 popup 高度
+    this.popupHeight = this.getPopupHeight(this.popItem)
+  }
+
+  /**
+   * 获取 popup 高度
+   * @param popItem
+   * @returns
+   */
+  getPopupHeight(popItem: ChatPopupItem[]): string {
+    if (popItem.length <= 4) {
+      return SizeConstant.SIZE_70
+    } else if (popItem.length > 4 && popItem.length <= 8) {
+      return SizeConstant.SIZE_120
+    }
+    return SizeConstant.SIZE_200
+
   }
 
   initCoverListener() {
@@ -575,7 +595,8 @@ export struct ChatItemView {
       .columnsTemplate('1fr 1fr 1fr 1fr')
       .rowsGap(5)
     }
-    .width(SizeConstant.SIZE_PERCENT_60)
+    .width(SizeConstant.SIZE_PERCENT_65)
+    .height(this.popupHeight)
     .padding({
       top: SizeConstant.SIZE_15,
       bottom: SizeConstant.SIZE_15,

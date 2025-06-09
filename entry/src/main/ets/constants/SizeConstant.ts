@@ -26,6 +26,8 @@ export default class SizeConstant {
   static readonly SIZE_1000 = '1000vp'
   static readonly SIZE_600 = '600vp'
   static readonly SIZE_200 = '200vp'
+  static readonly SIZE_140 = '140vp'
+  static readonly SIZE_120 = '120vp'
   static readonly SIZE_100 = '100vp'
   static readonly SIZE_80 = '80vp'
   static readonly SIZE_70 = '70vp'

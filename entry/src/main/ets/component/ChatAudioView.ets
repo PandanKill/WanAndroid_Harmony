@@ -1,5 +1,6 @@
 import SizeConstant from '../constants/SizeConstant'
 import { Message } from '../pages/ChatPage'
+import AudioRendererManager from '../utils/AudioRendererManager'
 
 @Component
 export struct ChatAudioView {
@@ -23,10 +24,19 @@ export struct ChatAudioView {
     .alignItems(VerticalAlign.Center)
     .backgroundColor($r('app.color.color_95EC69'))
     .borderRadius(SizeConstant.SIZE_5)
-    .gesture(
+    .gesture(GestureGroup(GestureMode.Exclusive,
       LongPressGesture().onAction((event) => {
         this.showPopup = !this.showPopup
-      })
-    )
+      }),
+      TapGesture().onAction((event) => {
+        //语音播放
+        if (AudioRendererManager.getPlay()) {
+          AudioRendererManager.stop().then(() => {
+            AudioRendererManager.release()
+          })
+        } else {
+          AudioRendererManager.doPlay(this.item.audioUri)
+        }
+      })))
   }
 }

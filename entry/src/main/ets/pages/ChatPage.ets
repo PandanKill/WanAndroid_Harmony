@@ -22,6 +22,7 @@ import { AISpeakBean } from '../bean/AIResponseBean';
 import databaseUtil from '../utils/DatabaseUtil';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { AudioCaptureManager, RecordFile } from '../utils/AudioCaptureManager';
+import AudioRendererManager from '../utils/AudioRendererManager';
 
 @Observed
 export class Message {
@@ -418,6 +419,7 @@ struct AIChatPage {
               //聊天列表
               Column() {
                 List({
+                  initialIndex: this.messageArr.length > 0 ? this.messageArr.length - 1 : 0,
                   scroller: this.scroller
                 }) {
                   ForEach(this.messageArr, (item: Message, index: number) => {
@@ -1230,6 +1232,11 @@ struct AIChatPage {
 
   onPageHide(): void {
     //销毁请求
+  }
+
+  aboutToDisappear(): void {
+    //播放音频
+    AudioRendererManager.release()
   }
 
   // 精准删除逻辑
