@@ -1,5 +1,6 @@
 import { audio } from '@kit.AudioKit';
 import { fileIo } from '@kit.CoreFileKit';
+import fileIO from '@ohos.fileio';
 
 /**
  * 语音播放
@@ -31,6 +32,7 @@ class AudioRendererManager {
    */
   private static async ready(fileName: string) {
 
+    let file = fileIo.openSync(fileName, fileIo.OpenMode.READ_ONLY)
     try {
       let bufferSize: number = 0
       let audioStreamInfo: audio.AudioStreamInfo = {
@@ -50,7 +52,6 @@ class AudioRendererManager {
         rendererInfo: audioRendererInfo
       }
 
-      let file = fileIo.openSync(fileName, fileIo.OpenMode.READ_ONLY)
       const fileSize = fileIo.statSync(file.path).size
       let writeDataCallback: audio.AudioRendererWriteDataCallback = (buffer: ArrayBuffer) => {
         let options: Options = {
@@ -73,6 +74,10 @@ class AudioRendererManager {
       AudioRendererManager.audioRender.on("writeData", writeDataCallback)
     } catch (e) {
       console.log("e", e.message, e.code)
+    } finally {
+      if (file) {
+        fileIo.closeSync(file)
+      }
     }
   }
 

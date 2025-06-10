@@ -176,7 +176,7 @@ struct AIChatPage {
    * 语音转文字
    */
   startSpeechRecognize() {
-
+    
   }
 
   /**

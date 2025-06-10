@@ -52,8 +52,16 @@ export async function getFetchFrameByTime(time: number, imageUri: string, width:
   let avImageGenerator: media.AVImageGenerator = await media.createAVImageGenerator()
 
   let file = fileIo.openSync(imageUri, fileIo.OpenMode.READ_ONLY)
-  avImageGenerator.fdSrc = {
-    fd: file.fd
+  try {
+    avImageGenerator.fdSrc = {
+      fd: file.fd
+    }
+  } catch (e) {
+    console.log("e", e.message, e.code)
+  } finally {
+    if (file) {
+      fileIo.closeSync(file)
+    }
   }
   let pixMap = await avImageGenerator.fetchFrameByTime(time, media.AVImageQueryOptions.AV_IMAGE_QUERY_NEXT_SYNC, {
     width: width,

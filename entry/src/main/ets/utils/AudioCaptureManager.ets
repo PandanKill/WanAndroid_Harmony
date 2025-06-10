@@ -59,6 +59,13 @@ export class AudioCaptureManager {
 
     //记录开始时间戳
     AudioCaptureManager.startRecordTime = Date.now()
+    //文件路径
+    let path = getContext().filesDir
+    let filePath = `${path}/${fileName}.wav`
+    AudioCaptureManager.recordFilePath = filePath
+
+    //打开或创建录音文件
+    let file = fileIo.openSync(filePath, fileIo.OpenMode.READ_WRITE | fileIo.OpenMode.CREATE)
 
     try {
       let bufferSize: number = 0
@@ -67,15 +74,6 @@ export class AudioCaptureManager {
         offset?: number //文件偏移量
         length?: number //写入数据的长度
       }
-
-      //文件路径
-      let path = getContext().filesDir
-
-      let filePath = `${path}/${fileName}.wav`
-      AudioCaptureManager.recordFilePath = filePath
-
-      //打开或创建录音文件
-      let file = fileIo.openSync(filePath, fileIo.OpenMode.READ_WRITE | fileIo.OpenMode.CREATE)
 
       //读取回调
       let readDataCallback = (buffer: ArrayBuffer) => {
@@ -102,6 +100,10 @@ export class AudioCaptureManager {
       let err = e as BusinessError
       console.error(`startRecord ${err.message}`)
       return ''
+    } finally {
+      if (file != null) {
+        fileIo.closeSync(file)
+      }
     }
   }
 
