@@ -10,7 +10,6 @@ import { checkFileMimeType, fileToBase64 } from '../utils/FileUtil';
 import { ItemInfo } from '@kit.MediaLibraryKit';
 import { AudioRecordView } from '../component/AudioRecordView';
 import { EventState, CustomTouchType } from '../bean/TouchType';
-import { AudioParseTextView } from '../component/AudioParseTextView';
 import { startVibrator } from '../utils/VibratorUtil';
 import { ReferenceView } from '../component/ReferenceView';
 import { checkPermissionGrant, requestPermissionForUser } from '../utils/PermissionUtil';
@@ -20,9 +19,10 @@ import { CommonAiRequestUtil } from '../utils/CommonAiRequestUtil';
 import { RefTypeView } from '../component/RefTypeView';
 import { AISpeakBean } from '../bean/AIResponseBean';
 import databaseUtil from '../utils/DatabaseUtil';
-import { BusinessError } from '@kit.BasicServicesKit';
 import { AudioCaptureManager, RecordFile } from '../utils/AudioCaptureManager';
 import AudioRendererManager from '../utils/AudioRendererManager';
+import SpeechRecognizerManager from '../utils/SpeechRecognizerManager';
+import { speechRecognizer } from '@kit.CoreSpeechKit';
 
 @Observed
 export class Message {
@@ -97,8 +97,6 @@ struct AIChatPage {
   isSoftwareInput: boolean = false
   //是否正在录音
   @State isRecording: boolean = false
-  //音频解析
-  @State isAudioParsing: boolean = false
   //是否存在引用
   @State isRefer: boolean = false
   //引用消息
@@ -112,6 +110,8 @@ struct AIChatPage {
   @Provide('itemSizeChange') @Watch('itemSizeChangeListener') itemSizeChange: boolean = false
   //录音文件名
   recordFileName: string = "" //事件回调
+  //语音抓文字内容
+  @State audioText: string = ''
   onAudioTouch = async (event: TouchEvent) => {
     // const eventState: EventState = new EventState()
     if (event.type === TouchType.Down) {
@@ -176,7 +176,15 @@ struct AIChatPage {
    * 语音转文字
    */
   startSpeechRecognize() {
-    
+    let sentence = ""
+    SpeechRecognizerManager.audioBufToText((res: speechRecognizer.SpeechRecognitionResult) => {
+      if (res.isFinal) {
+        sentence += res.result
+        this.audioText = sentence
+      } else {
+        this.audioText = sentence + res.result
+      }
+    })
   }
 
   /**
@@ -695,16 +703,17 @@ struct AIChatPage {
               if (this.isRecording) {
                 //开启录音
                 AudioRecordView({
+                  //当前事件
                   event: this.eventAudio,
+                  //录制 View
                   audioRecord: this.isRecording,
-                  audioParse: this.isAudioParsing,
+                  //语音解析文字
+                  voiceToText: this.audioText,
+                  //事件回调
                   onDataSend: (textType: number, recordFile: RecordFile) => {
-                    this.isRecording = false
+                    console.info(`onDataSend: ${JSON.stringify(recordFile)}`)
                     if (textType === 0) {
-                      let message = this.getSendMessage(recordFile.recordText)
-                      this.messageArr.push(message)
-                      databaseUtil.insert(message, this.context)
-                      this.scrollEnd()
+                      this.toGetAi(recordFile.parseText!)
 
                     } else if (textType === 3) {
                       let message = this.getSendAudioMessage(recordFile)
@@ -714,14 +723,6 @@ struct AIChatPage {
                       this.scrollEnd()
                     }
                   }
-                })
-                  .width(SizeConstant.FULL_SIZE)
-                  .height(SizeConstant.FULL_SIZE)
-              }
-
-              if (this.isAudioParsing) {
-                AudioParseTextView({
-                  isParse: this.isAudioParsing
                 })
                   .width(SizeConstant.FULL_SIZE)
                   .height(SizeConstant.FULL_SIZE)

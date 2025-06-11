@@ -9,7 +9,7 @@ export interface RecordFile {
   recordFilePath?: string //保存的文件路径
   startRecordTime?: number // 开始时间戳
   endRecordTime?: number // 结束时间戳
-  recordText?: string //转文字内容
+  parseText?: string // 解析内容
 }
 
 export class AudioCaptureManager {
@@ -100,11 +100,12 @@ export class AudioCaptureManager {
       let err = e as BusinessError
       console.error(`startRecord ${err.message}`)
       return ''
-    } finally {
+    }/* finally {
+    //文件是否需要关闭啊？  增加 finally 后 ，崩溃啊
       if (file != null) {
         fileIo.closeSync(file)
       }
-    }
+    }*/
   }
 
   //停止录音

@@ -74,11 +74,11 @@ class AudioRendererManager {
       AudioRendererManager.audioRender.on("writeData", writeDataCallback)
     } catch (e) {
       console.log("e", e.message, e.code)
-    } finally {
+    }/* finally {
       if (file) {
         fileIo.closeSync(file)
       }
-    }
+    }*/
   }
 
   //播放

@@ -17,6 +17,7 @@ import { WindowUtils } from '../utils/WindowUtils'
 import { ComponentAttrUtils, RectInfoInPx } from '../utils/ComponentAttrUtils'
 import databaseUtil from '../utils/DatabaseUtil'
 import { it } from '@ohos/hypium'
+import AudioRendererManager from '../utils/AudioRendererManager'
 
 /**
  * 聊天内容 View
@@ -226,7 +227,12 @@ export struct ChatItemView {
             referText: this.item.referText,
             onClickItem: () => {
               console.info(`click`)
-              this.showReferContent = true
+              //非语音展示Content
+              if (this.item.referType !== 3) {
+                this.showReferContent = true
+              } else {
+                AudioRendererManager.doPlay(this.item.referUri)
+              }
             }
           })
             .bindContentCover(this.showReferContent,

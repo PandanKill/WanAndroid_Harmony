@@ -12,7 +12,7 @@ class SpeechRecognizerManager {
    * 语音模式：长
    */
   private static extraParams: Record<string, Object> = {
-    "locate": "CN", "recognizerMode": "long"
+    "locate": "CN", "recognizerMode": "short"
   }
   //识别 sessionId
   private static sessionId: string = "asr" + Date.now()

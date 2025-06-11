@@ -2,9 +2,9 @@ import SizeConstant from "../constants/SizeConstant";
 import { componentUtils } from "@kit.ArkUI";
 import { EventState } from "../pages/ChatPage";
 import { CustomTouchType } from "../bean/TouchType";
-import { AudioParseTextView } from "./AudioParseTextView";
 import { startVibrator } from "../utils/VibratorUtil";
 import { AudioCaptureManager, RecordFile } from "../utils/AudioCaptureManager";
+import SpeechRecognizerManager from "../utils/SpeechRecognizerManager";
 
 /**
  * 录音页面
@@ -36,9 +36,17 @@ export struct AudioRecordView {
     center: { anchor: "__container__", align: VerticalAlign.Center }
   }
   @State vocalPositionCenterRule: AlignRuleOption = this.centerRule
-  //正在解析语音
-  @Link audioParse: boolean
+  //语音解析
+  @State audioParse: boolean = false
+  //语音录制
   @Link audioRecord: boolean
+  //语音解析文字
+  @Prop voiceToText: string = ""
+  //语音转文字是否异常
+  @State errorStatus: boolean = false
+  @State isLoading: boolean = false
+  //语音文件
+  private recordFile: RecordFile | null = null
   //数据发送(转文字或语音)
   /**
    * 文字：语音文字内容
@@ -155,26 +163,128 @@ export struct AudioRecordView {
         }
       } else if (this.event.type === CustomTouchType.Up) {
         //取消录制
+        this.recordFile = await AudioCaptureManager.stopRecord()
+        console.info(`stopRecord: ${JSON.stringify(this.recordFile)}`)
+        //取消实时语音转文字
+        SpeechRecognizerManager.release()
         if (this.voiceStatus === PressCancelVoicePostText.pressing) {
-          const res = await AudioCaptureManager.stopRecord()
-          console.info(`stopRecord: ${JSON.stringify(res)}`)
           //发送语音
-          this.onDataSend(3, res)
+          this.onDataSend(3, this.recordFile)
+          this.audioRecord = false
         } else if (this.voiceStatus === PressCancelVoicePostText.postText) {
           //语音解析成文字
-          this.audioRecord = false
           this.audioParse = true
-          this.onDataSend(0, {})
         } else if (this.voiceStatus === PressCancelVoicePostText.cancelVoice) {
           //取消
           this.audioRecord = false
         }
       }
-
     }
   }
 
   build() {
+    Stack() {
+      if (this.audioParse) {
+        //语音解析
+        this.audioParseView()
+      } else {
+        //语音录制
+        this.audioView()
+      }
+    }.width(SizeConstant.FULL_SIZE)
+    .height(SizeConstant.FULL_SIZE)
+    .backgroundColor("#90000000")
+  }
+
+  @Builder
+  audioParseView() {
+    RelativeContainer() {
+      Stack({ alignContent: Alignment.Center }) {
+        Text(this.isLoading ? "..." : this.errorStatus ? "未识别到文字" : this.voiceToText)
+          .fontSize($r('app.float.font_20'))
+          .fontColor(Color.Black)
+          .width(SizeConstant.FULL_SIZE)
+      }
+      .padding(SizeConstant.SIZE_20)
+      .width(SizeConstant.SIZE_PERCENT_90)
+      .height('auto')
+      .backgroundColor(this.errorStatus ? $r('app.color.color_FB5251') :
+      $r('app.color.color_95EC69'))
+      .borderRadius(SizeConstant.SIZE_15)
+      .alignRules({
+        middle: { anchor: "__container__", align: HorizontalAlign.Center },
+        center: { anchor: "__container__", align: VerticalAlign.Center }
+      })
+
+      Row() {
+        //取消
+        Column() {
+          Image($r('app.media.icon_back_e1e1e1'))
+            .width(SizeConstant.SIZE_25)
+
+          Text("取消")
+            .fontSize($r('app.float.font_12'))
+            .fontColor($r('app.color.color_e1e1e1'))
+            .margin({ top: SizeConstant.SIZE_5 })
+        }.alignItems(HorizontalAlign.Center)
+        .onClick(() => {
+          //取消
+          this.audioRecord = false
+        })
+
+        //发送原语音
+        Column() {
+          Image($r('app.media.icon_audio_e1'))
+            .width(SizeConstant.SIZE_25)
+
+          Text("发送原语音")
+            .fontSize($r('app.float.font_12'))
+            .fontColor($r('app.color.color_e1e1e1'))
+            .margin({ top: SizeConstant.SIZE_5 })
+        }.alignItems(HorizontalAlign.Center)
+        .onClick(() => {
+          if (this.recordFile) {
+            //发送原语音
+            this.onDataSend(3, this.recordFile)
+          }
+          this.audioRecord = false
+        })
+
+        //转文字 发送
+        Stack({ alignContent: Alignment.Center }) {
+          Image(this.isLoading ? $r('app.media.icon_loading_green') :
+            this.errorStatus ? $r('app.media.icon_right_grey') : $r('app.media.icon_right_gre'))
+            .width(SizeConstant.SIZE_25)
+        }
+        .width(SizeConstant.SIZE_80)
+        .height(SizeConstant.SIZE_80)
+        .backgroundColor(this.errorStatus ? $r('app.color.color_505050') : $r('app.color.color_ECECEC'))
+        .borderRadius(SizeConstant.SIZE_PERCENT_50)
+        .onClick(() => {
+          if (this.errorStatus || this.isLoading || !this.voiceToText || this.voiceToText === "") {
+            return
+          }
+          this.onDataSend(0, {
+            parseText: this.voiceToText
+          })
+          this.audioRecord = false
+        })
+      }
+      .alignRules({
+        middle: { anchor: "__container__", align: HorizontalAlign.Center },
+        bottom: { anchor: "__container__", align: VerticalAlign.Bottom }
+      })
+      .width(SizeConstant.FULL_SIZE)
+      .alignItems(VerticalAlign.Center)
+      .justifyContent(FlexAlign.SpaceEvenly)
+      .margin({ bottom: '180vp' })
+    }.width(SizeConstant.FULL_SIZE)
+    .height(SizeConstant.FULL_SIZE)
+    .backgroundColor("#90000000")
+  }
+
+  @Builder
+  audioView() {
     RelativeContainer() {
       //底部圆弧
       Row()
@@ -286,6 +396,7 @@ export struct AudioRecordView {
         })
         .margin({ bottom: SizeConstant.SIZE_10 })
 
+      //转文字
       Stack({ alignContent: this.vocalAlignment }) {
         this.vocalBuilderView()
       }
@@ -321,7 +432,6 @@ export struct AudioRecordView {
       this.textLocalPosition.width = px2vp(modePosition.size.width / 2)
       this.textLocalPosition.height = px2vp(modePosition.size.height)
     })
-    .backgroundColor("#90000000")
   }
 
   @Builder
