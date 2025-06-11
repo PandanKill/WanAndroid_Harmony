@@ -71,3 +71,15 @@ export async function getFetchFrameByTime(time: number, imageUri: string, width:
   avImageGenerator.release()
   return pixMap
 }
+
+/**
+ * 图片转 PixelMap
+ * @param picPath
+ * @returns
+ */
+export async function getPicToPixelMap(picPath: string): Promise<PixelMap> {
+  let file = fileIo.openSync(picPath, fileIo.OpenMode.READ_ONLY)
+  let imageSource = image.createImageSource(file.fd)
+  const picMap = await imageSource.createPixelMap()
+  return picMap
+}

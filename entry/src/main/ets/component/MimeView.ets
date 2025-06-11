@@ -131,7 +131,9 @@ export struct MimeView {
       .onClick(() => {
         //to 分享
         if (this.isLogin) {
-
+          router.pushUrl({
+            url: "pages/SharePage"
+          })
         } else {
           router.pushUrl({
             url: "pages/LoginPage"

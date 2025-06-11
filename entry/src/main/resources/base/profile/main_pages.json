@@ -12,6 +12,7 @@
     "pages/CollectPage",
     "pages/ChatPage",
     "pages/PhotoPickerComponentPage",
-    "pages/PicEditPage"
+    "pages/PicEditPage",
+    "pages/SharePage"
   ]
 }
