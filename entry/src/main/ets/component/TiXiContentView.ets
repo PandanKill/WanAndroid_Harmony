@@ -26,7 +26,7 @@ export struct TiXiContentView {
     session.get(requestPath.baseUrl + requestPath.PATH_TREE).then((response: rcp.Response) => {
       let bean = JSON.parse(response.toString()!!) as ResponseBean<TreeListBean[]>
       if (bean.errorCode === 0) {
-        this.contentMap = bean.data
+        this.contentMap = bean.data!
         this.isLoading = false
       }
     }).catch((err: BusinessError) => {

@@ -34,7 +34,7 @@ export struct SpareTabContentView {
         if (responseBean.errorCode === 0) {
           //获取成功
           logger.error(`nihai :${JSON.stringify(responseBean.data)}`)
-          responseBean.data.datas.forEach((homeBean: HomeBean) => {
+          responseBean.data!.datas.forEach((homeBean: HomeBean) => {
             let bean = new HomeListViewBean()
             bean.author = homeBean.author
             bean.chapterName = homeBean.chapterName
@@ -79,7 +79,7 @@ export struct SpareTabContentView {
         if (responseBean.errorCode === 0) {
           //获取成功
           logger.error(`nihai :${JSON.stringify(responseBean.data)}`)
-          responseBean.data.datas.forEach((homeBean: HomeBean) => {
+          responseBean.data!.datas.forEach((homeBean: HomeBean) => {
             let bean = new HomeListViewBean()
             bean.author = homeBean.author
             bean.chapterName = homeBean.chapterName

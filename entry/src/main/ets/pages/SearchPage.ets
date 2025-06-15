@@ -10,6 +10,7 @@ import { promptAction, router } from '@kit.ArkUI'
 import { JSON } from '@kit.ArkTS'
 import { http } from '@kit.NetworkKit'
 import SizeConstant from '../constants/SizeConstant'
+import Preference from '../utils/Preference'
 
 @Entry
 @Component
@@ -18,7 +19,6 @@ struct SearchPage {
   @State historySearchData: string[] = []
   private currentHotData: string = (router.getParams() as Record<string, string>).currentHotKey as string
   private context: common.UIAbilityContext = getContext() as common.UIAbilityContext
-  dataPreferences: preferences.Preferences | null = null
   @State isSearchView: boolean = false
   //搜索词
   @State searchStr: string = this.currentHotData
@@ -28,8 +28,7 @@ struct SearchPage {
 
   onPageShow(): void {
     let options: preferences.Options = { name: PreferenceKey.FILE_WANANDROID_STORE }
-    this.dataPreferences = preferences.getPreferencesSync(this.context, options)
-    let historyString: string = this.dataPreferences.getSync(PreferenceKey.PREFERENCE_KET_HISTORY, "") as string
+    let historyString: string = Preference.get(this.context).getSearchHistory()
     if (historyString !== "" && historyString.length > 0) {
       this.historySearchData = JSON.parse(historyString) as string[]
     }
@@ -53,8 +52,7 @@ struct SearchPage {
     if (this.historySearchData.length > 5) {
       let popData = this.historySearchData.pop()
     }
-    this.dataPreferences?.put(PreferenceKey.PREFERENCE_KET_HISTORY, JSON.stringify(this.historySearchData))
-    this.dataPreferences?.flush()
+    Preference.get(this.context).putSearchHistory(this.historySearchData)
   }
 
   @Builder
@@ -137,9 +135,7 @@ struct SearchPage {
                   .margin({ right: SizeConstant.SIZE_15 })
                   .onClick(() => {
                     this.historySearchData.splice(index, 1)
-                    this.dataPreferences?.put(PreferenceKey.PREFERENCE_KET_HISTORY,
-                      JSON.stringify(this.historySearchData))
-                    this.dataPreferences?.flush()
+                    Preference.get(this.context).putSearchHistory(this.historySearchData)
                   })
               }
               .alignItems(VerticalAlign.Center)
@@ -211,7 +207,7 @@ struct SearchPage {
         .height(SizeConstant.SIZE_30)
         .backgroundColor($r('app.color.color_474954'))
         .borderRadius(20)
-        .margin({ left: SizeConstant.SIZE_15, bottom:SizeConstant.SIZE_10 })
+        .margin({ left: SizeConstant.SIZE_15, bottom: SizeConstant.SIZE_10 })
 
         Blank()
 

@@ -7,6 +7,7 @@ import { BusinessError } from '@kit.BasicServicesKit';
 import { WindowUtils } from '../utils/WindowUtils';
 import databaseUtil from '../utils/DatabaseUtil';
 import { taskpool } from '@kit.ArkTS';
+import EntryContext from '../constants/EntryContext';
 
 export default class EntryAbility extends UIAbility {
   private window?: window.Window
@@ -14,7 +15,7 @@ export default class EntryAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
     hilog.info(0x0000, 'testTag', '%{public}s', 'Ability onCreate');
     AppStorage.setOrCreate<ConfigurationConstant.ColorMode>('colorModel', this.context.config.colorMode)
-
+    EntryContext.setContext(this.context)
     //请求权限
     const atManager = abilityAccessCtrl.createAtManager();
     try {

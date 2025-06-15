@@ -12,7 +12,9 @@ import { LoginBean } from '../bean/LoginBean'
 import { ResponseBean } from '../bean/ResponseBean'
 import { NavHeaderView } from '../component/NavHeaderView'
 import { http } from '@kit.NetworkKit'
-import { LoginResponse } from '../bean/LoginResponse'
+import { User } from '../bean/LoginResponse'
+import Api from '../utils/net/Api'
+import { UserService } from '../service/UserService'
 
 @Entry
 @Component
@@ -48,7 +50,7 @@ struct LoginPage {
     }
   }
 
-  login() {
+  async login() {
     if (this.userName === '' || this.userName === undefined) {
       promptAction.showToast({
         message: $r('app.string.please_input_username')
@@ -63,54 +65,21 @@ struct LoginPage {
       return
     }
 
-    let loginBean = new LoginBean(this.userName, this.pwd)
-    console.info(`Response succeeded: ${JSON.stringify(loginBean)}`);
-
-    //登录
-    let httpRequest = http.createHttp()
-    httpRequest.on('headersReceive', (header) => {
-      console.info('header: ' + JSON.stringify(header));
-    })
-    httpRequest.request(requestPath.baseUrl + requestPath.PATH_LOGIN, {
-      method: http.RequestMethod.POST,
-      header: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      extraData: `password=${this.pwd}&username=${this.userName}`,
-      connectTimeout: 30000,
-      readTimeout: 30000,
-    }, (err: BusinessError, data: http.HttpResponse) => {
-      if (!err) {
-        let responseBean =
-          JSON.parse(JSON.stringify(data.result)) as ResponseBean<LoginResponse>
-        if (data.responseCode === 200) {
-          //登录成功
-          //todo 为啥无法获取到？
-          // AppStorage.setOrCreate('nickname', responseBean.data.nickname)
-          AppStorage.setOrCreate('nickname', this.userName)
-          AppStorage.setOrCreate("isLogin", true)
-          //登录成功
-          promptAction.showToast({
-            message: $r('app.string.login_succ')
-          })
-          router.back()
-        } else {
-          //登录失败
-          promptAction.showToast({
-            message: responseBean.errorMsg
-          })
-        }
-      } else {
-        console.error('error:' + JSON.stringify(err));
-        promptAction.showToast({
-          message: err.message
-        })
+    const logBean: ResponseBean<User> = await Api.get().login(this.userName, this.pwd)
+    if (logBean.isSuccessWithData()) {
+      promptAction.showToast({
+        message: $r('app.string.login_succ')
+      })
+      UserService.get().setUser(logBean.data)
+      const user = await UserService.get().updateUser()
+      if (user) {
+        router.back()
       }
-      // 取消订阅HTTP响应头事件
-      httpRequest.off('headersReceive');
-      // 当该请求使用完毕时，调用destroy方法主动销毁
-      httpRequest.destroy();
-    })
+    } else {
+      promptAction.showToast({
+        message: logBean.errorMsg
+      })
+    }
   }
 
   build() {

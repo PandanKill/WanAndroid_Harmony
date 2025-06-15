@@ -1,11 +1,51 @@
 import SizeConstant from '../constants/SizeConstant'
 import { router } from '@kit.ArkUI'
 import { CommonListItemView } from 'utils'
+import { UserService } from '../service/UserService'
+import { User } from '../bean/LoginResponse'
+
+class UserInfo {
+  name: string = ""
+  level: string = ""
+  rank: string = ""
+  point: string = ""
+}
 
 @Component
 export struct MimeView {
-  @StorageProp("isLogin") isLogin: boolean = false
-  @StorageProp("nickname") nickname: string = ''
+  private unLoginInfo: UserInfo = {
+    name: "未登录",
+    level: "",
+    rank: "",
+    point: ""
+  }
+  @State userInfo: UserInfo = this.unLoginInfo;
+  @State isLogin: boolean = false;
+  //登录、登出回调
+  private userObserver = (user?: User) => {
+    if (user) {
+      this.isLogin = true;
+      this.userInfo = {
+        name: user.nickname,
+        level: user.level,
+        rank: user.rank,
+        point: user.coinCount.toString()
+      }
+    } else {
+      this.isLogin = false;
+      this.userInfo = this.unLoginInfo
+    }
+  }
+
+  aboutToAppear(): void {
+    UserService.get().addUserObserver(this.userObserver)
+    const user = UserService.get().getUser()
+    this.userObserver(user)
+  }
+
+  aboutToDisappear(): void {
+    UserService.get().removeUserObserver(this.userObserver)
+  }
 
   build() {
     Column() {
@@ -20,19 +60,15 @@ export struct MimeView {
         })
         .onClick(() => {
           //头像详情，共享元素
-          if (this.isLogin) {
+          UserService.get().checkLogin(() => {
             router.pushUrl({
               url: "pages/PersonAvater"
             })
-          } else {
-            router.pushUrl({
-              url: "pages/LoginPage"
-            })
-          }
+          })
         })
 
       //欢迎词
-      Text(this.isLogin ? `欢迎回来！${this.nickname}` : "欢迎登录！")
+      Text(this.userInfo.name)
         .fontSize($r('app.float.font_15'))
         .fontColor($r('app.color.color_000000'))
         .margin({ top: SizeConstant.SIZE_5 })
@@ -57,15 +93,11 @@ export struct MimeView {
       .backgroundColor($r('app.color.color_FFFFFF'))
       .onClick(() => {
         //to 积分
-        // if (this.isLogin) {
-        router.pushUrl({
-          url: "pages/PointPage"
+        UserService.get().checkLogin(() => {
+          router.pushUrl({
+            url: "pages/PointPage"
+          })
         })
-        // } else {
-        //   router.pushUrl({
-        //     url: "pages/LoginPage"
-        //   })
-        // }
       })
 
       //线
@@ -93,15 +125,11 @@ export struct MimeView {
       .backgroundColor($r('app.color.color_FFFFFF'))
       .onClick(() => {
         //to 收藏
-        // if (this.isLogin) {
-        router.pushUrl({
-          url: "pages/CollectPage"
+        UserService.get().checkLogin(() => {
+          router.pushUrl({
+            url: "pages/CollectPage"
+          })
         })
-        // } else {
-        //   router.pushUrl({
-        //     url: "pages/LoginPage"
-        //   })
-        // }
       })
 
       //线
@@ -130,15 +158,11 @@ export struct MimeView {
       .backgroundColor($r('app.color.color_FFFFFF'))
       .onClick(() => {
         //to 分享
-        if (this.isLogin) {
+        UserService.get().checkLogin(() => {
           router.pushUrl({
             url: "pages/SharePage"
           })
-        } else {
-          router.pushUrl({
-            url: "pages/LoginPage"
-          })
-        }
+        })
       })
 
       //线

@@ -1,11 +1,10 @@
 import { NavHeaderView } from '../component/NavHeaderView'
 import SizeConstant from '../constants/SizeConstant'
 import { common, ConfigurationConstant } from '@kit.AbilityKit'
-import { faceDetector } from '@kit.CoreVisionKit'
 import { setAutoColorMode, setDarkColorMode, setLightColorMode } from '../utils/ColorModeChangeFunctions'
-import { http } from '@kit.NetworkKit'
-import { requestPath } from 'utils/src/main/ets/http/RequestPath'
-import { BusinessError } from '@kit.BasicServicesKit'
+import { UserService } from '../service/UserService'
+import Api from '../utils/net/Api'
+import { User } from '../bean/LoginResponse'
 import { promptAction, router } from '@kit.ArkUI'
 
 @Entry
@@ -15,12 +14,13 @@ struct SettingPage {
   @StorageProp('enableDarkMode') enableDarkMode: boolean = false
   @StorageProp('isFollowSystemSetting') isFollowSystemSetting: boolean = true
   @StorageProp('screenRecord') isScreenRecord: boolean = false
-  @StorageProp('isLogin') isLogin: boolean = false
+  @State isLogin: boolean = false
   private context: common.UIAbilityContext = getContext(this) as common.UIAbilityContext
 
   aboutToAppear(): void {
     AppStorage.setOrCreate('enableDarkMode', this.enableDarkMode);
     AppStorage.setOrCreate('isFollowSystemSetting', this.isFollowSystemSetting);
+    this.isLogin = UserService.get().isLogin()
   }
 
   build() {
@@ -215,33 +215,12 @@ struct SettingPage {
     .backgroundColor($r('app.color.color_F5F5F5'))
   }
 
-  toLogout() {
-    let httpSession = http.createHttp()
-    httpSession.request(requestPath.baseUrl + requestPath.PATH_LOGOUT, {
-      method: http.RequestMethod.GET
-    }, (err: BusinessError, data: http.HttpResponse) => {
-      if (!err) {
-        if (data.responseCode === 200) {
-          AppStorage.setOrCreate('nickname', "")
-          AppStorage.setOrCreate('isLogin', false)
-          //登出成功
-          promptAction.showToast({
-            message: $r('app.string.logout_succ')
-          })
-          router.back()
-        } else {
-          //登出成功
-          promptAction.showToast({
-            message: $r('app.string.logout_fail')
-          })
-        }
-      } else {
-        promptAction.showToast({
-          message: err.message
-        })
-      }
-
-      httpSession.destroy()
+  async toLogout() {
+    await Api.get().logout()
+    UserService.get().clearUser()
+    promptAction.showToast({
+      message: $r('app.string.logout_succ')
     })
+    router.back()
   }
 }

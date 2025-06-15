@@ -41,7 +41,7 @@ export struct AudioRecordView {
   //语音录制
   @Link audioRecord: boolean
   //语音解析文字
-  @Prop voiceToText: string = ""
+  @Prop @Watch('parseListener') voiceToText: string = ""
   //语音转文字是否异常
   @State errorStatus: boolean = false
   @State isLoading: boolean = false
@@ -77,6 +77,30 @@ export struct AudioRecordView {
     y: 0,
     width: 0,
     height: 0
+  }
+
+  /**
+   * 解析回调
+   */
+  parseListener() {
+    if (this.voiceToText === "") {
+      //没有识别到文字
+      this.errorStatus = true
+    } else {
+      this.errorStatus = false
+    }
+  }
+
+  /**
+   * 首次进来为空
+   */
+  aboutToAppear(): void {
+    if (this.voiceToText === "") {
+      //没有识别到文字
+      this.errorStatus = true
+    } else {
+      this.errorStatus = false
+    }
   }
 
   /**
@@ -200,7 +224,13 @@ export struct AudioRecordView {
   audioParseView() {
     RelativeContainer() {
       Stack({ alignContent: Alignment.Center }) {
-        Text(this.isLoading ? "..." : this.errorStatus ? "未识别到文字" : this.voiceToText)
+        TextArea({
+          text: this.isLoading ? "..." : this.errorStatus ? "未识别到文字" : this.voiceToText
+        })
+          .onChange((value: string, previewText?: PreviewText, options?: TextChangeOptions) => {
+            this.voiceToText = value
+          })
+          .backgroundColor(Color.Transparent)
           .fontSize($r('app.float.font_20'))
           .fontColor(Color.Black)
           .width(SizeConstant.FULL_SIZE)
@@ -208,6 +238,7 @@ export struct AudioRecordView {
       .padding(SizeConstant.SIZE_20)
       .width(SizeConstant.SIZE_PERCENT_90)
       .height('auto')
+      .id('parseText')
       .backgroundColor(this.errorStatus ? $r('app.color.color_FB5251') :
       $r('app.color.color_95EC69'))
       .borderRadius(SizeConstant.SIZE_15)
@@ -230,6 +261,8 @@ export struct AudioRecordView {
         .onClick(() => {
           //取消
           this.audioRecord = false
+          this.audioParse = false
+          this.voiceToText = ""
         })
 
         //发送原语音
@@ -247,7 +280,9 @@ export struct AudioRecordView {
             //发送原语音
             this.onDataSend(3, this.recordFile)
           }
+          this.voiceToText = ""
           this.audioRecord = false
+          this.audioParse = false
         })
 
         //转文字 发送
@@ -267,7 +302,9 @@ export struct AudioRecordView {
           this.onDataSend(0, {
             parseText: this.voiceToText
           })
+          this.voiceToText = ""
           this.audioRecord = false
+          this.audioParse = false
         })
       }
       .alignRules({

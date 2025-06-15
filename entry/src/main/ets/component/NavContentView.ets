@@ -27,7 +27,7 @@ export struct NavContentView {
         let tmpTabContent: Map<string, Array<NavContentBean>> = new Map()
         let tmpTabKeys: Array<string> = []
         //请求成功
-        let artArr = bean.data
+        let artArr = bean.data!
         artArr.forEach((bean: ArticlesList) => {
           tmpTabKeys.push(bean.name)
           let list: Array<NavContentBean> = []

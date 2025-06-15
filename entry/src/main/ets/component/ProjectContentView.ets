@@ -23,7 +23,7 @@ export struct ProjectContentView {
         if (responseBean.errorCode === 0) {
           //获取成功
           logger.error(`nihai :${JSON.stringify(responseBean.data)}`)
-          this.tabNames = responseBean.data
+          this.tabNames = responseBean.data!
         }
       }
     }).catch((err: BusinessError) => {

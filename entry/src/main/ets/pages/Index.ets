@@ -70,7 +70,7 @@ struct Index {
       if (response !== undefined) {
         let bean = JSON.parse(response.toString()) as ResponseBean<HotKeyBean[]>
         if (bean.errorCode === 0) {
-          this.hotKeys = bean.data
+          this.hotKeys = bean.data!
           AppStorage.setOrCreate("hotKey", bean.data)
         }
       }

@@ -714,8 +714,9 @@ struct AIChatPage {
                     console.info(`onDataSend: ${JSON.stringify(recordFile)}`)
                     if (textType === 0) {
                       this.toGetAi(recordFile.parseText!)
-
+                      this.audioText = ''
                     } else if (textType === 3) {
+                      this.audioText = ''
                       let message = this.getSendAudioMessage(recordFile)
                       console.info(`stopRecord onDataSend ${JSON.stringify(message)}`)
                       this.messageArr.push(message)

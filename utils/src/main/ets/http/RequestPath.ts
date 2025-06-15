@@ -28,8 +28,6 @@ class RequestPath {
   //注册
   static readonly PATH_REGISTER = "/user/register"
 
-  //退出
-  static readonly PATH_USER_EXIT = "/user/logout/json"
 }
 
 

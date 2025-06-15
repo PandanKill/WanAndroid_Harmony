@@ -52,7 +52,7 @@ export struct SwiperView {
         } else {
           //获取成功
           logger.error(`nihai :${JSON.stringify(responseBean.data)}`)
-          this.swiperPics = responseBean.data
+          this.swiperPics = responseBean.data!
           // this.swiperDataSource = new SwiperDataSource(this.swiperPics)
         }
       }

@@ -30,8 +30,8 @@ struct TagDetailPage {
           if (responseBean.errorCode === 0) {
             //获取成功
             logger.error(`nihai :${JSON.stringify(responseBean.data)}`)
-            this.tabs = responseBean.data
-            responseBean.data.forEach((item: TabDetailBean, index: number) => {
+            this.tabs = responseBean.data!
+            responseBean.data!.forEach((item: TabDetailBean, index: number) => {
               if (item.id === this.tagBean.officialAcc) {
                 this.currentIndex = index
               }
