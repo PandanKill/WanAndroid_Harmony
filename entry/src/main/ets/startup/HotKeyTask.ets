@@ -1,9 +1,7 @@
 import { common, StartupTask } from '@kit.AbilityKit';
-import { rcp } from '@kit.RemoteCommunicationKit';
-import { logger, requestPath } from 'utils';
-import { JSON } from '@kit.ArkTS';
 import { ResponseBean } from '../bean/ResponseBean';
 import { HotKeyBean } from '../bean/HotKeyBean';
+import Api from '../utils/net/Api';
 
 @Sendable
 export default class HotKeyTask extends StartupTask {
@@ -17,17 +15,9 @@ export default class HotKeyTask extends StartupTask {
 
   async init(context: common.AbilityStageContext): Promise<void | Object> {
     //获取热词
-    let session = rcp.createSession()
-    try {
-      let response: rcp.Response = await session.get(requestPath.baseUrl + requestPath.PATH_HOTKEY_JSON)
-      let bean = JSON.parse(response.toString()) as ResponseBean<HotKeyBean[]>
-      if (bean.errorCode === 0) {
-        //保存
-        AppStorage.set("hotKey", bean.data)
-      }
-      session.close()
-    } catch (err) {
-      logger.error(JSON.stringify(err))
+    let response: ResponseBean<HotKeyBean[]> = await Api.get().getHotKey()
+    if (response.isSuccessWithData()) {
+      AppStorage.setOrCreate("hotKey", response.data)
     }
     return ""
   }

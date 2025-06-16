@@ -1,10 +1,11 @@
-import { httpRequest, logger, requestPath } from 'utils'
+import { logger, requestPath } from 'utils'
 import { rcp } from '@kit.RemoteCommunicationKit'
 import { BusinessError } from '@kit.BasicServicesKit';
 import SizeConstant from '../constants/SizeConstant';
 import { ProjectTabBean } from '../bean/ProjectTabBean';
 import { ResponseBean } from '../bean/ResponseBean';
 import { ProjectTabContentView } from './ProjectTabContentView';
+import Api from '../utils/net/Api';
 
 @Component
 export struct ProjectContentView {
@@ -14,23 +15,16 @@ export struct ProjectContentView {
   @State tabNames: ProjectTabBean[] = []
 
   aboutToAppear(): void {
-    let session = rcp.createSession()
-    session.get(requestPath.baseUrl + requestPath.PATH_PROJECT_TREE).then((response: rcp.Response) => {
-      console.info(`Response succeeded: ${response}`);
-      if (response !== undefined) {
-        let responseBean: ResponseBean<ProjectTabBean[]> =
-          JSON.parse(response.toString()!!) as ResponseBean<ProjectTabBean[]>
-        if (responseBean.errorCode === 0) {
-          //获取成功
-          logger.error(`nihai :${JSON.stringify(responseBean.data)}`)
-          this.tabNames = responseBean.data!
-        }
-      }
-    }).catch((err: BusinessError) => {
-      console.error(`Response err: Code is ${err.code}, message is ${JSON.stringify(err)}`);
-    }).finally(() => {
-      session.close()
-    })
+    this.loadProjectTree()
+  }
+
+  async loadProjectTree() {
+    let responseBean: ResponseBean<ProjectTabBean[]> = await Api.get().getProjectTree()
+    if (responseBean.isSuccessWithData()) {
+      //获取成功
+      logger.error(`nihai :${JSON.stringify(responseBean.data)}`)
+      this.tabNames = responseBean.getDataOrThrow()
+    }
   }
 
   @Builder

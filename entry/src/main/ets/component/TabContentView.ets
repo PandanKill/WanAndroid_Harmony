@@ -1,4 +1,3 @@
-import { httpRequest } from 'utils/src/main/ets/http/HttpRequest'
 import { requestPath } from 'utils/src/main/ets/http/RequestPath'
 import { rcp } from '@kit.RemoteCommunicationKit'
 import SizeConstant from '../constants/SizeConstant'
@@ -9,6 +8,7 @@ import { ListAttr, ListView, RefreshController, RefreshDataSource } from '@abner
 import { ResponseBean } from '../bean/ResponseBean'
 import { HomeBean, HomeListViewBeanInterface } from '../bean/HomeListViewBeanInterface'
 import { logger } from 'utils'
+import Api from '../utils/net/Api'
 
 @Component
 export struct TabContentView {
@@ -32,106 +32,84 @@ export struct TabContentView {
     this.loadInitContent()
   }
 
-  private loadInitContent(): void {
+  private async loadInitContent() {
     if (this.type === "Home") {
       this.path = `/wxarticle/list/${this.contentId}/${this.currentIndex}/json`
     } else if (this.type === "TiXi") {
       this.path = `/article/list/${this.currentIndex}/json?cid=${this.contentId}`
     }
-    let session = rcp.createSession()
-    session.get(requestPath.baseUrl + this.path)
-      .then((response: rcp.Response) => {
-        console.info(`Response succeeded: ${response}`);
-        if (response !== undefined) {
-          let responseBean: ResponseBean<HomeListViewBeanInterface> =
-            JSON.parse(response.toString()!!) as ResponseBean<HomeListViewBeanInterface>
-          if (responseBean.errorCode === 0) {
-            //获取成功
-            logger.error(`nihai :${JSON.stringify(responseBean.data)}`)
-            responseBean.data!.datas.forEach((homeBean: HomeBean) => {
-              let bean = new HomeListViewBean()
-              bean.author = homeBean.author
-              bean.chapterName = homeBean.chapterName
-              bean.id = homeBean.id
-              bean.link = homeBean.link
-              bean.niceDate = homeBean.niceDate
-              bean.desc = homeBean.desc
-              bean.envelopePic = homeBean.envelopePic
-              bean.superChapterName = homeBean.superChapterName
-              bean.isTop = false
 
-              if (homeBean.tags !== undefined && homeBean.tags.length !== 0) {
-                let tag = new TagBean()
-                tag.name = homeBean.tags[0].name
-                tag.url = homeBean.tags[0].url
-                bean.tags = [tag]
-              }
+    let responseBean: ResponseBean<HomeListViewBeanInterface> = await Api.get().getCommonPath(this.path)
+    if (responseBean.isSuccessWithData()) {
+      //获取成功
+      logger.error(`nihai :${JSON.stringify(responseBean.data)}`)
+      responseBean.getDataOrThrow().datas.forEach((homeBean: HomeBean) => {
+        let bean = new HomeListViewBean()
+        bean.author = homeBean.author
+        bean.chapterName = homeBean.chapterName
+        bean.id = homeBean.id
+        bean.link = homeBean.link
+        bean.niceDate = homeBean.niceDate
+        bean.desc = homeBean.desc
+        bean.envelopePic = homeBean.envelopePic
+        bean.superChapterName = homeBean.superChapterName
+        bean.isTop = false
 
-              bean.title = homeBean.title
-              bean.zan = homeBean.zan !== 0
-              this.intiData.push(bean)
-            })
-          }
-          //显示
-          this.isLoading = false
-          this.dataSource.initData(this.intiData)
+        if (homeBean.tags !== undefined && homeBean.tags.length !== 0) {
+          let tag = new TagBean()
+          tag.name = homeBean.tags[0].name
+          tag.url = homeBean.tags[0].url
+          bean.tags = [tag]
         }
-      }).catch((err: BusinessError) => {
-      console.error(`Response err: Code is ${err.code}, message is ${JSON.stringify(err)}`);
-    }).finally(() => {
-      session.close()
-    })
+
+        bean.title = homeBean.title
+        bean.zan = homeBean.zan !== 0
+        this.intiData.push(bean)
+      })
+    }
+    //显示
+    this.isLoading = false
+    this.dataSource.initData(this.intiData)
   }
 
-  private loadMoreContent(): void {
+  private async loadMoreContent() {
     if (this.type === "Home") {
       this.path = `/wxarticle/list/${this.contentId}/${this.currentIndex}/json`
     } else if (this.type === "TiXi") {
       this.path = `/article/list/${this.currentIndex}/json?cid=${this.contentId}`
     }
-    let session = rcp.createSession()
-    session.get(requestPath.baseUrl + this.path)
-      .then((response: rcp.Response) => {
-        console.info(`Response succeeded: ${response}`);
-        if (response !== undefined) {
-          let responseBean: ResponseBean<HomeListViewBeanInterface> =
-            JSON.parse(response.toString()!!) as ResponseBean<HomeListViewBeanInterface>
-          let dataArr: Array<HomeListViewBean> = []
-          if (responseBean.errorCode === 0) {
-            //获取成功
-            logger.error(`nihai :${JSON.stringify(responseBean.data)}`)
-            responseBean.data!.datas.forEach((homeBean: HomeBean) => {
-              let bean = new HomeListViewBean()
-              bean.author = homeBean.author
-              bean.chapterName = homeBean.chapterName
-              bean.id = homeBean.id
-              bean.link = homeBean.link
-              bean.niceDate = homeBean.niceDate
-              bean.superChapterName = homeBean.superChapterName
-              bean.desc = homeBean.desc
-              bean.envelopePic = homeBean.envelopePic
-              bean.isTop = false
 
-              if (homeBean.tags !== undefined && homeBean.tags.length !== 0) {
-                let tag = new TagBean()
-                tag.name = homeBean.tags[0].name
-                tag.url = homeBean.tags[0].url
-                bean.tags = [tag]
-              }
+    let responseBean: ResponseBean<HomeListViewBeanInterface> = await Api.get().getCommonPath(this.path)
+    let dataArr: Array<HomeListViewBean> = []
+    if (responseBean.isSuccessWithData()) {
+      //获取成功
+      logger.error(`nihai :${JSON.stringify(responseBean.data)}`)
+      responseBean.getDataOrThrow().datas.forEach((homeBean: HomeBean) => {
+        let bean = new HomeListViewBean()
+        bean.author = homeBean.author
+        bean.chapterName = homeBean.chapterName
+        bean.id = homeBean.id
+        bean.link = homeBean.link
+        bean.niceDate = homeBean.niceDate
+        bean.superChapterName = homeBean.superChapterName
+        bean.desc = homeBean.desc
+        bean.envelopePic = homeBean.envelopePic
+        bean.isTop = false
 
-              bean.title = homeBean.title
-              bean.zan = homeBean.zan !== 0
-              dataArr.push(bean)
-            })
-          }
-          //显示
-          this.dataSource.pushDataArray(dataArr)
+        if (homeBean.tags !== undefined && homeBean.tags.length !== 0) {
+          let tag = new TagBean()
+          tag.name = homeBean.tags[0].name
+          tag.url = homeBean.tags[0].url
+          bean.tags = [tag]
         }
-      }).catch((err: BusinessError) => {
-      console.error(`Response err: Code is ${err.code}, message is ${JSON.stringify(err)}`);
-    }).finally(() => {
-      session.close()
-    })
+
+        bean.title = homeBean.title
+        bean.zan = homeBean.zan !== 0
+        dataArr.push(bean)
+      })
+    }
+    //显示
+    this.dataSource.pushDataArray(dataArr)
   }
 
   build() {

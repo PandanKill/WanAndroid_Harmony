@@ -4,9 +4,10 @@ import { HomeListViewBean, TagBean } from '../bean/HomeListViewBean'
 import { rcp } from '@kit.RemoteCommunicationKit'
 import { ResponseBean } from '../bean/ResponseBean'
 import { HomeBean, HomeListViewBeanInterface } from '../bean/HomeListViewBeanInterface'
-import { httpRequest, logger, requestPath } from 'utils'
+import { logger, requestPath } from 'utils'
 import { BusinessError } from '@kit.BasicServicesKit'
 import { router } from '@kit.ArkUI'
+import Api from '../utils/net/Api'
 
 @Component
 export struct SpareTabContentView {
@@ -24,92 +25,70 @@ export struct SpareTabContentView {
     this.loadInitData()
   }
 
-  private loadInitData() {
-    let session = rcp.createSession()
-    session.get(requestPath.baseUrl + `/user_article/list/${this.currentPage}/json`).then((response: rcp.Response) => {
-      console.info(`Response succeeded: ${response}`);
-      if (response !== undefined) {
-        let responseBean: ResponseBean<HomeListViewBeanInterface> =
-          JSON.parse(response.toString()!!) as ResponseBean<HomeListViewBeanInterface>
-        if (responseBean.errorCode === 0) {
-          //获取成功
-          logger.error(`nihai :${JSON.stringify(responseBean.data)}`)
-          responseBean.data!.datas.forEach((homeBean: HomeBean) => {
-            let bean = new HomeListViewBean()
-            bean.author = homeBean.author
-            bean.chapterName = homeBean.chapterName
-            bean.id = homeBean.id
-            bean.link = homeBean.link
-            bean.niceDate = homeBean.niceDate
-            bean.desc = homeBean.desc
-            bean.superChapterName = homeBean.superChapterName
-            bean.isTop = false
+  private async loadInitData() {
+    let responseBean: ResponseBean<HomeListViewBeanInterface> = await Api.get().getUserArticle(this.currentPage)
+    if (responseBean.isSuccessWithData()) {
+      //获取成功
+      logger.error(`nihai :${JSON.stringify(responseBean.data)}`)
+      responseBean.getDataOrThrow().datas.forEach((homeBean: HomeBean) => {
+        let bean = new HomeListViewBean()
+        bean.author = homeBean.author
+        bean.chapterName = homeBean.chapterName
+        bean.id = homeBean.id
+        bean.link = homeBean.link
+        bean.niceDate = homeBean.niceDate
+        bean.desc = homeBean.desc
+        bean.superChapterName = homeBean.superChapterName
+        bean.isTop = false
 
-            if (homeBean.tags !== undefined && homeBean.tags.length !== 0) {
-              let tag = new TagBean()
-              tag.name = homeBean.tags[0].name
-              tag.url = homeBean.tags[0].url
-              bean.tags = [tag]
-            }
-
-            bean.title = homeBean.title
-            bean.zan = homeBean.zan !== 0
-            this.intiData.push(bean)
-          })
+        if (homeBean.tags !== undefined && homeBean.tags.length !== 0) {
+          let tag = new TagBean()
+          tag.name = homeBean.tags[0].name
+          tag.url = homeBean.tags[0].url
+          bean.tags = [tag]
         }
-        //显示
-        this.isLoading = false
-        this.refreshDataSource.initData(this.intiData)
-      }
-    }).catch((err: BusinessError) => {
-      console.error(`Response err: Code is ${err.code}, message is ${JSON.stringify(err)}`);
-    }).finally(() => {
-      session.close()
-    })
+
+        bean.title = homeBean.title
+        bean.zan = homeBean.zan !== 0
+        this.intiData.push(bean)
+      })
+    }
+    //显示
+    this.isLoading = false
+    this.refreshDataSource.initData(this.intiData)
   }
 
-  private loadMoreData() {
-    let session = rcp.createSession()
-    session.get(requestPath.baseUrl + `/user_article/list/${this.currentPage}/json`).then((response: rcp.Response) => {
-      console.info(`Response succeeded: ${response}`);
-      if (response !== undefined) {
-        let responseBean: ResponseBean<HomeListViewBeanInterface> =
-          JSON.parse(response.toString()!!) as ResponseBean<HomeListViewBeanInterface>
-        let dataArr: Array<HomeListViewBean> = []
-        if (responseBean.errorCode === 0) {
-          //获取成功
-          logger.error(`nihai :${JSON.stringify(responseBean.data)}`)
-          responseBean.data!.datas.forEach((homeBean: HomeBean) => {
-            let bean = new HomeListViewBean()
-            bean.author = homeBean.author
-            bean.chapterName = homeBean.chapterName
-            bean.id = homeBean.id
-            bean.link = homeBean.link
-            bean.niceDate = homeBean.niceDate
-            bean.desc = homeBean.desc
-            bean.superChapterName = homeBean.superChapterName
-            bean.isTop = false
+  private async loadMoreData() {
+    let responseBean: ResponseBean<HomeListViewBeanInterface> = await Api.get().getUserArticle(this.currentPage)
+    let dataArr: Array<HomeListViewBean> = []
+    if (responseBean.isSuccessWithData()) {
+      //获取成功
+      logger.error(`nihai :${JSON.stringify(responseBean.data)}`)
+      responseBean.getDataOrThrow().datas.forEach((homeBean: HomeBean) => {
+        let bean = new HomeListViewBean()
+        bean.author = homeBean.author
+        bean.chapterName = homeBean.chapterName
+        bean.id = homeBean.id
+        bean.link = homeBean.link
+        bean.niceDate = homeBean.niceDate
+        bean.desc = homeBean.desc
+        bean.superChapterName = homeBean.superChapterName
+        bean.isTop = false
 
-            if (homeBean.tags !== undefined && homeBean.tags.length !== 0) {
-              let tag = new TagBean()
-              tag.name = homeBean.tags[0].name
-              tag.url = homeBean.tags[0].url
-              bean.tags = [tag]
-            }
-
-            bean.title = homeBean.title
-            bean.zan = homeBean.zan !== 0
-            this.intiData.push(bean)
-          })
+        if (homeBean.tags !== undefined && homeBean.tags.length !== 0) {
+          let tag = new TagBean()
+          tag.name = homeBean.tags[0].name
+          tag.url = homeBean.tags[0].url
+          bean.tags = [tag]
         }
-        //显示
-        this.refreshDataSource.pushDataArray(dataArr)
-      }
-    }).catch((err: BusinessError) => {
-      console.error(`Response err: Code is ${err.code}, message is ${JSON.stringify(err)}`);
-    }).finally(() => {
-      session.close()
-    })
+
+        bean.title = homeBean.title
+        bean.zan = homeBean.zan !== 0
+        this.intiData.push(bean)
+      })
+    }
+    //显示
+    this.refreshDataSource.pushDataArray(dataArr)
   }
 
   build() {

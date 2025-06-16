@@ -9,7 +9,6 @@ import { FooterTab, FooterTabViewModel } from '../viewModel/FooterTabViewModel';
 import systemTime from '@ohos.systemTime';
 import systemDateTime from '@ohos.systemDateTime';
 import { promptAction, router } from '@kit.ArkUI';
-import { httpRequest, logger, requestPath } from 'utils';
 import { rcp } from '@kit.RemoteCommunicationKit';
 import { JSON } from '@kit.ArkTS';
 import { ResponseBean } from '../bean/ResponseBean';
@@ -17,6 +16,7 @@ import { HotKeyBean } from '../bean/HotKeyBean';
 import { common } from '@kit.AbilityKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import http from '@ohos.net.http';
+import Api from '../utils/net/Api';
 
 @Entry
 @Component
@@ -64,21 +64,15 @@ struct Index {
 
   aboutToAppear(): void {
     //获取热词
-    let session = rcp.createSession()
-    session.get(requestPath.baseUrl + requestPath.PATH_HOTKEY_JSON).then((response: rcp.Response) => {
-      console.info(`Response succeeded: ${response}`);
-      if (response !== undefined) {
-        let bean = JSON.parse(response.toString()) as ResponseBean<HotKeyBean[]>
-        if (bean.errorCode === 0) {
-          this.hotKeys = bean.data!
-          AppStorage.setOrCreate("hotKey", bean.data)
-        }
-      }
-    }).catch((err: BusinessError) => {
+    this.loadHotKey()
+  }
 
-    }).finally(() => {
-      session.close()
-    })
+  async loadHotKey() {
+    let response: ResponseBean<HotKeyBean[]> = await Api.get().getHotKey()
+    if (response.isSuccessWithData()) {
+      this.hotKeys = response.getDataOrThrow()
+      AppStorage.setOrCreate("hotKey", response.getDataOrThrow())
+    }
   }
 
   private showSearch() {

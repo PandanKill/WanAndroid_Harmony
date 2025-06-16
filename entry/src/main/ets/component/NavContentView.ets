@@ -1,12 +1,12 @@
 import SizeConstant from '../constants/SizeConstant'
 import { NavTabContentView } from './NavTabContentView'
-import { httpRequest } from 'utils/src/main/ets/http/HttpRequest'
 import { requestPath } from 'utils/src/main/ets/http/RequestPath'
 import { rcp } from '@kit.RemoteCommunicationKit'
 import { BusinessError } from '@kit.BasicServicesKit'
 import { logger } from 'utils'
 import { ResponseBean } from '../bean/ResponseBean'
 import { ArticlesList, NavContentBean } from '../bean/NavContentBean'
+import Api from '../utils/net/Api'
 
 @Component
 export struct NavContentView {
@@ -19,38 +19,34 @@ export struct NavContentView {
   @State private isLoading: boolean = true
 
   aboutToAppear(): void {
-    //获取导航数据
-    let session = rcp.createSession()
-    session.get(requestPath.baseUrl + requestPath.PATH_NAV).then((response: rcp.Response) => {
-      let bean = JSON.parse(response.toString()!!) as ResponseBean<ArticlesList[]>
-      if (bean.errorCode === 0) {
-        let tmpTabContent: Map<string, Array<NavContentBean>> = new Map()
-        let tmpTabKeys: Array<string> = []
-        //请求成功
-        let artArr = bean.data!
-        artArr.forEach((bean: ArticlesList) => {
-          tmpTabKeys.push(bean.name)
-          let list: Array<NavContentBean> = []
-          bean.articles.forEach((bean: NavContentBean) => {
-            let navBean = new NavContentBean()
-            navBean.chapterId = bean.chapterId
-            navBean.chapterName = bean.chapterName
-            navBean.link = bean.link
-            navBean.title = bean.title
-            list.push(navBean)
-          })
-          tmpTabContent.set(bean.name, list)
-        })
+    this.loadNavData()
+  }
 
-        this.tabContent = tmpTabContent
-        this.tabKeys = tmpTabKeys
-        this.isLoading = false
-      }
-    }).catch((err: BusinessError) => {
-      logger.error(`Response err: Code is ${err.code}, message is ${JSON.stringify(err)}`);
-    }).finally(() => {
-      session.close()
-    })
+  async loadNavData() {
+    let responseD: ResponseBean<ArticlesList[]> = await Api.get().getNavList()
+    if (responseD.isSuccessWithData()) {
+      let tmpTabContent: Map<string, Array<NavContentBean>> = new Map()
+      let tmpTabKeys: Array<string> = []
+      //请求成功
+      let artArr = responseD.getDataOrThrow()
+      artArr.forEach((bean: ArticlesList) => {
+        tmpTabKeys.push(bean.name)
+        let list: Array<NavContentBean> = []
+        bean.articles.forEach((bean: NavContentBean) => {
+          let navBean = new NavContentBean()
+          navBean.chapterId = bean.chapterId
+          navBean.chapterName = bean.chapterName
+          navBean.link = bean.link
+          navBean.title = bean.title
+          list.push(navBean)
+        })
+        tmpTabContent.set(bean.name, list)
+      })
+
+      this.tabContent = tmpTabContent
+      this.tabKeys = tmpTabKeys
+      this.isLoading = false
+    }
   }
 
   @Builder

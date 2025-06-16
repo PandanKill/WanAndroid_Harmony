@@ -1,4 +1,3 @@
-import { httpRequest } from 'utils/src/main/ets/http/HttpRequest'
 import { requestPath } from 'utils/src/main/ets/http/RequestPath'
 import { rcp } from '@kit.RemoteCommunicationKit'
 import { BusinessError } from '@kit.BasicServicesKit'
@@ -9,6 +8,7 @@ import { logger } from 'utils'
 import { router } from '@kit.ArkUI'
 import { TagRouterBean } from '../bean/TagRouterBean'
 import { TabDetailBean } from '../bean/TabDetailBean'
+import Api from '../utils/net/Api'
 
 interface GeneratedObjectLiteralInterface_1 {
   id: number;
@@ -22,18 +22,15 @@ export struct TiXiContentView {
 
   aboutToAppear(): void {
     //加载体系数据
-    let session = rcp.createSession()
-    session.get(requestPath.baseUrl + requestPath.PATH_TREE).then((response: rcp.Response) => {
-      let bean = JSON.parse(response.toString()!!) as ResponseBean<TreeListBean[]>
-      if (bean.errorCode === 0) {
-        this.contentMap = bean.data!
-        this.isLoading = false
-      }
-    }).catch((err: BusinessError) => {
-      logger.error(`Response err: Code is ${err.code}, message is ${JSON.stringify(err)}`);
-    }).finally(() => {
-      session.close()
-    })
+    this.loadTiXiData()
+  }
+
+  async loadTiXiData() {
+    let bean: ResponseBean<TreeListBean[]> = await Api.get().getTiXiData()
+    if (bean.isSuccessWithData()) {
+      this.contentMap = bean.getDataOrThrow()
+      this.isLoading = false
+    }
   }
 
   build() {

@@ -3,7 +3,6 @@
  */
 import SizeConstant from '../constants/SizeConstant'
 import { promptAction, router } from '@kit.ArkUI'
-import { httpRequest } from 'utils/src/main/ets/http/HttpRequest'
 import { logger, requestPath } from 'utils'
 import { BusinessError } from '@kit.BasicServicesKit'
 import { JSON } from '@kit.ArkTS'
@@ -70,7 +69,7 @@ struct LoginPage {
       promptAction.showToast({
         message: $r('app.string.login_succ')
       })
-      UserService.get().setUser(logBean.data)
+      UserService.get().setUser(logBean.getDataOrThrow())
       const user = await UserService.get().updateUser()
       if (user) {
         router.back()

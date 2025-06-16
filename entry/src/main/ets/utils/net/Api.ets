@@ -8,6 +8,14 @@ import { ResponseBean } from '../../bean/ResponseBean'
 import { requestPath } from 'utils'
 import CookieUtils from './cookie/CookieUtils'
 import { User } from '../../bean/LoginResponse'
+import { HomeListViewBeanInterface } from '../../bean/HomeListViewBeanInterface'
+import { TabDetailBean } from '../../bean/TabDetailBean'
+import { TopBean } from '../../bean/TopBean'
+import { ArticlesList } from '../../bean/NavContentBean'
+import { ProjectTabBean } from '../../bean/ProjectTabBean'
+import { BannerBean } from '../../bean/BannerBean'
+import { TreeListBean } from '../../bean/TreeContentBean'
+import { HotKeyBean } from '../../bean/HotKeyBean'
 
 const cookieJar: CookieJar = new PersistentCookieJar(EntryContext.getContext())
 
@@ -111,6 +119,113 @@ export default class Api {
    */
   async logout(): Promise<ResponseBean<string>> {
     return requestSync(requestPath.PATH_LOGOUT, http.RequestMethod.GET)
+  }
+
+  /**
+   * 获取问答
+   * @returns
+   */
+  async getWendaList(pageNum: number): Promise<ResponseBean<HomeListViewBeanInterface>> {
+    return requestSync(`/wenda/list/${pageNum}/json`, http.RequestMethod.GET)
+  }
+
+  /**
+   * 获取微信公众号
+   * @returns
+   */
+  async getWXArticle(): Promise<ResponseBean<TabDetailBean[]>> {
+    return requestSync(requestPath.PATH_WXARTICLE_CHAPTERS, http.RequestMethod.GET)
+  }
+
+  /**
+   * 获取置顶
+   * @returns
+   */
+  async getTopArt(): Promise<ResponseBean<TopBean[]>> {
+    return requestSync(requestPath.PATH_TOP, http.RequestMethod.GET)
+  }
+
+  /**
+   * 获取文章
+   * @returns
+   */
+  async getArticleList(page: number): Promise<ResponseBean<HomeListViewBeanInterface>> {
+    return requestSync(`/article/list/${page}/json`, http.RequestMethod.GET)
+  }
+
+  /**
+   * 获取导航数据
+   * @returns
+   */
+  async getNavList(): Promise<ResponseBean<ArticlesList[]>> {
+    return requestSync(requestPath.PATH_NAV, http.RequestMethod.GET)
+  }
+
+  /**
+   * 获取项目树
+   * @returns
+   */
+  async getProjectTree(): Promise<ResponseBean<ProjectTabBean[]>> {
+    return requestSync(requestPath.PATH_PROJECT_TREE, http.RequestMethod.GET)
+  }
+
+  /**
+   * 获取项目列表
+   * @returns
+   */
+  async getProjectList(currentIndex: number, contentId: number): Promise<ResponseBean<HomeListViewBeanInterface>> {
+    return requestSync(`/project/list/${currentIndex}/json?cid=${contentId}`,
+      http.RequestMethod.GET)
+  }
+
+  /**
+   * 获取用户文章
+   * @returns
+   */
+  async getUserArticle(currentIndex: number): Promise<ResponseBean<HomeListViewBeanInterface>> {
+    return requestSync(`/user_article/list/${currentIndex}/json`,
+      http.RequestMethod.GET)
+  }
+
+  /**
+   * 获取用户文章
+   * @returns
+   */
+  async getSwiperArt(): Promise<ResponseBean<BannerBean[]>> {
+    return requestSync(requestPath.PATH_HOME_BANNER,
+      http.RequestMethod.GET)
+  }
+
+  /**
+   * 获取用户文章
+   * @returns
+   */
+  async getCommonPath(path: string): Promise<ResponseBean<HomeListViewBeanInterface>> {
+    return requestSync(path, http.RequestMethod.GET)
+  }
+
+  /**
+   * 获取用户文章
+   * @returns
+   */
+  async getTiXiData(): Promise<ResponseBean<TreeListBean[]>> {
+    return requestSync(requestPath.PATH_TREE, http.RequestMethod.GET)
+  }
+
+  /**
+   * 获取用户文章
+   * @returns
+   */
+  async getHotKey(): Promise<ResponseBean<HotKeyBean[]>> {
+    return requestSync(requestPath.PATH_HOTKEY_JSON, http.RequestMethod.GET)
+  }
+
+  /**
+   * 获取用户文章
+   * @returns
+   */
+  async getMineCoin(page: number): Promise<ResponseBean<HotKeyBean[]>> {
+    return requestSync(`/lg/coin/list/${page}/json`, http.RequestMethod.GET)
   }
 }
 
