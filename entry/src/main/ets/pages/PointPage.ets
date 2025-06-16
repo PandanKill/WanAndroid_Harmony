@@ -3,12 +3,18 @@ import SizeConstant from '../constants/SizeConstant'
 import { router } from '@kit.ArkUI'
 import { RefreshController } from '@abner/refresh/src/main/ets/controller/RefreshController'
 import { ListAttr, ListView, RefreshDataSource } from '@abner/refresh'
+import Api from '../utils/net/Api'
+import { ResponseBean } from '../bean/ResponseBean'
+import { MineCoinBean, MineCoinContentBean } from '../bean/CoinBean'
+import { UserService } from '../service/UserService'
+import { User } from '../bean/LoginResponse'
+import { timestampToDateTime } from '../utils/DateUtil'
 
 @Entry
 @Component
 struct PointPage {
   @State point: number = 0
-  initData: string[] = []
+  initData: MineCoinContentBean[] = []
   //是否是首次加载
   @State isFirstLoading: boolean = true
   private currentIndex: number = 0
@@ -16,6 +22,7 @@ struct PointPage {
   dataSource: RefreshDataSource = new RefreshDataSource()
   //刷新 controller
   refreshController: RefreshController = new RefreshController()
+  // private maxCount
   private pointEventRule: AlignRuleOption = {
     left: { anchor: "__container__", align: HorizontalAlign.Start },
     center: { anchor: "__container__", align: VerticalAlign.Center }
@@ -24,39 +31,64 @@ struct PointPage {
     right: { anchor: "__container__", align: HorizontalAlign.End },
     center: { anchor: "__container__", align: VerticalAlign.Center }
   }
+  private observer: (user?: User) => void = (user) => {
+    if (user) {
+      animateTo({
+        duration: 500,
+        curve: Curve.Linear
+      }, () => {
+        this.point = (user as User).coinCount
+      })
+    }
+  }
 
   aboutToAppear(): void {
+    this.loadMineCoin()
     this.loadInitData()
   }
 
+  /**
+   * 个人积分
+   */
+  loadMineCoin() {
+    let user = UserService.get().getUser()
+    if (user) {
+      animateTo({
+        duration: 500,
+        curve: Curve.Linear
+      }, () => {
+        this.point = (user as User).coinCount
+      })
+    }
+    UserService.get().addUserObserver(this.observer)
+  }
+
   //加载内容
-  loadInitData() {
-    setTimeout(() => {
-      this.initData.push('积分1')
-      this.initData.push('积分2')
-      this.initData.push('积分3')
-      this.isFirstLoading = false
+  async loadInitData() {
+    let responseBean: ResponseBean<MineCoinBean> = await Api.get().getMineCoin(this.currentIndex)
+    this.isFirstLoading = false
+    if (responseBean.isSuccessWithData()) {
+      let data = responseBean.getDataOrThrow()
+      this.initData.push(...data.datas)
       this.dataSource.initData(this.initData)
       this.refreshController.finishRefresh()
-    }, 1000)
+    }
   }
 
   //加载更多
-  loadMoreContent() {
-    setTimeout(() => {
-      let dataArr: Array<string> = []
-      if (this.currentIndex < 7) {
-        if (this.currentIndex === 6) {
-          dataArr.push("")
-        } else {
-          dataArr.push('积分1')
-          dataArr.push('积分2')
-          dataArr.push('积分3')
-        }
-        this.dataSource.pushDataArray(dataArr)
-      }
-      this.refreshController.finishLoadMore()
-    }, 1000)
+  async loadMoreContent() {
+    let responseBean: ResponseBean<MineCoinBean> = await Api.get().getMineCoin(this.currentIndex)
+    if (responseBean.isSuccessWithData()) {
+      let dataArr: Array<MineCoinContentBean> = []
+      let data = responseBean.getDataOrThrow()
+      dataArr.push(...data.datas)
+      this.dataSource.pushDataArray(dataArr)
+      this.refreshController.finishRefresh()
+    }
+  }
+
+  aboutToDisappear(): void {
+    UserService.get().removeUserObserver(this.observer)
   }
 
   build() {
@@ -91,7 +123,7 @@ struct PointPage {
         } else {
           ListView({
             lazyDataSource: this.dataSource,
-            itemLayout: (item, index) => this.itemLayout(item as string, index),
+            itemLayout: (item, index) => this.itemLayout(item as MineCoinContentBean, index),
             controller: this.refreshController,
             onRefresh: () => {
               //下拉刷新
@@ -124,45 +156,34 @@ struct PointPage {
   }
 
   @Builder
-  itemLayout(item: string, index: number) {
+  itemLayout(item: MineCoinContentBean, index: number) {
     Column() {
-      if (item === "") {
-        //没有数据，最后补一个“没有更多了”
-        Text("没有更多了")
-          .fontSize($r('app.float.font_12'))
-          .fontColor($r('app.color.color_999999'))
-          .alignSelf(ItemAlign.Center)
-          .margin({ top: SizeConstant.SIZE_5 })
-      } else {
+      RelativeContainer() {
         Column() {
-          RelativeContainer() {
-            Column() {
-              Text(item)
-                .fontSize($r('app.float.font_12'))
-                .fontColor($r('app.color.color_666666'))
-              Text(item)
-                .fontSize($r('app.float.font_10'))
-                .fontColor($r('app.color.color_999999'))
-                .margin({ top: SizeConstant.SIZE_2 })
-            }.id("pointEvent")
-            .alignRules(this.pointEventRule)
-            .margin({ left: SizeConstant.SIZE_15 })
+          Text(item.reason)
+            .fontSize($r('app.float.font_12'))
+            .fontColor($r('app.color.color_666666'))
+          Text(timestampToDateTime(item.date))
+            .fontSize($r('app.float.font_10'))
+            .fontColor($r('app.color.color_999999'))
+            .margin({ top: SizeConstant.SIZE_2 })
+        }.id("pointEvent")
+        .alignRules(this.pointEventRule)
+        .margin({ left: SizeConstant.SIZE_15 })
 
-            Text(item)
-              .alignRules(this.pointRule)
-              .fontColor($r('app.color.color_FF7800'))
-              .fontSize($r('app.float.font_12'))
-              .id("point")
-              .margin({ right: SizeConstant.SIZE_15 })
-          }.width(SizeConstant.FULL_SIZE)
-          .height(60)
+        Text(item.coinCount.toString())
+          .alignRules(this.pointRule)
+          .fontColor($r('app.color.color_FF7800'))
+          .fontSize($r('app.float.font_12'))
+          .id("point")
+          .margin({ right: SizeConstant.SIZE_15 })
+      }.width(SizeConstant.FULL_SIZE)
+      .height(60)
 
-          Line()
-            .width(SizeConstant.FULL_SIZE)
-            .height(1)
-            .backgroundColor($r('app.color.color_F0F0F0'))
-        }
-      }
+      Line()
+        .width(SizeConstant.FULL_SIZE)
+        .height(1)
+        .backgroundColor($r('app.color.color_F0F0F0'))
     }.width(SizeConstant.FULL_SIZE)
   }
 }

@@ -16,6 +16,7 @@ import { ProjectTabBean } from '../../bean/ProjectTabBean'
 import { BannerBean } from '../../bean/BannerBean'
 import { TreeListBean } from '../../bean/TreeContentBean'
 import { HotKeyBean } from '../../bean/HotKeyBean'
+import { CoinRankBean, MineCoinBean } from '../../bean/CoinBean'
 
 const cookieJar: CookieJar = new PersistentCookieJar(EntryContext.getContext())
 
@@ -221,11 +222,19 @@ export default class Api {
   }
 
   /**
+   * 获取
+   * @returns
+   */
+  async getMineCoin(page: number): Promise<ResponseBean<MineCoinBean>> {
+    return requestSync(`/lg/coin/list/${page}/json`, http.RequestMethod.GET)
+  }
+
+  /**
    * 获取用户文章
    * @returns
    */
-  async getMineCoin(page: number): Promise<ResponseBean<HotKeyBean[]>> {
-    return requestSync(`/lg/coin/list/${page}/json`, http.RequestMethod.GET)
+  async getCoinRank(page: number): Promise<ResponseBean<CoinRankBean>> {
+    return requestSync(`/coin/rank/${page}/json`, http.RequestMethod.GET)
   }
 }
 
