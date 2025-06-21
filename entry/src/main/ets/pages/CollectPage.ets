@@ -1,11 +1,15 @@
 import { ListAttr, ListView, RefreshController, RefreshDataSource } from '@abner/refresh'
+import { HomeBean, HomeListViewBeanInterface } from '../bean/HomeListViewBeanInterface'
+import { ResponseBean } from '../bean/ResponseBean'
 import { NavHeaderView } from '../component/NavHeaderView'
 import SizeConstant from '../constants/SizeConstant'
+import Api from '../utils/net/Api'
+import { router } from '@kit.ArkUI'
 
 @Entry
 @Component
 struct CollectPage {
-  initData: string[] = []
+  initData: HomeBean[] = []
   //是否是首次加载
   @State isFirstLoading: boolean = true
   private currentIndex: number = 0
@@ -19,33 +23,27 @@ struct CollectPage {
   }
 
   //加载内容
-  loadInitData() {
-    setTimeout(() => {
-      this.initData.push('积分1')
-      this.initData.push('积分2')
-      this.initData.push('积分3')
-      this.isFirstLoading = false
+  async loadInitData() {
+    let responseBean: ResponseBean<HomeListViewBeanInterface> = await Api.get().getMineCollect(this.currentIndex)
+    this.isFirstLoading = false
+    if (responseBean.isSuccessWithData()) {
+      let data = responseBean.getDataOrThrow()
+      this.initData.push(...data.datas)
       this.dataSource.initData(this.initData)
-      this.refreshController.finishRefresh()
-    }, 1000)
+    }
+    this.refreshController.finishRefresh()
   }
 
   //加载更多
-  loadMoreContent() {
-    setTimeout(() => {
-      let dataArr: Array<string> = []
-      if (this.currentIndex < 7) {
-        if (this.currentIndex === 6) {
-          dataArr.push("")
-        } else {
-          dataArr.push('积分1')
-          dataArr.push('积分2')
-          dataArr.push('积分3')
-        }
-        this.dataSource.pushDataArray(dataArr)
-      }
-      this.refreshController.finishLoadMore()
-    }, 1000)
+  async loadMoreContent() {
+    let responseBean: ResponseBean<HomeListViewBeanInterface> = await Api.get().getMineCollect(this.currentIndex)
+    if (responseBean.isSuccessWithData()) {
+      let dataArr: Array<HomeBean> = []
+      let data = responseBean.getDataOrThrow()
+      dataArr.push(...data.datas)
+      this.dataSource.pushDataArray(dataArr)
+    }
+    this.refreshController.finishLoadMore()
   }
 
   build() {
@@ -64,7 +62,7 @@ struct CollectPage {
         } else {
           ListView({
             lazyDataSource: this.dataSource,
-            itemLayout: (item, index) => this.itemLayout(item as string, index),
+            itemLayout: (item, index) => this.itemLayout(item as HomeBean, index),
             controller: this.refreshController,
             onRefresh: () => {
               //下拉刷新
@@ -95,20 +93,20 @@ struct CollectPage {
   }
 
   @Builder
-  itemLayout(item: string, index: number) {
+  itemLayout(item: HomeBean, index: number) {
     Column() {
       Row() {
-        Image($r('app.media.icon_default'))
+        Image($r('app.media.icon_person'))
           .width(SizeConstant.SIZE_20)
           .height(SizeConstant.SIZE_20)
           .margin({ left: SizeConstant.SIZE_15 })
 
         Column() {
-          Text(item)
+          Text(item.author === undefined || item.author === "" ? "匿名" : item.author)
             .width(SizeConstant.FULL_SIZE)
             .fontSize($r('app.float.font_10'))
 
-          Text(item)
+          Text(item.niceDate)
             .width(SizeConstant.FULL_SIZE)
             .fontSize($r('app.float.font_10'))
             .margin({ top: SizeConstant.SIZE_1 })
@@ -119,7 +117,7 @@ struct CollectPage {
       .width(SizeConstant.FULL_SIZE)
       .margin({ top: SizeConstant.SIZE_10 })
 
-      Text(item)
+      Text(item.title)
         .margin({ left: SizeConstant.SIZE_15, top: SizeConstant.SIZE_10, right: SizeConstant.SIZE_15 })
         .width(SizeConstant.FULL_SIZE)
         .maxLines(3)
@@ -128,7 +126,7 @@ struct CollectPage {
 
 
       Row() {
-        Text(item)
+        Text(item.chapterName)
           .fontSize($r('app.float.font_10'))
           .margin({ left: SizeConstant.SIZE_15 })
 
@@ -143,5 +141,14 @@ struct CollectPage {
       .alignItems(VerticalAlign.Center)
       .width(SizeConstant.FULL_SIZE)
     }.alignItems(HorizontalAlign.Start)
+    .onClick(() => {
+      //点击跳转webView
+      router.pushUrl({
+        url: "pages/WebPage",
+        params: {
+          webUrl: item.link
+        }
+      })
+    })
   }
 }

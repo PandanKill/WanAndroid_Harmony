@@ -230,11 +230,28 @@ export default class Api {
   }
 
   /**
-   * 获取用户文章
+   * 获取积分排名
    * @returns
    */
   async getCoinRank(page: number): Promise<ResponseBean<CoinRankBean>> {
     return requestSync(`/coin/rank/${page}/json`, http.RequestMethod.GET)
+  }
+
+  /**
+   * 获取积分排名
+   * @returns
+   */
+  async getMineCollect(page: number): Promise<ResponseBean<HomeListViewBeanInterface>> {
+    return requestSync(`/lg/collect/list/${page}/json`, http.RequestMethod.GET)
+  }
+
+  /**
+   * 搜索
+   * @param searchData
+   * @param page
+   */
+  async search(searchData: string, page: number): Promise<ResponseBean<HomeListViewBeanInterface>> {
+    return requestSync(`/article/query/${page}/json?k=${encodeURIComponent(searchData)}`, http.RequestMethod.POST)
   }
 }
 

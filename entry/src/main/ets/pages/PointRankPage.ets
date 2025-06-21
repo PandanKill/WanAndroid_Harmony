@@ -2,14 +2,18 @@ import { NavHeaderView } from '../component/NavHeaderView'
 import SizeConstant from '../constants/SizeConstant'
 import { router } from '@kit.ArkUI'
 import { ListAttr, ListView, RefreshController, RefreshDataSource } from '@abner/refresh'
+import { CoinRankBean, CoinRankContentBean } from '../bean/CoinBean'
+import Api from '../utils/net/Api'
+import { ResponseBean } from '../bean/ResponseBean'
+import { animatorNumber } from '../utils/AnimatorUtil'
 
 @Entry
 @Component
 struct PointRankPage {
-  initData: string[] = []
+  initData: CoinRankContentBean[] = []
   //是否是首次加载
   @State isFirstLoading: boolean = true
-  private currentIndex: number = 0
+  private currentIndex: number = 1
   //数据刷新
   dataSource: RefreshDataSource = new RefreshDataSource()
   //刷新 controller
@@ -28,39 +32,66 @@ struct PointRankPage {
     left: { anchor: "col_gold", align: HorizontalAlign.End },
     right: { anchor: "__container__", align: HorizontalAlign.End }
   }
+  //初始化数据
+  private initRankData: CoinRankContentBean = {
+    coinCount: 0,
+    level: 0,
+    nickname: '暂无上榜',
+    rank: 0,
+    userId: 0,
+    username: '暂无上榜'
+  }
+  //金、银、铜牌
+  @State firstRank: CoinRankContentBean = this.initRankData
+  @State firstRankNum: number = 0
+  @State secondRank: CoinRankContentBean = this.initRankData
+  @State secondRankNum: number = 0
+  @State thirdRank: CoinRankContentBean = this.initRankData
+  @State thirdRankNum: number = 0
 
   aboutToAppear(): void {
     this.loadInitData()
   }
 
   //加载内容
-  loadInitData() {
-    setTimeout(() => {
-      this.initData.push('积分1')
-      this.initData.push('积分2')
-      this.initData.push('积分3')
-      this.isFirstLoading = false
+  async loadInitData() {
+    let responseBean: ResponseBean<CoinRankBean> = await Api.get().getCoinRank(this.currentIndex)
+    this.isFirstLoading = false
+    if (responseBean.isSuccessWithData()) {
+      let data = responseBean.getDataOrThrow()
+      //金牌
+      this.firstRank = data.datas.shift()!
+      animatorNumber(this.firstRankNum, this.firstRank.coinCount, (cu: number) => {
+        this.firstRankNum = cu
+      })
+
+      //银牌
+      this.secondRank = data.datas.shift()!
+      animatorNumber(this.secondRankNum, this.secondRank.coinCount, (cu: number) => {
+        this.secondRankNum = cu
+      })
+
+      //铜牌
+      this.thirdRank = data.datas.shift()!
+      animatorNumber(this.thirdRankNum, this.thirdRank.coinCount, (cu: number) => {
+        this.thirdRankNum = cu
+      })
+      this.initData.push(...data.datas)
       this.dataSource.initData(this.initData)
-      this.refreshController.finishRefresh()
-    }, 1000)
+    }
+    this.refreshController.finishRefresh()
   }
 
   //加载更多
-  loadMoreContent() {
-    setTimeout(() => {
-      let dataArr: Array<string> = []
-      if (this.currentIndex < 7) {
-        if (this.currentIndex === 6) {
-          dataArr.push("")
-        } else {
-          dataArr.push('积分1')
-          dataArr.push('积分2')
-          dataArr.push('积分3')
-        }
-        this.dataSource.pushDataArray(dataArr)
-      }
-      this.refreshController.finishLoadMore()
-    }, 1000)
+  async loadMoreContent() {
+    let responseBean: ResponseBean<CoinRankBean> = await Api.get().getCoinRank(this.currentIndex)
+    if (responseBean.isSuccessWithData()) {
+      let dataArr: CoinRankContentBean[] = []
+      let data = responseBean.getDataOrThrow()
+      dataArr.push(...data.datas)
+      this.dataSource.pushDataArray(dataArr)
+    }
+    this.refreshController.finishLoadMore()
   }
 
   build() {
@@ -90,14 +121,14 @@ struct PointRankPage {
             .width(SizeConstant.SIZE_30)
             .margin({ top: SizeConstant.SIZE_5 })
 
-          Text('nihao')
+          Text(`${this.secondRank.username}`)
             .fontColor(Color.White)
-            .fontSize($r('app.float.font_20'))
+            .fontSize($r('app.float.font_15'))
             .margin({ top: SizeConstant.SIZE_10 })
 
-          Text('132321')
+          Text(`${Math.floor(this.secondRankNum)}`)
             .fontColor(Color.White)
-            .fontSize($r('app.float.font_20'))
+            .fontSize($r('app.float.font_15'))
             .margin({ top: SizeConstant.SIZE_5 })
         }
         .alignItems(HorizontalAlign.Center)
@@ -112,14 +143,14 @@ struct PointRankPage {
             .width(SizeConstant.SIZE_45)
             .margin({ top: SizeConstant.SIZE_5 })
 
-          Text('nihao')
+          Text(`${this.firstRank.username}`)
             .fontColor(Color.White)
-            .fontSize($r('app.float.font_20'))
+            .fontSize($r('app.float.font_15'))
             .margin({ top: SizeConstant.SIZE_10 })
 
-          Text('132321')
+          Text(`${Math.floor(this.firstRankNum)}`)
             .fontColor(Color.White)
-            .fontSize($r('app.float.font_20'))
+            .fontSize($r('app.float.font_15'))
             .margin({ top: SizeConstant.SIZE_5 })
         }
         .alignItems(HorizontalAlign.Center)
@@ -136,14 +167,14 @@ struct PointRankPage {
             .width(SizeConstant.SIZE_30)
             .margin({ top: SizeConstant.SIZE_5 })
 
-          Text('nihao')
+          Text(`${this.thirdRank.username}`)
             .fontColor(Color.White)
-            .fontSize($r('app.float.font_20'))
+            .fontSize($r('app.float.font_15'))
             .margin({ top: SizeConstant.SIZE_10 })
 
-          Text('132321')
+          Text(`${Math.floor(this.thirdRankNum)}`)
             .fontColor(Color.White)
-            .fontSize($r('app.float.font_20'))
+            .fontSize($r('app.float.font_15'))
             .margin({ top: SizeConstant.SIZE_5 })
         }
         .alignItems(HorizontalAlign.Center)
@@ -163,13 +194,13 @@ struct PointRankPage {
         } else {
           ListView({
             lazyDataSource: this.dataSource,
-            itemLayout: (item, index) => this.itemLayout(item as string, index),
+            itemLayout: (item, index) => this.itemLayout(item as CoinRankContentBean, index),
             controller: this.refreshController,
             onRefresh: () => {
               //下拉刷新
               //重置currentIndex
               this.initData = []
-              this.currentIndex = 0
+              this.currentIndex = 1
               this.loadInitData()
             },
             onLoadMore: () => {
@@ -195,51 +226,42 @@ struct PointRankPage {
   }
 
   @Builder
-  itemLayout(item: string, index: number) {
+  itemLayout(item: CoinRankContentBean, index: number) {
     Column() {
-      if (item === "") {
-        //没有数据，最后补一个“没有更多了”
-        Text("没有更多了")
-          .fontSize($r('app.float.font_12'))
-          .fontColor($r('app.color.color_999999'))
-          .alignSelf(ItemAlign.Center)
-          .margin({ top: SizeConstant.SIZE_5 })
-      } else {
-        Column() {
-          Row() {
-            Stack() {
-              Text((index + 4).toString())
-                .fontSize($r('app.float.font_15'))
-                .fontColor(Color.Black)
-                .margin(SizeConstant.SIZE_2)
-            }.backgroundColor(Color.Orange)
-            .borderRadius(SizeConstant.SIZE_10)
-            .align(Alignment.Center)
+      Column() {
+        Row() {
+          Stack() {
+            Text((index + 4).toString())
+              .fontSize($r('app.float.font_15'))
+              .fontColor(Color.Black)
+              .margin(SizeConstant.SIZE_2)
+          }.backgroundColor(Color.Orange)
+          .borderRadius(SizeConstant.SIZE_10)
+          .align(Alignment.Center)
+          .margin({ left: SizeConstant.SIZE_15 })
+
+          //姓名
+          Text(`${item.username}`)
+            .fontSize($r('app.float.font_12'))
+            .fontColor($r('app.color.color_666666'))
             .margin({ left: SizeConstant.SIZE_15 })
 
-            //姓名
-            Text(item)
-              .fontSize($r('app.float.font_12'))
-              .fontColor($r('app.color.color_666666'))
-              .margin({ left: SizeConstant.SIZE_15 })
+          Blank()
 
-            Blank()
+          //积分
+          Text(item.coinCount.toString())
+            .fontColor($r('app.color.color_FF7800'))
+            .fontSize($r('app.float.font_12'))
+            .margin({ right: SizeConstant.SIZE_15 })
 
-            //积分
-            Text(item)
-              .fontColor($r('app.color.color_FF7800'))
-              .fontSize($r('app.float.font_12'))
-              .margin({ right: SizeConstant.SIZE_15 })
+        }.width(SizeConstant.FULL_SIZE)
+        .height(SizeConstant.SIZE_60)
+        .alignItems(VerticalAlign.Center)
 
-          }.width(SizeConstant.FULL_SIZE)
-          .height(SizeConstant.SIZE_60)
-          .alignItems(VerticalAlign.Center)
-
-          Line()
-            .width(SizeConstant.FULL_SIZE)
-            .height(1)
-            .backgroundColor($r('app.color.color_F0F0F0'))
-        }
+        Line()
+          .width(SizeConstant.FULL_SIZE)
+          .height(1)
+          .backgroundColor($r('app.color.color_F0F0F0'))
       }
     }.width(SizeConstant.FULL_SIZE)
   }

@@ -9,6 +9,7 @@ import { MineCoinBean, MineCoinContentBean } from '../bean/CoinBean'
 import { UserService } from '../service/UserService'
 import { User } from '../bean/LoginResponse'
 import { timestampToDateTime } from '../utils/DateUtil'
+import { animatorNumber } from '../utils/AnimatorUtil'
 
 @Entry
 @Component
@@ -17,7 +18,7 @@ struct PointPage {
   initData: MineCoinContentBean[] = []
   //是否是首次加载
   @State isFirstLoading: boolean = true
-  private currentIndex: number = 0
+  private currentIndex: number = 1
   //数据刷新
   dataSource: RefreshDataSource = new RefreshDataSource()
   //刷新 controller
@@ -33,11 +34,8 @@ struct PointPage {
   }
   private observer: (user?: User) => void = (user) => {
     if (user) {
-      animateTo({
-        duration: 500,
-        curve: Curve.Linear
-      }, () => {
-        this.point = (user as User).coinCount
+      animatorNumber(this.point, (user as User).coinCount, (to: number) => {
+        this.point = to
       })
     }
   }
@@ -53,11 +51,8 @@ struct PointPage {
   loadMineCoin() {
     let user = UserService.get().getUser()
     if (user) {
-      animateTo({
-        duration: 500,
-        curve: Curve.Linear
-      }, () => {
-        this.point = (user as User).coinCount
+      animatorNumber(this.point, (user as User).coinCount, (to: number) => {
+        this.point = to
       })
     }
     UserService.get().addUserObserver(this.observer)
@@ -69,7 +64,13 @@ struct PointPage {
     this.isFirstLoading = false
     if (responseBean.isSuccessWithData()) {
       let data = responseBean.getDataOrThrow()
-      this.initData.push(...data.datas)
+      if (!data.datas || data.datas!.length === 0) {
+        let lastCon = new MineCoinContentBean()
+        lastCon.isLast = true
+        this.initData.push(lastCon)
+      } else {
+        this.initData.push(...data.datas)
+      }
       this.dataSource.initData(this.initData)
       this.refreshController.finishRefresh()
     }
@@ -81,10 +82,34 @@ struct PointPage {
     if (responseBean.isSuccessWithData()) {
       let dataArr: Array<MineCoinContentBean> = []
       let data = responseBean.getDataOrThrow()
-      dataArr.push(...data.datas)
-      this.dataSource.pushDataArray(dataArr)
-      this.refreshController.finishRefresh()
+      if (data.datas && data.datas!.length > 0) {
+        dataArr.push(...data.datas)
+        this.dataSource.pushDataArray(dataArr)
+      } else {
+        //没有更多
+        let totalCount = this.dataSource.totalCount()
+        if (totalCount !== 0) {
+          let bean = this.dataSource.getData(totalCount - 1) as MineCoinContentBean
+          if (!bean.isLast) {
+            let lastCon = new MineCoinContentBean()
+            lastCon.isLast = true
+            this.dataSource.pushData(lastCon)
+          }
+        }
+      }
+    } else {
+      //没有更多
+      let totalCount = this.dataSource.totalCount()
+      if (totalCount !== 0) {
+        let bean = this.dataSource.getData(totalCount - 1) as MineCoinContentBean
+        if (!bean.isLast) {
+          let lastCon = new MineCoinContentBean()
+          lastCon.isLast = true
+          this.dataSource.pushData(lastCon)
+        }
+      }
     }
+    this.refreshController.finishLoadMore()
   }
 
   aboutToDisappear(): void {
@@ -105,7 +130,8 @@ struct PointPage {
         }
       })
 
-      Text(this.point.toString())
+      //必须取整
+      Text(`${Math.floor(this.point)}`)
         .fontSize($r('app.float.font_60'))
         .fontColor($r('app.color.color_FFFFFF'))
         .textAlign(TextAlign.Center)
@@ -129,7 +155,7 @@ struct PointPage {
               //下拉刷新
               //重置currentIndex
               this.initData = []
-              this.currentIndex = 0
+              this.currentIndex = 1
               this.loadInitData()
             },
             onLoadMore: () => {
@@ -158,32 +184,43 @@ struct PointPage {
   @Builder
   itemLayout(item: MineCoinContentBean, index: number) {
     Column() {
-      RelativeContainer() {
-        Column() {
-          Text(item.reason)
+      if (!item.isLast) {
+        //是内容
+        RelativeContainer() {
+          Column() {
+            Text(item.reason)
+              .fontSize($r('app.float.font_12'))
+              .fontColor($r('app.color.color_666666'))
+            Text(timestampToDateTime(item.date))
+              .fontSize($r('app.float.font_10'))
+              .fontColor($r('app.color.color_999999'))
+              .margin({ top: SizeConstant.SIZE_2 })
+          }.id("pointEvent")
+          .alignRules(this.pointEventRule)
+          .alignItems(HorizontalAlign.Start)
+          .margin({ left: SizeConstant.SIZE_15 })
+
+          Text(item.coinCount.toString())
+            .alignRules(this.pointRule)
+            .fontColor($r('app.color.color_FF7800'))
             .fontSize($r('app.float.font_12'))
-            .fontColor($r('app.color.color_666666'))
-          Text(timestampToDateTime(item.date))
-            .fontSize($r('app.float.font_10'))
-            .fontColor($r('app.color.color_999999'))
-            .margin({ top: SizeConstant.SIZE_2 })
-        }.id("pointEvent")
-        .alignRules(this.pointEventRule)
-        .margin({ left: SizeConstant.SIZE_15 })
+            .id("point")
+            .margin({ right: SizeConstant.SIZE_15 })
+        }.width(SizeConstant.FULL_SIZE)
+        .height(60)
 
-        Text(item.coinCount.toString())
-          .alignRules(this.pointRule)
-          .fontColor($r('app.color.color_FF7800'))
+        Line()
+          .width(SizeConstant.FULL_SIZE)
+          .height(1)
+          .backgroundColor($r('app.color.color_F0F0F0'))
+      } else {
+        //没有数据，最后补一个“没有更多了”
+        Text("没有更多了")
           .fontSize($r('app.float.font_12'))
-          .id("point")
-          .margin({ right: SizeConstant.SIZE_15 })
-      }.width(SizeConstant.FULL_SIZE)
-      .height(60)
-
-      Line()
-        .width(SizeConstant.FULL_SIZE)
-        .height(1)
-        .backgroundColor($r('app.color.color_F0F0F0'))
+          .fontColor($r('app.color.color_999999'))
+          .alignSelf(ItemAlign.Center)
+          .margin({ top: SizeConstant.SIZE_5 })
+      }
     }.width(SizeConstant.FULL_SIZE)
   }
 }

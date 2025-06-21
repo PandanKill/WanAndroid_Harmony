@@ -10,6 +10,7 @@ export class MineCoinContentBean {
   type: number = 0
   userId: number = 0
   userName: string = ''
+  isLast: boolean = false
 }
 
 export class MineCoinBean {
@@ -30,7 +31,7 @@ export class CoinRankContentBean {
   nickname: string = ''
   rank: number = 0
   userId: number = 0
-  userName: string = ''
+  username: string = ''
 }
 
 export class CoinRankBean {
