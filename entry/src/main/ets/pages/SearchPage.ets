@@ -11,6 +11,12 @@ import { JSON } from '@kit.ArkTS'
 import { http } from '@kit.NetworkKit'
 import SizeConstant from '../constants/SizeConstant'
 import Preference from '../utils/Preference'
+import Api from '../utils/net/Api'
+import { HomeBean, HomeListViewBeanInterface } from '../bean/HomeListViewBeanInterface'
+import { ResponseBean } from '../bean/ResponseBean'
+import { ListAttr, ListView, RefreshController, RefreshDataSource } from '@abner/refresh'
+import { HomeListViewBean, TagBean } from '../bean/HomeListViewBean'
+import { TagRouterBean } from '../bean/TagRouterBean'
 
 @Entry
 @Component
@@ -25,6 +31,13 @@ struct SearchPage {
   @StorageProp('topRectHeight') topRectHeight: number = 0
   //搜索页面正在加载
   @State isLoadingView: boolean = false
+  //当前索引
+  private currentIndex: number = 0
+  initData: HomeListViewBean[] = []
+  //数据刷新
+  dataSource: RefreshDataSource = new RefreshDataSource()
+  //刷新 controller
+  refreshController: RefreshController = new RefreshController()
 
   onPageShow(): void {
     let options: preferences.Options = { name: PreferenceKey.FILE_WANANDROID_STORE }
@@ -34,12 +47,91 @@ struct SearchPage {
     }
   }
 
-  searchData(): void {
-    let httpSession = http.createHttp()
-    // httpSession.request("https://www.wanandroid.com" + "/", )
-    setTimeout(() => {
-      this.isLoadingView = false
-    }, 3000)
+  /**
+   * 搜索数据
+   */
+  async searchData() {
+    //初始化索引
+    this.currentIndex = 0
+    this.initData = []
+    let responseBean: ResponseBean<HomeListViewBeanInterface> =
+      await Api.get().search(this.searchStr, this.currentIndex)
+    this.isLoadingView = false
+    if (responseBean.isSuccessWithData()) {
+      let data = responseBean.getDataOrThrow()
+      if (data.datas && data.datas.length !== 0) {
+        data.datas.forEach((homeBean: HomeBean) => {
+          let bean = new HomeListViewBean()
+          bean.author = homeBean.author
+          bean.chapterName = homeBean.chapterName
+          bean.id = homeBean.id
+          bean.link = homeBean.link
+          bean.niceDate = homeBean.niceDate
+          bean.superChapterId = homeBean.superChapterId
+          bean.superChapterName = homeBean.superChapterName
+          bean.isTop = false
+
+          if (homeBean.tags !== undefined && homeBean.tags.length !== 0) {
+            let tag = new TagBean()
+            tag.name = homeBean.tags[0].name
+            tag.url = homeBean.tags[0].url
+            tag.charptId = this.getChartpId(homeBean.tags[0].url)
+            bean.tags = [tag]
+          }
+
+          bean.title = homeBean.title
+          bean.zan = homeBean.zan !== 0
+          this.initData.push(bean)
+        })
+        this.dataSource.initData(this.initData)
+      }
+    }
+    this.refreshController.finishRefresh()
+  }
+
+  getChartpId(url: string | undefined): number | undefined {
+    let idStr = url?.substring("/wxarticle/list/".length, url!!.length - 2)
+    return parseInt(idStr!!)
+  }
+
+  /**
+   * 加载更多
+   */
+  async loadMore() {
+    this.currentIndex++
+    let responseBean: ResponseBean<HomeListViewBeanInterface> =
+      await Api.get().search(this.searchStr, this.currentIndex)
+    if (responseBean.isSuccessWithData()) {
+      let dataArr: HomeListViewBean[] = []
+      let data = responseBean.getDataOrThrow()
+      if (data.datas && data.datas.length !== 0) {
+        data.datas.forEach((homeBean: HomeBean) => {
+          let bean = new HomeListViewBean()
+          bean.author = homeBean.author
+          bean.chapterName = homeBean.chapterName
+          bean.id = homeBean.id
+          bean.link = homeBean.link
+          bean.niceDate = homeBean.niceDate
+          bean.superChapterId = homeBean.superChapterId
+          bean.superChapterName = homeBean.superChapterName
+          bean.isTop = false
+
+          if (homeBean.tags !== undefined && homeBean.tags.length !== 0) {
+            let tag = new TagBean()
+            tag.name = homeBean.tags[0].name
+            tag.url = homeBean.tags[0].url
+            tag.charptId = this.getChartpId(homeBean.tags[0].url)
+            bean.tags = [tag]
+          }
+
+          bean.title = homeBean.title
+          bean.zan = homeBean.zan !== 0
+          dataArr.push(bean)
+        })
+        this.dataSource.pushDataArray(dataArr)
+      }
+    }
+    this.refreshController.finishLoadMore()
   }
 
   /**
@@ -47,6 +139,8 @@ struct SearchPage {
    * @param data
    */
   saveSearchHistoryData(data: string) {
+    this.historySearchData = this.historySearchData.filter(item => item !== data)
+
     this.historySearchData.unshift(data)
     //判断长度
     if (this.historySearchData.length > 5) {
@@ -64,10 +158,135 @@ struct SearchPage {
           .width(SizeConstant.SIZE_40)
           .height(SizeConstant.SIZE_40)
       } else {
-        Text("暂无数据")
+        //显示listView
+        ListView({
+          lazyDataSource: this.dataSource,
+          itemLayout: (item, index) => this.itemLayout(item as HomeListViewBean, index),
+          controller: this.refreshController,
+          onRefresh: () => {
+            //下拉刷新
+            //重置currentIndex
+            this.searchData()
+          },
+          onLoadMore: () => {
+            //上划加载
+            this.loadMore()
+          },
+          listAttribute: (listAttr: ListAttr) => {
+            listAttr.divider = {
+              strokeWidth: SizeConstant.SIZE_1,
+              color: $r('app.color.color_969696')
+            }
+            listAttr.scrollBar = BarState.Off
+          }
+        }).width(SizeConstant.FULL_SIZE)
+          .height(SizeConstant.FULL_SIZE)
       }
     }.width("100%")
     .height("100%")
+  }
+
+  @Builder
+  itemLayout(item: HomeListViewBean, index: number) {
+    //ItemLayout
+    Column() {
+      Row() {
+        //头像
+        Image($r('app.media.icon_person'))
+          .width(SizeConstant.SIZE_30)
+          .height(SizeConstant.SIZE_30)
+
+        Column() {
+          Text(item.author === undefined || item.author === "" ? "匿名" : item.author)
+            .fontSize($r('app.float.font_10'))
+            .fontColor($r('app.color.color_666666'))
+            .margin({ bottom: SizeConstant.SIZE_2 })
+          Text(item.niceDate).fontSize($r('app.float.font_10'))
+            .fontColor($r('app.color.color_999999'))
+        }.layoutWeight(1)
+        .alignItems(HorizontalAlign.Start)
+        .margin({ left: SizeConstant.SIZE_10 })
+
+        if (item.tags !== undefined && item.tags.length !== 0) {
+          //存在tag
+          Text(item.tags[0].name)
+            .padding(SizeConstant.SIZE_2)
+            .fontSize($r('app.float.font_10'))
+            .margin({ right: SizeConstant.SIZE_5 })
+            .fontColor($r('app.color.color_228B22'))
+            .border({
+              width: SizeConstant.SIZE_1,
+              color: $r('app.color.color_228B22'),
+              radius: SizeConstant.SIZE_2,
+              style: BorderStyle.Solid
+            })
+            .onClick(() => {
+              let tagBean = new TagRouterBean()
+              tagBean.type = "Home"
+              tagBean.officialAcc = item.tags!![0].charptId!!
+
+              //跳转公众号
+              router.pushUrl({
+                url: "pages/TagDetailPage",
+                params: tagBean
+              })
+            })
+        }
+      }.width(SizeConstant.FULL_SIZE)
+      .alignItems(VerticalAlign.Center)
+
+      //标题
+      Text(item.title)
+        .fontSize($r('app.float.font_15'))
+        .fontColor($r('app.color.color_000000'))
+        .margin({ top: SizeConstant.SIZE_10 })
+        .maxLines(2)
+        .width(SizeConstant.FULL_SIZE)
+        .ellipsisMode(EllipsisMode.END)
+
+      Row() {
+        //置顶
+        if (item.isTop) {
+          Text("置顶")
+            .fontSize($r('app.float.font_11'))
+            .fontColor(Color.Red)
+            .margin({ right: SizeConstant.SIZE_10 })
+        }
+
+        //来源
+        Text(`${item.superChapterName}·${item.chapterName}`)
+          .fontSize($r('app.float.font_10'))
+          .fontColor($r('app.color.color_999999'))
+          .layoutWeight(1)
+
+        Image(item.zan ? $r('app.media.shixin_love') : $r('app.media.kongxin_love'))
+          .width(SizeConstant.SIZE_20)
+          .height(SizeConstant.SIZE_20)
+          .margin({ right: SizeConstant.SIZE_5 })
+          .onClick(() => {
+            //点赞
+            item.zan = !item.zan
+          })
+      }.width(SizeConstant.FULL_SIZE)
+      .margin({ top: SizeConstant.SIZE_10 })
+      .alignItems(VerticalAlign.Center)
+
+    }.width(SizeConstant.FULL_SIZE)
+    .padding({
+      top: SizeConstant.SIZE_10,
+      bottom: SizeConstant.SIZE_10,
+      left: SizeConstant.SIZE_10,
+      right: SizeConstant.SIZE_10
+    })
+    .onClick(() => {
+      //点击跳转webView
+      router.pushUrl({
+        url: "pages/WebPage",
+        params: {
+          webUrl: item.link
+        }
+      })
+    })
   }
 
   @Builder

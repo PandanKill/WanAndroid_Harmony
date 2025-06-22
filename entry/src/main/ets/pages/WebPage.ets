@@ -14,6 +14,8 @@ struct WebPage {
   //加载进度
   @State progress: number = 0
   @State isLoading: boolean = true
+  @StorageProp('topRectHeight') topRectHeight: number = 0
+  @StorageProp('navHeight') navHeight: number = 0
 
   aboutToAppear(): void {
     //初始化
@@ -108,6 +110,7 @@ struct WebPage {
       })
     }.width(SizeConstant.FULL_SIZE)
     .height(SizeConstant.FULL_SIZE)
+    .padding({ top: px2vp(this.topRectHeight), bottom: px2vp(this.navHeight) })
   }
 
   /**

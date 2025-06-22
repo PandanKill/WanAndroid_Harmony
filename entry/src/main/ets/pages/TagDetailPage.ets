@@ -17,6 +17,7 @@ struct TagDetailPage {
   @State private tabs: TabDetailBean[] = []
   @State private currentIndex: number = 0
   private tagBean: TagRouterBean = router.getParams() as TagRouterBean
+  @StorageProp('topRectHeight') topRectHeight: number = 0
 
   aboutToAppear(): void {
     if (this.tagBean.type === "Home") {
@@ -77,5 +78,6 @@ struct TagDetailPage {
       }.width(SizeConstant.FULL_SIZE)
       .height(SizeConstant.FULL_SIZE)
     }.width(SizeConstant.FULL_SIZE)
+    .padding({ top: px2vp(this.topRectHeight) })
   }
 }
