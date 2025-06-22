@@ -29,6 +29,15 @@ class PopupItemClickManager {
   onResendListener: (deleteItem: Message) => void = (deleteItem) => {
 
   }
+  //转文字
+  onTranToText: (item: Message) => void = (item) => {
+  }
+  //翻译
+  onTranslate: (item: Message) => void = (item) => {
+  }
+  //文字提取
+  onPicToText: (item: Message) => void = (item) => {
+  }
 
   /**
    * 点击Item
@@ -62,18 +71,21 @@ class PopupItemClickManager {
         break
       case 4:
         //文字提取
-        this.getTextForPic(message)
+        // this.getTextForPic(message)
+        this.onPicToText(message)
         break
       case 9:
         //转文字
-        this.recognizerData(message)
+        // this.recognizerData(message)
+        this.onTranToText(message)
         break
       case 10:
         //语音整理
         break
       case 11:
         //翻译
-        this.translateData(message)
+        // this.translateData(message)
+        this.onTranslate(message)
         break
       case 12:
         this.searchData(message.text)

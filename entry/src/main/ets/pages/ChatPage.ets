@@ -244,6 +244,77 @@ struct AIChatPage {
     itemClickManager.onResendListener = (message) => {
       this.toGetAi(message.text)
     }
+
+    itemClickManager.onTranToText = (item) => {
+      //语音转文字
+      this.audioToText(item)
+    }
+
+    itemClickManager.onTranslate = (item) => {
+      //翻译
+      this.translateText(item)
+    }
+
+    itemClickManager.onPicToText = (item) => {
+      //图片中文字提取
+      this.referMessage = item
+      this.referType = 4
+      this.toGetAi("文字提取")
+    }
+  }
+
+  /**
+   * 翻译
+   * @param item
+   */
+  translateText(item: Message) {
+    //显示翻译内容
+    console.info(`translate data: ${JSON.stringify(item)}`)
+    item.translateEnable = true
+    item.translateLoading = true
+    const client = new CommonAiRequestUtil({
+      model: "qwen-mt-turbo",
+      endpoint: 'https://dashscope.aliyuncs.com',
+      api_key: "sk-c1d2d4ae26e44c61b098a719f98bc40d"
+    })
+
+    client.sendStreamRequest(client.getTranslateJsonContent(item.text), {
+      onDataReceived: (aiSpeakBean: AISpeakBean) => {
+        item.translateLoading = false
+        console.info(`translate data: ${JSON.stringify(aiSpeakBean)}`)
+        let ch = aiSpeakBean.choices
+        if (ch !== undefined) {
+          let delta = ch[0]
+          if (delta && delta.delta) {
+            if (delta.delta.content) {
+              item.translateText = delta.delta.content
+            }
+          }
+        }
+      },
+      onComplete: () => {
+        console.info(`translate data: onComplete`)
+        databaseUtil.updateTranslate(item, this.context)
+      },
+      onError: (err) => {
+        console.info(`translate data: onError`)
+        //翻译失败
+        item.translateText = "翻译失败"
+        databaseUtil.updateTranslate(item, this.context)
+      }
+    })
+  }
+
+  /**
+   * 语音转文字
+   * @param item
+   */
+  audioToText(item: Message) {
+    if (item.audioUri) {
+      SpeechRecognizerManager.audioToText(item.audioUri, (srr: speechRecognizer.SpeechRecognitionResult) => {
+        console.info(`audioToText: ${srr.result}`)
+      })
+    }
   }
 
   /**
@@ -862,7 +933,7 @@ struct AIChatPage {
     }
     //""
     let sendMessage = this.getSendMessage(editValue)
-    if (this.isRefer && this.referMessage) {
+    if ( /*this.isRefer && */this.referMessage) {
       sendMessage.referEnable = true
       sendMessage.referId = this.referMessage.id
       sendMessage.referType = this.referMessage.textType
@@ -916,6 +987,10 @@ struct AIChatPage {
       case 3:
         this.onPicFollow(receiverMessage, editValue, tempReferMessage)
         break
+      case 4:
+        //文字提取
+        this.getTextForPic(receiverMessage, tempReferMessage)
+        break
       case 5:
         this.onVideoFollow(receiverMessage, editValue, tempReferMessage)
         break
@@ -930,6 +1005,53 @@ struct AIChatPage {
         // this.onReferListener(receiverMessage, editValue)
         break
     }
+  }
+
+  /**
+   * 图片文字提取
+   * @param receiverMessage
+   */
+  async getTextForPic(receiverMessage: Message, tempReferMessage: Message) {
+    const client = new CommonAiRequestUtil({
+      model: "qwen-vl-ocr",
+      endpoint: 'https://dashscope.aliyuncs.com',
+      api_key: "sk-c1d2d4ae26e44c61b098a719f98bc40d"
+    })
+    let base64Url = await fileToBase64(tempReferMessage.imageUri ?? "")
+
+    client.sendStreamRequest(client.getPicForPicJsonContent(`data:image/png;base64,${base64Url}`,
+      "Read all the text in the image.?"), {
+      onDataReceived: (aiSpeakBean: AISpeakBean) => {
+        console.info(`getTextForPic data: ${JSON.stringify(aiSpeakBean)}`)
+        receiverMessage.messageStatus = 1
+        let ch = aiSpeakBean.choices
+        if (ch !== undefined) {
+          let delta = ch[0]
+          if (delta && delta.delta) {
+            if (delta.delta.reasoning_content) {
+              let text = receiverMessage.text
+              let newText = text + delta.delta.reasoning_content
+              receiverMessage.text = newText
+            }
+            if (delta.delta.content) {
+              let text = receiverMessage.text
+              let newText = text + delta.delta.content
+              receiverMessage.text = newText
+            }
+          }
+        }
+      },
+      onComplete: () => {
+        console.info(`translate data: onComplete`)
+        databaseUtil.insert(receiverMessage, this.context)
+      },
+      onError: (err) => {
+        console.info(`translate data: onError`)
+        receiverMessage.messageStatus = 2
+        receiverMessage.errorMessage = err.message
+        databaseUtil.insert(receiverMessage, this.context)
+      }
+    })
   }
 
   /**
