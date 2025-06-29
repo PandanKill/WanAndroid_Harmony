@@ -171,6 +171,37 @@ export struct MimeView {
         .height(1)
         .color($r('app.color.color_979797'))
 
+      //TODO
+      Row() {
+        Text("TODO")
+          .fontSize($r('app.float.font_12'))
+          .fontColor($r('app.color.color_000000'))
+          .margin({ left: SizeConstant.SIZE_15, top: SizeConstant.SIZE_15, bottom: SizeConstant.SIZE_15 })
+          .layoutWeight(1)
+
+        Image($r('app.media.to_right'))
+          .width(SizeConstant.SIZE_15)
+          .height(SizeConstant.SIZE_15)
+          .margin({ right: SizeConstant.SIZE_15 })
+
+      }
+      .width(SizeConstant.FULL_SIZE)
+      .alignItems(VerticalAlign.Center)
+      .backgroundColor($r('app.color.color_FFFFFF'))
+      .onClick(() => {
+        //to 分享
+        UserService.get().checkLogin(() => {
+          router.pushUrl({
+            url: "pages/SharePage"
+          })
+        })
+      })
+
+      //线
+      Divider()
+        .width(SizeConstant.FULL_SIZE)
+        .height(1)
+        .color($r('app.color.color_979797'))
 
       //系统设置
       Row() {

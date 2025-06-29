@@ -48,4 +48,13 @@ export default class Preference {
     this.preferences.put(PreferenceKey.PREFERENCE_KET_HISTORY, JSON.stringify(history))
     this.preferences.flush()
   }
+
+  getFingureLogin(): boolean {
+    return this.preferences.getSync(PreferenceKey.KEY_FINGLE_LOGIN, false) as boolean
+  }
+
+  setFingureLogin(fingure: boolean) {
+    this.preferences.putSync(PreferenceKey.KEY_FINGLE_LOGIN, fingure)
+    this.preferences.flush()
+  }
 }
