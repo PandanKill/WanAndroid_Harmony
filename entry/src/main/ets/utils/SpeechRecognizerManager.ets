@@ -51,8 +51,8 @@ class SpeechRecognizerManager {
   static async audioToText(audioUri: string, callback: (srr: speechRecognizer.SpeechRecognitionResult) => void = () => {
   }) {
     await SpeechRecognizerManager.createEngine()
-    SpeechRecognizerManager.setListener(callback)
     SpeechRecognizerManager.startListening(1)
+    SpeechRecognizerManager.setListener(callback)
     SpeechRecognizerManager.writeAudio(audioUri)
   }
 

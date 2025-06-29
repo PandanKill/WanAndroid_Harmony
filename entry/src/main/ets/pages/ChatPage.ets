@@ -235,8 +235,10 @@ struct AIChatPage {
     itemClickManager.onDeleteListener = (deleteMessage) => {
       // 从后向前遍历，避免索引错乱
       for (let i = this.messageArr.length - 1; i >= 0; i--) {
-        if (this.messageArr[i].id === deleteMessage.id) {
+        let deleteMessageArr = this.messageArr[i]
+        if (deleteMessageArr.id === deleteMessage.id) {
           this.messageArr.splice(i, 1); // 删除符合条件的对象
+          databaseUtil.delete(deleteMessageArr, this.context)
         }
       }
     }
@@ -250,59 +252,12 @@ struct AIChatPage {
       this.audioToText(item)
     }
 
-    itemClickManager.onTranslate = (item) => {
-      //翻译
-      this.translateText(item)
-    }
-
     itemClickManager.onPicToText = (item) => {
       //图片中文字提取
       this.referMessage = item
       this.referType = 4
       this.toGetAi("文字提取")
     }
-  }
-
-  /**
-   * 翻译
-   * @param item
-   */
-  translateText(item: Message) {
-    //显示翻译内容
-    console.info(`translate data: ${JSON.stringify(item)}`)
-    item.translateEnable = true
-    item.translateLoading = true
-    const client = new CommonAiRequestUtil({
-      model: "qwen-mt-turbo",
-      endpoint: 'https://dashscope.aliyuncs.com',
-      api_key: "sk-c1d2d4ae26e44c61b098a719f98bc40d"
-    })
-
-    client.sendStreamRequest(client.getTranslateJsonContent(item.text), {
-      onDataReceived: (aiSpeakBean: AISpeakBean) => {
-        item.translateLoading = false
-        console.info(`translate data: ${JSON.stringify(aiSpeakBean)}`)
-        let ch = aiSpeakBean.choices
-        if (ch !== undefined) {
-          let delta = ch[0]
-          if (delta && delta.delta) {
-            if (delta.delta.content) {
-              item.translateText = delta.delta.content
-            }
-          }
-        }
-      },
-      onComplete: () => {
-        console.info(`translate data: onComplete`)
-        databaseUtil.updateTranslate(item, this.context)
-      },
-      onError: (err) => {
-        console.info(`translate data: onError`)
-        //翻译失败
-        item.translateText = "翻译失败"
-        databaseUtil.updateTranslate(item, this.context)
-      }
-    })
   }
 
   /**

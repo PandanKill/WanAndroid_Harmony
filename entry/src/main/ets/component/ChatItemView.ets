@@ -18,13 +18,16 @@ import { ComponentAttrUtils, RectInfoInPx } from '../utils/ComponentAttrUtils'
 import databaseUtil from '../utils/DatabaseUtil'
 import { it } from '@ohos/hypium'
 import AudioRendererManager from '../utils/AudioRendererManager'
+import { CommonAiRequestUtil } from '../utils/CommonAiRequestUtil'
+import { AISpeakBean } from '../bean/AIResponseBean'
+import { common } from '@kit.AbilityKit'
 
 /**
  * 聊天内容 View
  */
 @Component
 export struct ChatItemView {
-  @ObjectLink item: Message
+  @Prop item: Message
   //索引
   @Prop @Require index: number
   //图片的宽高
@@ -64,6 +67,7 @@ export struct ChatItemView {
   @State popupHeight: string = SizeConstant.SIZE_80
   //监听模态页面
   listener: inspector.ComponentObserver = inspector.createComponentObserver('imageDetail');
+  private context: common.UIAbilityContext = getContext(this) as common.UIAbilityContext
 
   aboutToAppear() {
     this.initCoverListener()
@@ -216,10 +220,7 @@ export struct ChatItemView {
         //翻译
         if (this.item.translateEnable) {
           //展示翻译内容
-          TranslateView({
-            isLoading: this.item.translateLoading,
-            translateText: this.item.translateText
-          })
+          TranslateView({ item: this.item })
         }
         if (this.item.referEnable) {
           //展示引用信息
@@ -528,9 +529,9 @@ export struct ChatItemView {
             .fontSize($r('app.float.font_15'))
             .textAlign(TextAlign.Start)
             .copyOption(CopyOptions.None)// .onAreaChange((oldVal, newVal) => {
-              //   this.itemSizeChange = oldVal.height !== newVal.height
-              //   console.info(`onAreaChange oldVal height: ${oldVal.height}, newVal: ${newVal.height}`)
-              // })
+            //   this.itemSizeChange = oldVal.height !== newVal.height
+            //   console.info(`onAreaChange oldVal height: ${oldVal.height}, newVal: ${newVal.height}`)
+            // })
             .onSizeChange((oldVal, newVal) => {
               let changeVal = oldVal.height?.valueOf() !== newVal.height?.valueOf()
               if (changeVal) {
@@ -592,6 +593,11 @@ export struct ChatItemView {
             }.alignItems(HorizontalAlign.Center)
             .onClick(() => {
               this.showPopup = false
+              if (item.itemId === 11) {
+                this.onClickItem(item)
+                return
+              }
+
               itemClickManager.onClickItem(item, this.item)
             })
           }
@@ -608,6 +614,56 @@ export struct ChatItemView {
       bottom: SizeConstant.SIZE_15,
       left: SizeConstant.SIZE_10,
       right: SizeConstant.SIZE_10
+    })
+  }
+
+  onClickItem(item: ChatPopupItem) {
+    switch (item.itemId) {
+      case 11:
+        this.translateText()
+        break
+    }
+  }
+
+  /**
+   * 翻译
+   * @param item
+   */
+  translateText() {
+    //显示翻译内容
+    console.info(`translate data: ${JSON.stringify(this.item)}`)
+    this.item.translateEnable = true
+    this.item.translateLoading = true
+    const client = new CommonAiRequestUtil({
+      model: "qwen-mt-turbo",
+      endpoint: 'https://dashscope.aliyuncs.com',
+      api_key: "sk-c1d2d4ae26e44c61b098a719f98bc40d"
+    })
+
+    client.sendStreamRequest(client.getTranslateJsonContent(this.item.text), {
+      onDataReceived: (aiSpeakBean: AISpeakBean) => {
+        this.item.translateLoading = false
+        console.info(`translate data: ${JSON.stringify(aiSpeakBean)}`)
+        let ch = aiSpeakBean.choices
+        if (ch !== undefined) {
+          let delta = ch[0]
+          if (delta && delta.delta) {
+            if (delta.delta.content) {
+              this.item.translateText = delta.delta.content
+            }
+          }
+        }
+      },
+      onComplete: () => {
+        console.info(`translate data: onComplete`)
+        databaseUtil.updateTranslate(this.item, this.context)
+      },
+      onError: (err) => {
+        console.info(`translate data: onError`)
+        //翻译失败
+        this.item.translateText = "翻译失败"
+        databaseUtil.updateTranslate(this.item, this.context)
+      }
     })
   }
 

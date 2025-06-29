@@ -136,9 +136,10 @@ async function updateTranslateData(context: Context, message: relationalStore.Va
   let store: relationalStore.RdbStore = await relationalStore.getRdbStore(context, config)
 
   let predicates1 = new relationalStore.RdbPredicates(DatabaseConstant.CHAT_TABLE)
-    .equalTo('MESSAGEID', message.id)
+  predicates1.equalTo('MESSAGEID', message.MESSAGEID)
 
-  store.update(message, predicates1)
+  let number = await store.update(message, predicates1)
+  console.info(`updateTranslate: number = ${number}`)
 }
 
 /**
@@ -152,9 +153,10 @@ async function deleteMessageData(context: Context, message: relationalStore.Valu
   let store: relationalStore.RdbStore = await relationalStore.getRdbStore(context, config)
 
   let predicates1 = new relationalStore.RdbPredicates(DatabaseConstant.CHAT_TABLE)
-    .equalTo('MESSAGEID', message.id)
+    .equalTo('MESSAGEID', message.MESSAGEID)
 
-  store.delete(predicates1)
+  let number = await store.delete(predicates1)
+  console.info(`deleteMessageData: number = ${number}`)
 }
 
 /**
@@ -168,7 +170,7 @@ async function queryMessageData(context: Context, config: relationalStore.StoreC
   let messageArr: Message[] = []
 
   let predicates1 = new relationalStore.RdbPredicates(DatabaseConstant.CHAT_TABLE)
-    //id 升序排列
+  //id 升序排列
     .orderByAsc('ID')
 
   let resultSet: relationalStore.ResultSet = await store.query(predicates1)
@@ -373,7 +375,7 @@ class DatabaseUtil {
    */
   async delete(message: Message, context: Context): Promise<void> {
     let valueB: relationalStore.ValuesBucket = {
-      'id': message.id
+      'MESSAGEID': message.id
     }
     await taskpool.execute(deleteMessageData, context, valueB, CONFIG)
     return
@@ -385,8 +387,24 @@ class DatabaseUtil {
    * @returns
    */
   async updateTranslate(message: Message, context: Context): Promise<void> {
+    console.info(`updateTranslate:${JSON.stringify(message)}`)
     let valueB: relationalStore.ValuesBucket = {
-      'id': message.id
+      'MESSAGETYPE': message.messageType,
+      'OWNERNAME': message.ownerName,
+      'MESSAGESTATUS': message.messageStatus,
+      'ERRORMESSAGE': message.errorMessage,
+      'TEXTTYPE': message.textType,
+      'TEXTVAL': message.text,
+      'MESSAGEID': message.id,
+      'REFERENABLE': message.referEnable,
+      'REFERID': message.referId,
+      'REFERTYPE': message.referType,
+      'REFERTEXT': message.referText,
+      'REFERURI': message.referUri,
+      'REFERWIDTH': message.referWidth,
+      'REFERHEIGHT': message.referHeight,
+      'TRANSLATEENABLE': message.translateEnable,
+      'TRANSLATETEXT': message.translateText
     }
     await taskpool.execute(updateTranslateData, context, valueB, CONFIG)
     return

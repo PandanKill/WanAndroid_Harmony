@@ -32,9 +32,6 @@ class PopupItemClickManager {
   //转文字
   onTranToText: (item: Message) => void = (item) => {
   }
-  //翻译
-  onTranslate: (item: Message) => void = (item) => {
-  }
   //文字提取
   onPicToText: (item: Message) => void = (item) => {
   }
@@ -84,8 +81,7 @@ class PopupItemClickManager {
         break
       case 11:
         //翻译
-        // this.translateData(message)
-        this.onTranslate(message)
+        this.translateData(message)
         break
       case 12:
         this.searchData(message.text)

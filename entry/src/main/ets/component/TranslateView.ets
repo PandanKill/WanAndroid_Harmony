@@ -1,21 +1,21 @@
 import SizeConstant from "../constants/SizeConstant"
+import { Message } from "../pages/ChatPage"
 
 /**
  * 聊天翻译
  */
 @Component
 export struct TranslateView {
-  @State isLoading: boolean = false
-  @State translateText: string = ""
+  @ObjectLink item: Message
 
   build() {
     Stack() {
-      if (this.isLoading) {
+      if (this.item.translateLoading) {
         Image($r('app.media.icon_loading_green'))
           .width(SizeConstant.SIZE_10)
       } else {
         //加载成功
-        Text(this.translateText)
+        Text(this.item.translateText)
           .backgroundColor($r('app.color.color_FFFFFF'))
           .borderRadius(SizeConstant.SIZE_5)
           .fontColor(Color.Black)
