@@ -1,5 +1,6 @@
 import { matrix4, window } from "@kit.ArkUI";
 import image from "@ohos.multimedia.image";
+import EntryContext from "../constants/EntryContext";
 import { runWithAnimation, windowSizeManager } from "../utils/CommonUtils";
 
 @Observed
@@ -71,7 +72,7 @@ export class ImageModel {
   }
 
   windowSize() {
-    window.getLastWindow(getContext()).then((window: window.Window) => {
+    window.getLastWindow(EntryContext.getContext()).then((window: window.Window) => {
       this.componentWidth = px2vp(window.getWindowProperties().windowRect.width)
       this.componentHeight = px2vp(window.getWindowProperties().windowRect.height)
     })

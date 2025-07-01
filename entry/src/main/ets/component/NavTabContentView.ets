@@ -4,7 +4,7 @@ import { router } from '@kit.ArkUI'
 
 @Component
 export struct NavTabContentView {
-  private content: Array<NavContentBean> = []
+  content: Array<NavContentBean> = []
 
   build() {
     Flex({ justifyContent: FlexAlign.Start, wrap: FlexWrap.Wrap }) {
@@ -22,7 +22,7 @@ export struct NavTabContentView {
           .borderRadius(SizeConstant.SIZE_20)
           .margin({ top: SizeConstant.SIZE_10, left: SizeConstant.SIZE_10, right: SizeConstant.SIZE_10 })
           .onClick(() => {
-            router.pushUrl({
+            this.getUIContext().getRouter().pushUrl({
               url: 'pages/WebPage',
               params: {
                 webUrl: item.link

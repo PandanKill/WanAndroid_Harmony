@@ -79,7 +79,7 @@ export struct TiXiContentView {
                           return bean1
                         })
 
-                        router.pushUrl({
+                        this.getUIContext().getRouter().pushUrl({
                           url: "pages/TagDetailPage",
                           params: tagBean
                         })

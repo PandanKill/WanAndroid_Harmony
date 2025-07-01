@@ -159,6 +159,14 @@
     {
       "name": "figure_login",
       "value": "指纹登录"
+    },
+    {
+      "name": "register",
+      "value": "注册账号"
+    },
+    {
+      "name": "other_auth",
+      "value": "其他方式登录"
     }
   ]
 }

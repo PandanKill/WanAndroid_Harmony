@@ -38,6 +38,7 @@ export struct AnsTabContentView {
         bean.link = homeBean.link
         bean.niceDate = homeBean.niceDate
         bean.desc = homeBean.desc
+        bean.collect = homeBean.collect
         bean.superChapterName = homeBean.superChapterName
         bean.isTop = false
 
@@ -49,7 +50,6 @@ export struct AnsTabContentView {
         }
 
         bean.title = homeBean.title
-        bean.zan = homeBean.zan !== 0
         this.intiData.push(bean)
       })
     }
@@ -72,6 +72,7 @@ export struct AnsTabContentView {
         bean.link = homeBean.link
         bean.niceDate = homeBean.niceDate
         bean.desc = homeBean.desc
+        bean.collect = homeBean.collect
         bean.superChapterName = homeBean.superChapterName
         bean.isTop = false
 
@@ -83,7 +84,6 @@ export struct AnsTabContentView {
         }
 
         bean.title = homeBean.title
-        bean.zan = homeBean.zan !== 0
         this.intiData.push(bean)
       })
     }
@@ -199,13 +199,12 @@ export struct AnsTabContentView {
           .fontColor($r('app.color.color_999999'))
           .layoutWeight(1)
 
-        Image(item.zan ? $r('app.media.shixin_love') : $r('app.media.kongxin_love'))
+        Image(item.collect ? $r('app.media.shixin_love') : $r('app.media.kongxin_love'))
           .width(SizeConstant.SIZE_20)
           .height(SizeConstant.SIZE_20)
           .margin({ right: SizeConstant.SIZE_5 })
           .onClick(() => {
             //点赞
-            item.zan = !item.zan
           })
       }.width(SizeConstant.FULL_SIZE)
       .margin({ top: SizeConstant.SIZE_10 })
@@ -228,7 +227,7 @@ export struct AnsTabContentView {
     })
     .onClick(() => {
       //点击跳转webView
-      router.pushUrl({
+      this.getUIContext().getRouter().pushUrl({
         url: "pages/WebPage",
         params: {
           webUrl: item.link

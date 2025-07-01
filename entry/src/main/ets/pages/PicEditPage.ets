@@ -4,7 +4,7 @@ import { fileIo } from '@kit.CoreFileKit'
 @Entry
 @Component
 struct PicEditPage {
-  @Prop imageUri: string = ''
+  @State imageUri: string = ''
   //是否开启抗锯齿 true开启
   private setting: RenderingContextSettings = new RenderingContextSettings(true)
   //创建 context

@@ -56,7 +56,7 @@ export struct SwiperView {
           .width(SizeConstant.FULL_SIZE)
           .height(SizeConstant.FULL_SIZE)
           .onClick(() => {
-            router.pushUrl({
+            this.getUIContext().getRouter().pushUrl({
               url: "pages/WebPage",
               params: {
                 webUrl: item.url

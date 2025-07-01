@@ -5,6 +5,7 @@ import { image } from '@kit.ImageKit';
 import { media } from '@kit.MediaKit';
 import { ComponentAttrUtils, RectInfoInPx } from './ComponentAttrUtils';
 import { WindowUtils } from './WindowUtils';
+import { common } from '@kit.AbilityKit';
 
 const TAG: string = '[CommonUtils]';
 

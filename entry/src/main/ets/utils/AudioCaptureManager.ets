@@ -1,6 +1,7 @@
 import { audio } from "@kit.AudioKit"
 import fileIo from "@ohos.file.fs"
 import { BusinessError } from "@kit.BasicServicesKit"
+import EntryContext from "../constants/EntryContext"
 
 /**
  * 录音管理类
@@ -60,7 +61,7 @@ export class AudioCaptureManager {
     //记录开始时间戳
     AudioCaptureManager.startRecordTime = Date.now()
     //文件路径
-    let path = getContext().filesDir
+    let path = EntryContext.getContext().filesDir
     let filePath = `${path}/${fileName}.wav`
     AudioCaptureManager.recordFilePath = filePath
 

@@ -39,7 +39,7 @@ export struct NavHeaderView {
           })
           .alignRules(this.backRule)
           .onClick(() => {
-            router.back()
+            this.getUIContext().getRouter().back()
           })
       }
 
@@ -62,7 +62,7 @@ export struct NavHeaderView {
       }
 
     }.width(SizeConstant.FULL_SIZE)
-    .padding({ top: px2vp(this.topRectHeight) })
+    .padding({ top: this.getUIContext().px2vp(this.topRectHeight) })
     .height(SizeConstant.SIZE_80)
     .expandSafeArea([SafeAreaType.KEYBOARD])
     .backgroundColor($r('app.color.color_272A36'))

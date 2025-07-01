@@ -13,9 +13,9 @@ export class HomeListViewBean {
   tags?: TagBean[]
   title?: string
   desc?: string
+  collect: boolean = false
   envelopePic?: string
   superChapterId?: number
-  zan?: boolean
 }
 
 export class TagBean {

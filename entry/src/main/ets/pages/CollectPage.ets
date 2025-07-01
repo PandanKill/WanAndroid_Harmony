@@ -132,7 +132,7 @@ struct CollectPage {
 
         Blank()
 
-        Image($r('app.media.kongxin_love'))
+        Image($r('app.media.shixin_love'))
           .width(SizeConstant.SIZE_20)
           .height(SizeConstant.SIZE_20)
           .margin({ right: SizeConstant.SIZE_15 })
@@ -143,7 +143,7 @@ struct CollectPage {
     }.alignItems(HorizontalAlign.Start)
     .onClick(() => {
       //点击跳转webView
-      router.pushUrl({
+      this.getUIContext().getRouter().pushUrl({
         url: "pages/WebPage",
         params: {
           webUrl: item.link

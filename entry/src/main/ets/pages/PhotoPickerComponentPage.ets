@@ -123,7 +123,7 @@ struct PhotoPickerComponentPage {
 
           this.bottomNav('编辑', () => {
             //todo 编辑图片页面
-            promptAction.showToast({
+            this.getUIContext().getPromptAction().showToast({
               message: "跳转编辑页面"
             })
           })
@@ -138,7 +138,7 @@ struct PhotoPickerComponentPage {
       }
     }.width('100%')
     .height('100%')
-    .padding({ bottom: px2vp(this.navHeight), top: px2vp(this.topRectHeight) })
+    .padding({ bottom: this.getUIContext().px2vp(this.navHeight), top: this.getUIContext().px2vp(this.topRectHeight) })
     .backgroundColor($r('app.color.color_1A1A18'))
   }
 
@@ -173,7 +173,7 @@ struct PhotoPickerComponentPage {
         .margin({ right: SizeConstant.SIZE_15 })
         .onClick(() => {
           //发送
-          router.back({
+          this.getUIContext().getRouter().back({
             url: "pages/ChatPage",
             params: {
               "selectUri": this.selectUris

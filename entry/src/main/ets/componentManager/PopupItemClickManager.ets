@@ -8,6 +8,7 @@ import { JSON } from "@kit.ArkTS";
 import { fileToBase64 } from "../utils/FileUtil";
 import { AISpeakBean } from "../bean/AIResponseBean";
 import databaseUtil from "../utils/DatabaseUtil";
+import EntryContext from "../constants/EntryContext";
 
 /**
  * 聊天 Item 点击
@@ -349,7 +350,7 @@ class PopupItemClickManager {
       uri: searchUrl
     };
 
-    (getContext(this) as common.UIAbilityContext).startAbility(want)
+    (EntryContext.getContext() as common.UIAbilityContext).startAbility(want)
   }
 
   /**

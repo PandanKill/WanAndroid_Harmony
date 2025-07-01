@@ -7,7 +7,7 @@ import { common, Want } from '@kit.AbilityKit'
 @Entry
 @Component
 struct WebPage {
-  pageSrc: string = (router.getParams() as Record<string, string>).webUrl as string
+  pageSrc: string = (this.getUIContext().getRouter().getParams() as Record<string, string>).webUrl as string
   // pageSrc:string = "https://mp.weixin.qq.com/s/m38HWBzxInUf_hgAZ---bw"
   // pageSrc: string = "https://juejin.cn/post/7294638699417288714"
   private webController: webview.WebviewController = new webview.WebviewController()
@@ -110,7 +110,7 @@ struct WebPage {
       })
     }.width(SizeConstant.FULL_SIZE)
     .height(SizeConstant.FULL_SIZE)
-    .padding({ top: px2vp(this.topRectHeight), bottom: px2vp(this.navHeight) })
+    .padding({ top: this.getUIContext().px2vp(this.topRectHeight), bottom: this.getUIContext().px2vp(this.navHeight) })
   }
 
   /**
@@ -127,7 +127,7 @@ struct WebPage {
       uri: this.pageSrc
     };
 
-    (getContext(this) as common.UIAbilityContext).startAbility(want)
+    (this.getUIContext().getHostContext() as common.UIAbilityContext).startAbility(want)
   }
 
   aboutToDisappear(): void {

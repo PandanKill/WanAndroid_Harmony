@@ -102,7 +102,7 @@ struct PointRankPage {
         menu: $r('app.media.icon_doubt'),
         onMenuClick: () => {
           //跳转积分说明
-          router.pushUrl({
+          this.getUIContext().getRouter().pushUrl({
             url: "pages/WebPage", params: {
               "webUrl": "https://www.wanandroid.com/blog/show/2653"
             }

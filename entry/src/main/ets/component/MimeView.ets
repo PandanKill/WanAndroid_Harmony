@@ -61,7 +61,7 @@ export struct MimeView {
         .onClick(() => {
           //头像详情，共享元素
           UserService.get().checkLogin(() => {
-            router.pushUrl({
+            this.getUIContext().getRouter().pushUrl({
               url: "pages/PersonAvater"
             })
           })
@@ -94,7 +94,7 @@ export struct MimeView {
       .onClick(() => {
         //to 积分
         UserService.get().checkLogin(() => {
-          router.pushUrl({
+          this.getUIContext().getRouter().pushUrl({
             url: "pages/PointPage"
           })
         })
@@ -126,7 +126,7 @@ export struct MimeView {
       .onClick(() => {
         //to 收藏
         UserService.get().checkLogin(() => {
-          router.pushUrl({
+          this.getUIContext().getRouter().pushUrl({
             url: "pages/CollectPage"
           })
         })
@@ -159,7 +159,7 @@ export struct MimeView {
       .onClick(() => {
         //to 分享
         UserService.get().checkLogin(() => {
-          router.pushUrl({
+          this.getUIContext().getRouter().pushUrl({
             url: "pages/SharePage"
           })
         })
@@ -191,7 +191,7 @@ export struct MimeView {
       .onClick(() => {
         //to 分享
         UserService.get().checkLogin(() => {
-          router.pushUrl({
+          this.getUIContext().getRouter().pushUrl({
             url: "pages/SharePage"
           })
         })
@@ -222,7 +222,7 @@ export struct MimeView {
       .backgroundColor($r('app.color.color_FFFFFF'))
       .onClick(() => {
         //to 系统设置
-        router.pushUrl({
+        this.getUIContext().getRouter().pushUrl({
           url: "pages/SettingPage"
         })
       })
@@ -251,7 +251,7 @@ export struct MimeView {
       .backgroundColor($r('app.color.color_FFFFFF'))
       .onClick(() => {
         //to AI 聊天
-        router.pushUrl({
+        this.getUIContext().getRouter().pushUrl({
           url: "pages/ChatPage"
         })
       })
@@ -281,7 +281,7 @@ export struct MimeView {
       .backgroundColor($r('app.color.color_FFFFFF'))
       .onClick(() => {
         //to AI 聊天
-        router.pushUrl({
+        this.getUIContext().getRouter().pushUrl({
           url: "pages/ChatPage"
         })
       })

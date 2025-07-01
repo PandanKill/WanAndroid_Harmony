@@ -56,7 +56,6 @@ export struct HomeListView {
         }
 
         bean.title = homeBean.title
-        bean.zan = homeBean.zan !== 0
         this.intiData.push(bean)
       })
     }
@@ -77,6 +76,7 @@ export struct HomeListView {
         bean.chapterName = homeBean.chapterName
         bean.id = homeBean.id
         bean.link = homeBean.link
+        bean.collect = homeBean.collect
         bean.niceDate = homeBean.niceDate
         bean.superChapterId = homeBean.superChapterId
         bean.superChapterName = homeBean.superChapterName
@@ -91,7 +91,6 @@ export struct HomeListView {
         }
 
         bean.title = homeBean.title
-        bean.zan = homeBean.zan !== 0
         this.intiData.push(bean)
       })
     }
@@ -118,6 +117,7 @@ export struct HomeListView {
         bean.chapterName = homeBean.chapterName
         bean.id = homeBean.id
         bean.link = homeBean.link
+        bean.collect = homeBean.collect
         bean.niceDate = homeBean.niceDate
         bean.superChapterId = homeBean.superChapterId
         bean.superChapterName = homeBean.superChapterName
@@ -132,7 +132,6 @@ export struct HomeListView {
         }
 
         bean.title = homeBean.title
-        bean.zan = homeBean.zan !== 0
         dataArr.push(bean)
       })
     }
@@ -225,7 +224,7 @@ export struct HomeListView {
               tagBean.officialAcc = item.tags!![0].charptId!!
 
               //跳转公众号
-              router.pushUrl({
+              this.getUIContext().getRouter().pushUrl({
                 url: "pages/TagDetailPage",
                 params: tagBean
               })
@@ -258,13 +257,12 @@ export struct HomeListView {
           .fontColor($r('app.color.color_999999'))
           .layoutWeight(1)
 
-        Image(item.zan ? $r('app.media.shixin_love') : $r('app.media.kongxin_love'))
+        Image(item.collect ? $r('app.media.shixin_love') : $r('app.media.kongxin_love'))
           .width(SizeConstant.SIZE_20)
           .height(SizeConstant.SIZE_20)
           .margin({ right: SizeConstant.SIZE_5 })
           .onClick(() => {
-            //点赞
-            item.zan = !item.zan
+            //收藏
           })
       }.width(SizeConstant.FULL_SIZE)
       .margin({ top: SizeConstant.SIZE_10 })
@@ -279,7 +277,7 @@ export struct HomeListView {
     })
     .onClick(() => {
       //点击跳转webView
-      router.pushUrl({
+      this.getUIContext().getRouter().pushUrl({
         url: "pages/WebPage",
         params: {
           webUrl: item.link

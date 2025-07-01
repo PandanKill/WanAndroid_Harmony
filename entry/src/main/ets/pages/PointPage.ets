@@ -124,7 +124,7 @@ struct PointPage {
         menu: $r('app.media.icon_rank'),
         onMenuClick: () => {
           //跳转积分排名
-          router.pushUrl({
+          this.getUIContext().getRouter().pushUrl({
             url: "pages/PointRankPage"
           })
         }

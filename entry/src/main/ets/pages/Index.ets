@@ -80,7 +80,7 @@ struct Index {
     //   this.isSearchShow = true
     //   this.alphaValue = 0
     // })
-    router.pushUrl({
+    this.getUIContext().getRouter().pushUrl({
       url: "pages/SearchPage",
       params: {
         "currentHotKey": this.hotKeys[this.nowSwiperIndex].name
@@ -156,7 +156,7 @@ struct Index {
       .barHeight(SizeConstant.SIZE_50)
       .barBackgroundColor($r('app.color.color_272A36'))
       .layoutWeight(1)
-      .padding({ bottom: px2vp(this.navHeight) })
+      .padding({ bottom: this.getUIContext().px2vp(this.navHeight) })
       .width(SizeConstant.FULL_SIZE)
       .scrollable(false)
       .animationMode(AnimationMode.NO_ANIMATION)
@@ -180,7 +180,7 @@ struct Index {
       return false
     }
     this.lastPressMill = nowMill
-    promptAction.showToast({
+    this.getUIContext().getPromptAction().showToast({
       message: $r('app.string.press_again')
     })
     return true

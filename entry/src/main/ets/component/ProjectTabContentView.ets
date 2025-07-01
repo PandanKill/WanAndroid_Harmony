@@ -13,7 +13,7 @@ import Api from '../utils/net/Api'
 @Component
 export struct ProjectTabContentView {
   //当前页面id值，用于getRequest
-  private contentId: number = 0
+  contentId: number = 0
   //页码
   private currentIndex: number = 1
   //首次加载
@@ -44,6 +44,7 @@ export struct ProjectTabContentView {
         bean.niceDate = homeBean.niceDate
         bean.desc = homeBean.desc
         bean.envelopePic = homeBean.envelopePic
+        bean.collect = homeBean.collect
         bean.superChapterName = homeBean.superChapterName
         bean.isTop = false
 
@@ -55,7 +56,6 @@ export struct ProjectTabContentView {
         }
 
         bean.title = homeBean.title
-        bean.zan = homeBean.zan !== 0
         this.intiData.push(bean)
       })
     }
@@ -80,6 +80,7 @@ export struct ProjectTabContentView {
         bean.niceDate = homeBean.niceDate
         bean.superChapterName = homeBean.superChapterName
         bean.desc = homeBean.desc
+        bean.collect = homeBean.collect
         bean.envelopePic = homeBean.envelopePic
         bean.isTop = false
 
@@ -91,7 +92,6 @@ export struct ProjectTabContentView {
         }
 
         bean.title = homeBean.title
-        bean.zan = homeBean.zan !== 0
         dataArr.push(bean)
       })
     }
@@ -176,7 +176,7 @@ export struct ProjectTabContentView {
             })
             .onClick(() => {
               //跳转公众号
-              router.pushUrl({
+              this.getUIContext().getRouter().pushUrl({
                 url: "pages/WeChatOfficialAccounts",
                 params: {
                   officialAcc: item.tags!![0].url
@@ -228,13 +228,12 @@ export struct ProjectTabContentView {
           .fontColor($r('app.color.color_999999'))
           .layoutWeight(1)
 
-        Image(item.zan ? $r('app.media.shixin_love') : $r('app.media.kongxin_love'))
+        Image(item.collect ? $r('app.media.shixin_love') : $r('app.media.kongxin_love'))
           .width(SizeConstant.SIZE_20)
           .height(SizeConstant.SIZE_20)
           .margin({ right: SizeConstant.SIZE_5 })
           .onClick(() => {
             //点赞
-            item.zan = !item.zan
           })
       }.width(SizeConstant.FULL_SIZE)
       .margin({ top: SizeConstant.SIZE_10 })
@@ -249,7 +248,7 @@ export struct ProjectTabContentView {
     })
     .onClick(() => {
       //点击跳转webView
-      router.pushUrl({
+      this.getUIContext().getRouter().pushUrl({
         url: "pages/WebPage",
         params: {
           webUrl: item.link

@@ -5,6 +5,7 @@ import { CustomTouchType } from "../bean/TouchType";
 import { startVibrator } from "../utils/VibratorUtil";
 import { AudioCaptureManager, RecordFile } from "../utils/AudioCaptureManager";
 import SpeechRecognizerManager from "../utils/SpeechRecognizerManager";
+import EntryContext from "../constants/EntryContext";
 
 /**
  * 录音页面
@@ -339,11 +340,11 @@ export struct AudioRecordView {
         })
         .id('circle')
         .onAppear(() => {
-          let modePosition = componentUtils.getRectangleById('circle')
-          this.recordLocalPosition.x = px2vp(modePosition.screenOffset.x)
-          this.recordLocalPosition.y = px2vp(modePosition.screenOffset.y)
-          this.recordLocalPosition.width = px2vp(modePosition.size.width)
-          this.recordLocalPosition.height = px2vp(modePosition.size.height)
+          let modePosition = this.getUIContext().getComponentUtils().getRectangleById('circle')
+          this.recordLocalPosition.x = this.getUIContext().px2vp(modePosition.screenOffset.x)
+          this.recordLocalPosition.y = this.getUIContext().px2vp(modePosition.screenOffset.y)
+          this.recordLocalPosition.width = this.getUIContext().px2vp(modePosition.size.width)
+          this.recordLocalPosition.height = this.getUIContext().px2vp(modePosition.size.height)
         })
 
       //松开 发送
@@ -458,16 +459,16 @@ export struct AudioRecordView {
     .height(SizeConstant.FULL_SIZE)
     .id('mainContent')
     .onAppear(() => {
-      let modePosition = componentUtils.getRectangleById('mainContent')
-      this.xLocalPosition.x = px2vp(modePosition.screenOffset.x)
-      this.xLocalPosition.y = px2vp(modePosition.screenOffset.y)
-      this.xLocalPosition.width = px2vp(modePosition.size.width / 2)
-      this.xLocalPosition.height = px2vp(modePosition.size.height)
+      let modePosition = this.getUIContext().getComponentUtils().getRectangleById('mainContent')
+      this.xLocalPosition.x = this.getUIContext().px2vp(modePosition.screenOffset.x)
+      this.xLocalPosition.y = this.getUIContext().px2vp(modePosition.screenOffset.y)
+      this.xLocalPosition.width = this.getUIContext().px2vp(modePosition.size.width / 2)
+      this.xLocalPosition.height = this.getUIContext().px2vp(modePosition.size.height)
 
-      this.textLocalPosition.x = px2vp(modePosition.size.width / 2)
-      this.textLocalPosition.y = px2vp(modePosition.screenOffset.y)
-      this.textLocalPosition.width = px2vp(modePosition.size.width / 2)
-      this.textLocalPosition.height = px2vp(modePosition.size.height)
+      this.textLocalPosition.x = this.getUIContext().px2vp(modePosition.size.width / 2)
+      this.textLocalPosition.y = this.getUIContext().px2vp(modePosition.screenOffset.y)
+      this.textLocalPosition.width = this.getUIContext().px2vp(modePosition.size.width / 2)
+      this.textLocalPosition.height = this.getUIContext().px2vp(modePosition.size.height)
     })
   }
 

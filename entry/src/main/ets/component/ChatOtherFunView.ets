@@ -72,7 +72,7 @@ export struct ChatOtherFunView {
   }
 
   openPhoto() {
-    router.pushUrl({
+    this.getUIContext().getRouter().pushUrl({
       url: "pages/PhotoPickerComponentPage"
     })
   }
@@ -85,12 +85,12 @@ export struct ChatOtherFunView {
       cameraPosition: camera.CameraPosition.CAMERA_POSITION_BACK
     }
     let pickerResult: cameraPicker.PickerResult =
-      await cameraPicker.pick(getContext(this),
+      await cameraPicker.pick(this.getUIContext().getHostContext(),
         [cameraPicker.PickerMediaType.PHOTO, cameraPicker.PickerMediaType.VIDEO], pickerProfile)
 
     let selectUri: Array<string> = []
     selectUri.push(pickerResult.resultUri)
-    router.back({
+    this.getUIContext().getRouter().back({
       url: "pages/ChatPage",
       params: {
         "selectUri": selectUri

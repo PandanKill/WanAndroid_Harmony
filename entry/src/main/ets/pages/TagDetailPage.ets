@@ -16,7 +16,7 @@ import Api from '../utils/net/Api'
 struct TagDetailPage {
   @State private tabs: TabDetailBean[] = []
   @State private currentIndex: number = 0
-  private tagBean: TagRouterBean = router.getParams() as TagRouterBean
+  private tagBean: TagRouterBean = this.getUIContext().getRouter().getParams() as TagRouterBean
   @StorageProp('topRectHeight') topRectHeight: number = 0
 
   aboutToAppear(): void {
@@ -78,6 +78,6 @@ struct TagDetailPage {
       }.width(SizeConstant.FULL_SIZE)
       .height(SizeConstant.FULL_SIZE)
     }.width(SizeConstant.FULL_SIZE)
-    .padding({ top: px2vp(this.topRectHeight) })
+    .padding({ top: this.getUIContext().px2vp(this.topRectHeight) })
   }
 }

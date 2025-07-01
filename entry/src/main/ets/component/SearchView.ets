@@ -10,13 +10,13 @@ import { JSON } from '@kit.ArkTS'
 export struct SearchView {
   @StorageLink('isLogin') isLogin: boolean = false
   //热词
-  @Prop private hotKeys: HotKeyBean[] = []
+  @Prop hotKeys: HotKeyBean[] = []
   @StorageProp('topRectHeight') topRectHeight: number = 0
   //点击搜索
-  private onClicked: () => void = () => {
+  onClicked: () => void = () => {
   }
   //轮播
-  private onSwiper: (index: number) => void = (index: number) => {
+  onSwiper: (index: number) => void = (index: number) => {
   }
 
   build() {
@@ -82,7 +82,7 @@ export struct SearchView {
 
             } else {
               //跳转登录界面
-              router.pushUrl({
+              this.getUIContext().getRouter().pushUrl({
                 url: "pages/LoginPage"
               })
             }
@@ -95,6 +95,6 @@ export struct SearchView {
 
       //沉浸式延伸到状态栏
     }.width(SizeConstant.FULL_SIZE)
-    .padding({ top: px2vp(this.topRectHeight) })
+    .padding({ top: this.getUIContext().px2vp(this.topRectHeight) })
   }
 }

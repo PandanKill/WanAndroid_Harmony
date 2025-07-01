@@ -23,8 +23,8 @@ import { TagRouterBean } from '../bean/TagRouterBean'
 struct SearchPage {
   @StorageProp('hotKey') hotKeys: HotKeyBean[] = []
   @State historySearchData: string[] = []
-  private currentHotData: string = (router.getParams() as Record<string, string>).currentHotKey as string
-  private context: common.UIAbilityContext = getContext() as common.UIAbilityContext
+  private currentHotData: string = (this.getUIContext().getRouter().getParams() as Record<string, string>).currentHotKey as string
+  private context: common.UIAbilityContext = this.getUIContext().getHostContext() as common.UIAbilityContext
   @State isSearchView: boolean = false
   //搜索词
   @State searchStr: string = this.currentHotData
@@ -68,6 +68,7 @@ struct SearchPage {
           bean.link = homeBean.link
           bean.niceDate = homeBean.niceDate
           bean.superChapterId = homeBean.superChapterId
+          bean.collect = homeBean.collect
           bean.superChapterName = homeBean.superChapterName
           bean.isTop = false
 
@@ -80,7 +81,6 @@ struct SearchPage {
           }
 
           bean.title = homeBean.title
-          bean.zan = homeBean.zan !== 0
           this.initData.push(bean)
         })
         this.dataSource.initData(this.initData)
@@ -113,6 +113,7 @@ struct SearchPage {
           bean.link = homeBean.link
           bean.niceDate = homeBean.niceDate
           bean.superChapterId = homeBean.superChapterId
+          bean.collect = homeBean.collect
           bean.superChapterName = homeBean.superChapterName
           bean.isTop = false
 
@@ -125,7 +126,6 @@ struct SearchPage {
           }
 
           bean.title = homeBean.title
-          bean.zan = homeBean.zan !== 0
           dataArr.push(bean)
         })
         this.dataSource.pushDataArray(dataArr)
@@ -226,7 +226,7 @@ struct SearchPage {
               tagBean.officialAcc = item.tags!![0].charptId!!
 
               //跳转公众号
-              router.pushUrl({
+              this.getUIContext().getRouter().pushUrl({
                 url: "pages/TagDetailPage",
                 params: tagBean
               })
@@ -259,13 +259,12 @@ struct SearchPage {
           .fontColor($r('app.color.color_999999'))
           .layoutWeight(1)
 
-        Image(item.zan ? $r('app.media.shixin_love') : $r('app.media.kongxin_love'))
+        Image(item.collect ? $r('app.media.shixin_love') : $r('app.media.kongxin_love'))
           .width(SizeConstant.SIZE_20)
           .height(SizeConstant.SIZE_20)
           .margin({ right: SizeConstant.SIZE_5 })
           .onClick(() => {
             //点赞
-            item.zan = !item.zan
           })
       }.width(SizeConstant.FULL_SIZE)
       .margin({ top: SizeConstant.SIZE_10 })
@@ -280,7 +279,7 @@ struct SearchPage {
     })
     .onClick(() => {
       //点击跳转webView
-      router.pushUrl({
+      this.getUIContext().getRouter().pushUrl({
         url: "pages/WebPage",
         params: {
           webUrl: item.link
@@ -436,11 +435,11 @@ struct SearchPage {
           .margin({ right: SizeConstant.SIZE_5 })
           .fontColor(Color.White)
           .onClick(() => {
-            router.back()
+            this.getUIContext().getRouter().back()
           })
       }.width(SizeConstant.FULL_SIZE)
       .backgroundColor($r('app.color.color_272A36'))
-      .padding({ top: px2vp(this.topRectHeight) })
+      .padding({ top: this.getUIContext().px2vp(this.topRectHeight) })
 
       if (this.isSearchView) {
         //搜索页面

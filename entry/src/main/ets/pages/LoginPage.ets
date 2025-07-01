@@ -24,9 +24,19 @@ struct LoginPage {
   @State isShowUserNameClean: boolean = false
   //是否展示清空密码
   @State isShowPwdClean: boolean = false
+  //是否支持三方登录
+  @State otherLoginMethod: boolean = false
+  //人脸登录
+  @State otherFace: boolean = false
+  //指纹登录
+  @State otherFinger: boolean = false
 
   onPageShow(): void {
     //页面展示
+  }
+
+  aboutToAppear(): void {
+    //是否支持其他方式登录
   }
 
   changeUsername() {
@@ -51,14 +61,14 @@ struct LoginPage {
 
   async login() {
     if (this.userName === '' || this.userName === undefined) {
-      promptAction.showToast({
+      this.getUIContext().getPromptAction().showToast({
         message: $r('app.string.please_input_username')
       })
       return
     }
 
     if (this.pwd === '' || this.pwd === undefined) {
-      promptAction.showToast({
+      this.getUIContext().getPromptAction().showToast({
         message: $r('app.string.please_input_pwd')
       })
       return
@@ -66,16 +76,16 @@ struct LoginPage {
 
     const logBean: ResponseBean<User> = await Api.get().login(this.userName, this.pwd)
     if (logBean.isSuccessWithData()) {
-      promptAction.showToast({
+      this.getUIContext().getPromptAction().showToast({
         message: $r('app.string.login_succ')
       })
       UserService.get().setUser(logBean.getDataOrThrow())
       const user = await UserService.get().updateUser()
       if (user) {
-        router.back()
+        this.getUIContext().getRouter().back()
       }
     } else {
-      promptAction.showToast({
+      this.getUIContext().getPromptAction().showToast({
         message: logBean.errorMsg
       })
     }
@@ -94,7 +104,7 @@ struct LoginPage {
           .aspectRatio(1)
           .onClick(() => {
             //跳转相册
-            promptAction.showToast({
+            this.getUIContext().getPromptAction().showToast({
               message: "跳转相册"
             })
           })
@@ -177,10 +187,22 @@ struct LoginPage {
         .onClick(() => {
           this.login()
         })
+
+      Text($r('app.string.register'))
+
+      Blank()
+
+      //其他方式登录
+      Column() {
+        Text($r('app.string.other_auth'))
+        Row() {
+          //人脸、指纹(能力集判断现实)
+
+        }
+      }
     }
     .width(SizeConstant.FULL_SIZE)
     .height(SizeConstant.FULL_SIZE)
     .alignItems(HorizontalAlign.Center)
-    .backgroundColor($r('app.color.color_272A36'))
   }
 }

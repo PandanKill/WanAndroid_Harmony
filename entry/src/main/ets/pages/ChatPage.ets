@@ -106,7 +106,7 @@ struct AIChatPage {
   private textAreaController: TextAreaController = new TextAreaController()
   private timeId: number = 0
   @State eventAudio: EventState = new EventState()
-  private context: common.UIAbilityContext = getContext(this) as common.UIAbilityContext
+  private context: common.UIAbilityContext = this.getUIContext().getHostContext() as common.UIAbilityContext
   @Provide('itemSizeChange') @Watch('itemSizeChangeListener') itemSizeChange: boolean = false
   //录音文件名
   recordFileName: string = "" //事件回调
@@ -141,7 +141,7 @@ struct AIChatPage {
    * 权限授权失败
    */
   deniedWarning() {
-    promptAction.showToast({
+    this.getUIContext().getPromptAction().showToast({
       message: "麦克风授权失败"
     })
   }
@@ -288,7 +288,7 @@ struct AIChatPage {
 
   async onPageShow(): Promise<void> {
     //获取 pageParam
-    let recordParam = (router.getParams() as Record<string, object>)
+    let recordParam = (this.getUIContext().getRouter().getParams() as Record<string, object>)
     if (recordParam !== undefined) {
       let uriArr = recordParam.selectUri
       if (uriArr !== undefined) {
@@ -720,7 +720,7 @@ struct AIChatPage {
                     ChatOtherFunView()
                   }
                 }.backgroundColor($r('app.color.color_F6F6F6'))
-                .padding({ bottom: px2vp(this.navHeight) })
+                .padding({ bottom: this.getUIContext().px2vp(this.navHeight) })
                 .width(SizeConstant.FULL_SIZE)
               }.width(SizeConstant.FULL_SIZE)
               .height(SizeConstant.FULL_SIZE)

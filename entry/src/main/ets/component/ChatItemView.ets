@@ -66,16 +66,16 @@ export struct ChatItemView {
   //popup高度
   @State popupHeight: string = SizeConstant.SIZE_80
   //监听模态页面
-  listener: inspector.ComponentObserver = inspector.createComponentObserver('imageDetail');
-  private context: common.UIAbilityContext = getContext(this) as common.UIAbilityContext
+  listener: inspector.ComponentObserver = this.getUIContext().getUIInspector().createComponentObserver('imageDetail');
+  private context: common.UIAbilityContext = this.getUIContext().getHostContext() as common.UIAbilityContext
 
   aboutToAppear() {
     this.initCoverListener()
     //配置图片信息
     if (this.item.textType === 1) {
       this.popItem = [...GeneralPopupItemConstant.CommonItem, ...GeneralPopupItemConstant.PicCommonItem]
-      let widthScaleRatio = this.item.imageWidth / vp2px(ChatItemView.maxWidth);
-      let heightScaleRatio = this.item.imageHeight / vp2px(ChatItemView.maxHeight);
+      let widthScaleRatio = this.item.imageWidth / this.getUIContext().vp2px(ChatItemView.maxWidth);
+      let heightScaleRatio = this.item.imageHeight / this.getUIContext().vp2px(ChatItemView.maxHeight);
       let isUseWidthScale = widthScaleRatio > heightScaleRatio;
       if (!isUseWidthScale) {
         //高大于宽
@@ -108,7 +108,7 @@ export struct ChatItemView {
       }
 
       //获取缩略图
-      getFetchFrameByTime(0, this.item.videoUri, vp2px(this.picWidth), vp2px(this.picHeight))
+      getFetchFrameByTime(0, this.item.videoUri, this.getUIContext().vp2px(this.picWidth), this.getUIContext().vp2px(this.picHeight))
         .then((pix: image.PixelMap) => {
           this.bgPixel = pix
         })
@@ -152,16 +152,16 @@ export struct ChatItemView {
       if (!this.isAnimating) {
         this.isAnimating = true;
         // Property animation for a mirror to the bottom of a modal page.
-        animateTo({
+        this.getUIContext().animateTo({
           duration: 1000,
           curve: Curve.Friction,
         }, () => {
           // this.scaleValue = 2;
-          this.translateX = px2vp(WindowUtils.windowWidth_px / 2);
+          this.translateX = this.getUIContext().px2vp(WindowUtils.windowWidth_px / 2);
           this.clipWidth = '100%';
           this.clipHeight = '100%';
           // Fixed height differences due to half-mode height and scaling.
-          this.translateY = px2vp(WindowUtils.windowHeight_px / 2);
+          this.translateY = this.getUIContext().px2vp(WindowUtils.windowHeight_px / 2);
           console.info(`lgwwww animEnd::::scale: ${this.scaleValue}, translateX:${this.translateX}, translateY:${this.translateY}, clipWidth:${this.clipWidth}, clipHeight:${this.clipHeight}`)
         })
       }

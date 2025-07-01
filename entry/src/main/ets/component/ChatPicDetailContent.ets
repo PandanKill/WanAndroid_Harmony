@@ -17,7 +17,7 @@ export struct ChatPicDetailContent {
   @Prop @Require imageHeight: number
   @Link chatPicDetailContent: boolean
   @State imageModel: ImageModel = new ImageModel()
-  private context: common.UIAbilityContext = getContext(this) as common.UIAbilityContext
+  private context: common.UIAbilityContext = this.getUIContext().getHostContext() as common.UIAbilityContext
   private imageWHRatio: number = 0
   //是否支持滑动，边界考虑
   @State isDisableSwipe: boolean = true

@@ -22,8 +22,8 @@ export interface HomeBean {
   tags?: TagBean[]
   title?: string
   desc?: string
+  collect: boolean
   envelopePic?: string
-  zan?: number
 }
 
 export interface TagBean {

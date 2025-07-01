@@ -21,7 +21,7 @@ struct SettingPage {
   @State isLogin: boolean = false
   //应用版本
   @State versionName: string = ""
-  private context: common.UIAbilityContext = getContext(this) as common.UIAbilityContext
+  private context: common.UIAbilityContext = this.getUIContext().getHostContext() as common.UIAbilityContext
 
   aboutToAppear(): void {
     AppStorage.setOrCreate('enableDarkMode', this.enableDarkMode);
@@ -172,7 +172,7 @@ struct SettingPage {
       .margin({ top: SizeConstant.SIZE_1 })
       .backgroundColor($r('app.color.color_FFFFFF'))
       .onClick(() => {
-        router.pushUrl({
+        this.getUIContext().getRouter().pushUrl({
           url: "pages/WebPage",
           params: {
             webUrl: Constants.WAN_ANDROID
@@ -192,7 +192,7 @@ struct SettingPage {
       .margin({ top: SizeConstant.SIZE_1 })
       .backgroundColor($r('app.color.color_FFFFFF'))
       .onClick(() => {
-        router.pushUrl({
+        this.getUIContext().getRouter().pushUrl({
           url: "pages/WebPage",
           params: {
             webUrl: Constants.QUESTION_WEB
@@ -212,7 +212,7 @@ struct SettingPage {
       .margin({ top: SizeConstant.SIZE_1 })
       .backgroundColor($r('app.color.color_FFFFFF'))
       .onClick(() => {
-        router.pushUrl({
+        this.getUIContext().getRouter().pushUrl({
           url: "pages/WebPage",
           params: {
             webUrl: Constants.WAN_ANDROID
@@ -274,10 +274,10 @@ struct SettingPage {
   async toLogout() {
     await Api.get().logout()
     UserService.get().clearUser()
-    promptAction.showToast({
+    this.getUIContext().getPromptAction().showToast({
       message: $r('app.string.logout_succ')
     })
-    router.back()
+    this.getUIContext().getRouter().back()
   }
 }
 
