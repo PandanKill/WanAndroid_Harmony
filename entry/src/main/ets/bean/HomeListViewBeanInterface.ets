@@ -13,7 +13,7 @@ export interface HomeListViewBeanInterface {
 export interface HomeBean {
   author?: string
   chapterName?: string
-  id?: string
+  id: number
   link?: string
   niceDate?: string
   shareUser?: string

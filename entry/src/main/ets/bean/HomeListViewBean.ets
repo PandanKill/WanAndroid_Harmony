@@ -5,7 +5,7 @@ export class HomeListViewBean {
   isTop?: boolean
   author?: string
   chapterName?: string
-  id?: string
+  id: number = 0
   link?: string
   niceDate?: string
   shareUser?: string

@@ -167,6 +167,14 @@
     {
       "name": "other_auth",
       "value": "其他方式登录"
+    },
+    {
+      "name": "opt_fail",
+      "value": "操作失败"
+    },
+    {
+      "name": "cancel_succ",
+      "value": "取消成功"
     }
   ]
 }

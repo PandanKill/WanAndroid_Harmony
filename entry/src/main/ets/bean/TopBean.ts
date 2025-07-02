@@ -1,7 +1,7 @@
 export interface TopBean {
   author?: string
   chapterName?: string
-  id?: string
+  id: number
   link?: string
   niceDate?: string
   shareUser?: string

@@ -263,8 +263,33 @@ struct SearchPage {
           .width(SizeConstant.SIZE_20)
           .height(SizeConstant.SIZE_20)
           .margin({ right: SizeConstant.SIZE_5 })
-          .onClick(() => {
-            //点赞
+          .onClick(async () => {
+            //收藏
+            let collTmp = item.collect
+            item.collect = !item.collect
+            if (collTmp) {
+              //取消收藏
+              let coll: ResponseBean<undefined> = await Api.get().unCollectArticle(item.id)
+              console.info(`collect ${JSON.stringify(coll)}}`)
+              if (!coll.isSuccess()) {
+                //更新失败
+                item.collect = collTmp
+                this.getUIContext().getPromptAction().showToast({
+                  message: $r('app.string.opt_fail')
+                })
+              }
+            } else {
+              //收藏
+              let coll: ResponseBean<undefined> = await Api.get().collectArticle(item.id)
+              console.info(`collect ${JSON.stringify(coll)}}`)
+              if (!coll.isSuccess()) {
+                //更新失败
+                item.collect = collTmp
+                this.getUIContext().getPromptAction().showToast({
+                  message: $r('app.string.opt_fail')
+                })
+              }
+            }
           })
       }.width(SizeConstant.FULL_SIZE)
       .margin({ top: SizeConstant.SIZE_10 })

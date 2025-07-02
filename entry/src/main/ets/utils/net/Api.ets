@@ -253,6 +253,24 @@ export default class Api {
   async search(searchData: string, page: number): Promise<ResponseBean<HomeListViewBeanInterface>> {
     return requestSync(`/article/query/${page}/json?k=${encodeURIComponent(searchData)}`, http.RequestMethod.POST)
   }
+
+  /**
+   * 收藏站内文章
+   * @param searchData
+   * @param page
+   */
+  async collectArticle(id: number): Promise<ResponseBean<undefined>> {
+    return requestSync(`/lg/collect/${id}/json`, http.RequestMethod.POST)
+  }
+
+  /**
+   * 取消收藏
+   * @param searchData
+   * @param page
+   */
+  async unCollectArticle(id: number): Promise<ResponseBean<undefined>> {
+    return requestSync(`/lg/uncollect_originId/${id}/json`, http.RequestMethod.POST)
+  }
 }
 
 class Headers {

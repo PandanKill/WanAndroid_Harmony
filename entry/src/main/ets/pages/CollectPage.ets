@@ -9,7 +9,6 @@ import { router } from '@kit.ArkUI'
 @Entry
 @Component
 struct CollectPage {
-  initData: HomeBean[] = []
   //是否是首次加载
   @State isFirstLoading: boolean = true
   private currentIndex: number = 0
@@ -24,12 +23,12 @@ struct CollectPage {
 
   //加载内容
   async loadInitData() {
+    this.currentIndex = 0
     let responseBean: ResponseBean<HomeListViewBeanInterface> = await Api.get().getMineCollect(this.currentIndex)
     this.isFirstLoading = false
     if (responseBean.isSuccessWithData()) {
       let data = responseBean.getDataOrThrow()
-      this.initData.push(...data.datas)
-      this.dataSource.initData(this.initData)
+      this.dataSource.initData(data.datas)
     }
     this.refreshController.finishRefresh()
   }
@@ -67,8 +66,6 @@ struct CollectPage {
             onRefresh: () => {
               //下拉刷新
               //重置currentIndex
-              this.initData = []
-              this.currentIndex = 0
               this.loadInitData()
             },
             onLoadMore: () => {
@@ -136,7 +133,26 @@ struct CollectPage {
           .width(SizeConstant.SIZE_20)
           .height(SizeConstant.SIZE_20)
           .margin({ right: SizeConstant.SIZE_15 })
-
+          .onClick(async () => {
+            //取消收藏
+            let collTmp = item.collect
+              //取消收藏
+            console.info(`item.id ${item.id}`)
+              let coll: ResponseBean<undefined> = await Api.get().unCollectArticle(item.id)
+              console.info(`collect ${JSON.stringify(coll)}}`)
+              if (!coll.isSuccess()) {
+                //更新失败
+                this.getUIContext().getPromptAction().showToast({
+                  message: $r('app.string.opt_fail')
+                })
+              } else {
+                //取消成功
+                this.dataSource.deleteData(index)
+                this.getUIContext().getPromptAction().showToast({
+                  message: $r('app.string.cancel_succ')
+                })
+              }
+          })
       }.margin({ top: SizeConstant.SIZE_10, bottom: SizeConstant.SIZE_10 })
       .alignItems(VerticalAlign.Center)
       .width(SizeConstant.FULL_SIZE)
