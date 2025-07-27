@@ -7,33 +7,9 @@ import { rcp } from '@kit.RemoteCommunicationKit';
 import { BannerBean } from '../bean/BannerBean';
 import Api from '../utils/net/Api';
 
-class SwiperDataSource implements IDataSource {
-  private bannerImgList: BannerBean[] = [];
-
-  constructor(bannerImgList: BannerBean[]) {
-    this.bannerImgList = bannerImgList;
-  }
-
-  totalCount(): number {
-    return this.bannerImgList.length
-  }
-
-  getData(index: number): BannerBean {
-    return this.bannerImgList[index]
-  }
-
-  registerDataChangeListener(listener: DataChangeListener): void {
-  }
-
-  unregisterDataChangeListener(listener: DataChangeListener): void {
-  }
-}
-
 @Component
 export struct SwiperView {
-  @State private swiperPics: BannerBean[] = []
-
-  // private swiperDataSource: SwiperDataSource = new SwiperDataSource([])
+  @State swiperPics: BannerBean[] = []
 
   aboutToAppear(): void {
     this.loadBannerData()

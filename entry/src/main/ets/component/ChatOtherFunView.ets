@@ -1,9 +1,5 @@
-import { it } from '@ohos/hypium'
 import SizeConstant from '../constants/SizeConstant'
 import { camera, cameraPicker } from '@kit.CameraKit'
-import { PickerOptions, ReminderMode } from '@ohos.file.PhotoPickerComponent'
-import { photoAccessHelper } from '@kit.MediaLibraryKit'
-import { router } from '@kit.ArkUI'
 
 interface ChatFunBean {
   name: string,

@@ -1,12 +1,7 @@
 import SizeConstant from "../constants/SizeConstant"
-import { Message } from "../pages/ChatPage"
-import { matrix4 } from "@kit.ArkUI"
 import { ImageModel } from "../model/ImageModel"
 import { common } from "@kit.AbilityKit"
-import image from "@ohos.multimedia.image"
-import { BusinessError } from "@kit.BasicServicesKit"
 import { windowSizeManager } from "../utils/CommonUtils"
-import { hilog } from "@kit.PerformanceAnalysisKit"
 
 const TAG: string = '[ImageItemView]';
 

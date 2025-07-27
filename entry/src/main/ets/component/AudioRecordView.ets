@@ -1,11 +1,9 @@
 import SizeConstant from "../constants/SizeConstant";
-import { componentUtils } from "@kit.ArkUI";
 import { EventState } from "../pages/ChatPage";
 import { CustomTouchType } from "../bean/TouchType";
 import { startVibrator } from "../utils/VibratorUtil";
 import { AudioCaptureManager, RecordFile } from "../utils/AudioCaptureManager";
 import SpeechRecognizerManager from "../utils/SpeechRecognizerManager";
-import EntryContext from "../constants/EntryContext";
 
 /**
  * 录音页面

@@ -1,23 +1,20 @@
 import { NavHeaderView } from '../component/NavHeaderView'
 import SizeConstant from '../constants/SizeConstant'
-import { router } from '@kit.ArkUI'
-import { ListAttr, ListView, RefreshController, RefreshDataSource } from '@abner/refresh'
 import { CoinRankBean, CoinRankContentBean } from '../bean/CoinBean'
 import Api from '../utils/net/Api'
 import { ResponseBean } from '../bean/ResponseBean'
-import { animatorNumber } from '../utils/AnimatorUtil'
+import { PageLoadingComponent } from '../component/PageLoadingComponent'
+import { PullToRefresh } from '@ohos/pulltorefresh'
+import { LoadState } from '../bean/LoadState'
 
 @Entry
 @Component
 struct PointRankPage {
-  initData: CoinRankContentBean[] = []
+  @State data: CoinRankContentBean[] = []
   //是否是首次加载
-  @State isFirstLoading: boolean = true
-  private currentIndex: number = 1
-  //数据刷新
-  dataSource: RefreshDataSource = new RefreshDataSource()
-  //刷新 controller
-  refreshController: RefreshController = new RefreshController()
+  @State loadState: LoadState = LoadState.LOADING
+  private scroller: Scroller = new Scroller()
+  private nextPage: number = 2
   private centerRule: AlignRuleOption = {
     center: { anchor: "__container__", align: VerticalAlign.Center },
     middle: { anchor: "__container__", align: HorizontalAlign.Center }
@@ -50,48 +47,43 @@ struct PointRankPage {
   @State thirdRankNum: number = 0
 
   aboutToAppear(): void {
-    this.loadInitData()
+    this.loadData()
   }
 
-  //加载内容
-  async loadInitData() {
-    let responseBean: ResponseBean<CoinRankBean> = await Api.get().getCoinRank(this.currentIndex)
-    this.isFirstLoading = false
-    if (responseBean.isSuccessWithData()) {
-      let data = responseBean.getDataOrThrow()
-      //金牌
-      this.firstRank = data.datas.shift()!
-      animatorNumber(this.firstRankNum, this.firstRank.coinCount, (cu: number) => {
-        this.firstRankNum = cu
-      })
+  /**
+   * 加载数据
+   */
+  loadData() {
+    this.loadState = LoadState.LOADING
+    this.loadPageData(1).then((data) => {
+      if (data.length > 0) {
+        this.data = data
+        this.loadState = LoadState.SUCCESS
+      } else {
+        this.loadState = LoadState.EMPTY
+      }
+    }, () => {
+      this.loadState = LoadState.FAILURE
 
-      //银牌
-      this.secondRank = data.datas.shift()!
-      animatorNumber(this.secondRankNum, this.secondRank.coinCount, (cu: number) => {
-        this.secondRankNum = cu
-      })
-
-      //铜牌
-      this.thirdRank = data.datas.shift()!
-      animatorNumber(this.thirdRankNum, this.thirdRank.coinCount, (cu: number) => {
-        this.thirdRankNum = cu
-      })
-      this.initData.push(...data.datas)
-      this.dataSource.initData(this.initData)
-    }
-    this.refreshController.finishRefresh()
+    })
   }
 
-  //加载更多
-  async loadMoreContent() {
-    let responseBean: ResponseBean<CoinRankBean> = await Api.get().getCoinRank(this.currentIndex)
+  /**
+   * 加载页面数据
+   * @param arg0
+   */
+  private async loadPageData(page: number): Promise<CoinRankContentBean[]> {
+    let responseBean: ResponseBean<CoinRankBean> = await Api.get().getCoinRank(page)
     if (responseBean.isSuccessWithData()) {
-      let dataArr: CoinRankContentBean[] = []
       let data = responseBean.getDataOrThrow()
-      dataArr.push(...data.datas)
-      this.dataSource.pushDataArray(dataArr)
+      let daArr: CoinRankContentBean[] = []
+      if (data.datas && data.datas!.length > 0) {
+        daArr.push(...data.datas)
+      }
+      return Promise.resolve(daArr)
+    } else {
+      return Promise.reject()
     }
-    this.refreshController.finishLoadMore()
   }
 
   build() {
@@ -184,45 +176,57 @@ struct PointRankPage {
       .height(SizeConstant.SIZE_PERCENT_20)
       .backgroundColor($r('app.color.color_272A36'))
 
-      Stack() {
-        if (this.isFirstLoading) {
-          //显示loading动画
-          LoadingProgress()
-            .color($r('app.color.color_0000FF'))
-            .width(SizeConstant.SIZE_40)
-            .height(SizeConstant.SIZE_40)
-        } else {
-          ListView({
-            lazyDataSource: this.dataSource,
-            itemLayout: (item, index) => this.itemLayout(item as CoinRankContentBean, index),
-            controller: this.refreshController,
-            onRefresh: () => {
-              //下拉刷新
-              //重置currentIndex
-              this.initData = []
-              this.currentIndex = 1
-              this.loadInitData()
-            },
-            onLoadMore: () => {
-              //上划加载
-              this.currentIndex++
-              this.loadMoreContent()
-            },
-            listAttribute: (listAttr: ListAttr) => {
-              listAttr.divider = {
-                strokeWidth: SizeConstant.SIZE_1,
-                color: $r('app.color.color_969696')
-              }
-              listAttr.scrollBar = BarState.Off
-            }
-          }).width(SizeConstant.FULL_SIZE)
-            .height(SizeConstant.FULL_SIZE)
+      PageLoadingComponent({
+        loadState: this.loadState,
+        onReload: () => {
+          this.loadData()
         }
-      }.width(SizeConstant.FULL_SIZE)
-      .layoutWeight(1)
+      }) {
+        PullToRefresh({
+          scroller: this.scroller,
+          data: $data,
+          customList: this.listViewBuilder,
+          onRefresh: () => {
+            return new Promise<string>((resolve, reject) => {
+              this.loadPageData(1).then((data) => {
+                this.nextPage = 2
+                this.data = data
+                resolve("刷新成功")
+
+              }, () => {
+                resolve("刷新失败")
+              })
+            })
+          },
+          onLoadMore: () => {
+            return new Promise<string>((resolve, reject) => {
+              this.loadPageData(this.nextPage).then((data) => {
+                this.nextPage++
+                this.data = this.data.concat(data)
+                resolve("刷新成功")
+              }, () => {
+                resolve("刷新失败")
+              })
+            })
+          }
+        })
+      }
 
     }.width(SizeConstant.FULL_SIZE)
     .height(SizeConstant.FULL_SIZE)
+  }
+
+  @Builder
+  listViewBuilder() {
+    List() {
+      ForEach(this.data, (data: CoinRankContentBean, index: number) => {
+        ListItem() {
+          this.itemLayout(data, index)
+        }
+      }, (data: CoinRankContentBean, index: number) => JSON.stringify(data) + index)
+    }.width(SizeConstant.FULL_SIZE)
+    .layoutWeight(1)
+
   }
 
   @Builder

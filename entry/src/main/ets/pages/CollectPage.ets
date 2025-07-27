@@ -1,48 +1,57 @@
-import { ListAttr, ListView, RefreshController, RefreshDataSource } from '@abner/refresh'
-import { HomeBean, HomeListViewBeanInterface } from '../bean/HomeListViewBeanInterface'
 import { ResponseBean } from '../bean/ResponseBean'
 import { NavHeaderView } from '../component/NavHeaderView'
 import SizeConstant from '../constants/SizeConstant'
 import Api from '../utils/net/Api'
 import { router } from '@kit.ArkUI'
+import { LoadState } from '../bean/LoadState'
+import { ArticleBean, ArticleListBean } from '../bean/ArticleBean'
+import { PageLoadingComponent } from '../component/PageLoadingComponent'
+import { PullToRefresh } from '@ohos/pulltorefresh'
+import { ArticleContentComponent } from '../component/ArticleContentComponent'
 
 @Entry
 @Component
 struct CollectPage {
   //是否是首次加载
-  @State isFirstLoading: boolean = true
-  private currentIndex: number = 0
-  //数据刷新
-  dataSource: RefreshDataSource = new RefreshDataSource()
-  //刷新 controller
-  refreshController: RefreshController = new RefreshController()
+  @State loadState: LoadState = LoadState.LOADING
+  private nextPage: number = 1
+  private scroller: Scroller = new Scroller()
+  @State data: Array<ArticleBean> = []
 
   aboutToAppear(): void {
-    this.loadInitData()
+    this.loadData()
   }
 
-  //加载内容
-  async loadInitData() {
-    this.currentIndex = 0
-    let responseBean: ResponseBean<HomeListViewBeanInterface> = await Api.get().getMineCollect(this.currentIndex)
-    this.isFirstLoading = false
-    if (responseBean.isSuccessWithData()) {
-      let data = responseBean.getDataOrThrow()
-      this.dataSource.initData(data.datas)
-    }
-    this.refreshController.finishRefresh()
+  /**
+   * 加载数据
+   */
+  loadData() {
+    this.loadState = LoadState.LOADING
+    this.loadPageData(0).then((data) => {
+      if (data.length > 0) {
+        this.data = data
+        this.loadState = LoadState.SUCCESS
+      } else {
+        this.loadState = LoadState.EMPTY
+      }
+    }, () => {
+      this.loadState = LoadState.FAILURE
+
+    })
   }
 
-  //加载更多
-  async loadMoreContent() {
-    let responseBean: ResponseBean<HomeListViewBeanInterface> = await Api.get().getMineCollect(this.currentIndex)
+  private async loadPageData(page: number): Promise<ArticleBean[]> {
+    let responseBean: ResponseBean<ArticleListBean> = await Api.get().getMineCollect(page)
     if (responseBean.isSuccessWithData()) {
-      let dataArr: Array<HomeBean> = []
       let data = responseBean.getDataOrThrow()
-      dataArr.push(...data.datas)
-      this.dataSource.pushDataArray(dataArr)
+      let daArr: ArticleBean[] = []
+      if (data.datas && data.datas!.length > 0) {
+        daArr.push(...data.datas)
+      }
+      return Promise.resolve(daArr)
+    } else {
+      return Promise.reject()
     }
-    this.refreshController.finishLoadMore()
   }
 
   build() {
@@ -51,120 +60,84 @@ struct CollectPage {
         title: $r('app.string.collect_content')
       })
 
-      Stack() {
-        if (this.isFirstLoading) {
-          //显示loading动画
-          LoadingProgress()
-            .color($r('app.color.color_0000FF'))
-            .width(SizeConstant.SIZE_40)
-            .height(SizeConstant.SIZE_40)
-        } else {
-          ListView({
-            lazyDataSource: this.dataSource,
-            itemLayout: (item, index) => this.itemLayout(item as HomeBean, index),
-            controller: this.refreshController,
-            onRefresh: () => {
-              //下拉刷新
-              //重置currentIndex
-              this.loadInitData()
-            },
-            onLoadMore: () => {
-              //上划加载
-              this.currentIndex++
-              this.loadMoreContent()
-            },
-            listAttribute: (listAttr: ListAttr) => {
-              listAttr.divider = {
-                strokeWidth: SizeConstant.SIZE_1,
-                color: $r('app.color.color_969696')
-              }
-              listAttr.scrollBar = BarState.Off
-            }
-          }).width(SizeConstant.FULL_SIZE)
-            .height(SizeConstant.FULL_SIZE)
+      PageLoadingComponent({
+        loadState: this.loadState,
+        onReload: () => {
+          this.loadData()
         }
-      }.width(SizeConstant.FULL_SIZE)
-      .height(SizeConstant.FULL_SIZE)
+      }) {
+        PullToRefresh({
+          scroller: this.scroller,
+          data: $data,
+          customList: this.listViewBuilder,
+          onRefresh: () => {
+            return new Promise<string>((resolve, reject) => {
+              this.loadPageData(0).then((data) => {
+                this.nextPage = 1
+                this.data = data
+                resolve("刷新成功")
+
+              }, () => {
+                resolve("刷新失败")
+              })
+            })
+          },
+          onLoadMore: () => {
+            return new Promise<string>((resolve, reject) => {
+              this.loadPageData(this.nextPage).then((data) => {
+                this.nextPage++
+                this.data = this.data.concat(data)
+                resolve("刷新成功")
+              }, () => {
+                resolve("刷新失败")
+              })
+            })
+          }
+        })
+      }
     }.width(SizeConstant.FULL_SIZE)
     .height(SizeConstant.FULL_SIZE)
   }
 
   @Builder
-  itemLayout(item: HomeBean, index: number) {
-    Column() {
-      Row() {
-        Image($r('app.media.icon_person'))
-          .width(SizeConstant.SIZE_20)
-          .height(SizeConstant.SIZE_20)
-          .margin({ left: SizeConstant.SIZE_15 })
-
-        Column() {
-          Text(item.author === undefined || item.author === "" ? "匿名" : item.author)
-            .width(SizeConstant.FULL_SIZE)
-            .fontSize($r('app.float.font_10'))
-
-          Text(item.niceDate)
-            .width(SizeConstant.FULL_SIZE)
-            .fontSize($r('app.float.font_10'))
-            .margin({ top: SizeConstant.SIZE_1 })
-
-        }.layoutWeight(1)
-        .margin({ left: SizeConstant.SIZE_5, right: SizeConstant.SIZE_15 })
-      }.alignItems(VerticalAlign.Center)
-      .width(SizeConstant.FULL_SIZE)
-      .margin({ top: SizeConstant.SIZE_10 })
-
-      Text(item.title)
-        .margin({ left: SizeConstant.SIZE_15, top: SizeConstant.SIZE_10, right: SizeConstant.SIZE_15 })
-        .width(SizeConstant.FULL_SIZE)
-        .maxLines(3)
-        .ellipsisMode(EllipsisMode.END)
-        .fontSize($r('app.float.font_12'))
-
-
-      Row() {
-        Text(item.chapterName)
-          .fontSize($r('app.float.font_10'))
-          .margin({ left: SizeConstant.SIZE_15 })
-
-        Blank()
-
-        Image($r('app.media.shixin_love'))
-          .width(SizeConstant.SIZE_20)
-          .height(SizeConstant.SIZE_20)
-          .margin({ right: SizeConstant.SIZE_15 })
-          .onClick(async () => {
-            //取消收藏
-            let collTmp = item.collect
-              //取消收藏
-            console.info(`item.id ${item.id}`)
-              let coll: ResponseBean<undefined> = await Api.get().unCollectArticle(item.id)
-              console.info(`collect ${JSON.stringify(coll)}}`)
-              if (!coll.isSuccess()) {
-                //更新失败
-                this.getUIContext().getPromptAction().showToast({
-                  message: $r('app.string.opt_fail')
-                })
+  listViewBuilder() {
+    List({ scroller: this.scroller }) {
+      ForEach(this.data, (data: ArticleBean, index: number) => {
+        ListItem() {
+          //文章列表
+          ArticleContentComponent({
+            item: data as ArticleBean,
+            onCollectClick: async (article: ArticleBean) => {
+              //收藏
+              if (article.collect) {
+                //取消收藏
+                let coll: ResponseBean<undefined> = await Api.get().unCollectArticle(article.id)
+                console.info(`collect ${JSON.stringify(coll)}}`)
+                if (coll.isSuccess()) {
+                  article.collect = !article.collect
+                  this.data = this.data.map(data => data)
+                }
               } else {
-                //取消成功
-                this.dataSource.deleteData(index)
-                this.getUIContext().getPromptAction().showToast({
-                  message: $r('app.string.cancel_succ')
-                })
+                //收藏
+                let coll: ResponseBean<undefined> = await Api.get().collectArticle(article.id)
+                console.info(`collect ${JSON.stringify(coll)}}`)
+                if (coll.isSuccess()) {
+                  article.collect = !article.collect
+                  this.data = this.data.map(data => data)
+                }
               }
+            }
           })
-      }.margin({ top: SizeConstant.SIZE_10, bottom: SizeConstant.SIZE_10 })
-      .alignItems(VerticalAlign.Center)
-      .width(SizeConstant.FULL_SIZE)
-    }.alignItems(HorizontalAlign.Start)
-    .onClick(() => {
-      //点击跳转webView
-      this.getUIContext().getRouter().pushUrl({
-        url: "pages/WebPage",
-        params: {
-          webUrl: item.link
         }
-      })
+      }, (data: ArticleBean, index: number) => JSON.stringify(data) + index)
+    }
+    .width(SizeConstant.FULL_SIZE)
+    .height(SizeConstant.FULL_SIZE)
+    .divider({
+      strokeWidth: SizeConstant.SIZE_1,
+      color: $r('app.color.color_969696')
     })
+    .edgeEffect(EdgeEffect.None)
+    .listDirection(Axis.Vertical)
   }
 }

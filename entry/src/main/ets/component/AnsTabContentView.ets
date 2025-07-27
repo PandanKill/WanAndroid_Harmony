@@ -1,263 +1,124 @@
-import { ListAttr, ListView, RefreshController, RefreshDataSource } from '@abner/refresh'
 import SizeConstant from '../constants/SizeConstant'
-import { logger, requestPath } from 'utils'
-import { rcp } from '@kit.RemoteCommunicationKit'
 import { ResponseBean } from '../bean/ResponseBean'
-import { HomeBean, HomeListViewBeanInterface } from '../bean/HomeListViewBeanInterface'
-import { HomeListViewBean, TagBean } from '../bean/HomeListViewBean'
-import { BusinessError } from '@kit.BasicServicesKit'
-import { router } from '@kit.ArkUI'
 import Api from '../utils/net/Api'
+import { LoadState } from '../bean/LoadState'
+import { ArticleBean, ArticleListBean, ArticleTagBean } from '../bean/ArticleBean'
+import { PageLoadingComponent } from './PageLoadingComponent'
+import { PullToRefresh } from '@ohos/pulltorefresh'
+import { JSON } from '@kit.ArkTS'
+import { ArticleContentComponent } from './ArticleContentComponent'
 
 @Component
 export struct AnsTabContentView {
-  private refreshDataSource: RefreshDataSource = new RefreshDataSource()
-  @State private isLoading: boolean = true
   //当前页数,从1开始
-  private currentPage: number = 1
+  private nextPage: number = 2
   //初始化数据
-  private intiData: Array<HomeListViewBean> = []
-  //刷新controller
-  refreshController: RefreshController = new RefreshController()
+  @State data: Array<ArticleBean> = []
+  private scroller: Scroller = new Scroller()
+  @State loadState: LoadState = LoadState.LOADING
 
   aboutToAppear(): void {
     //获取问答数据
-    this.loadInitData()
+    this.loadData()
   }
 
-  private async loadInitData() {
-    let responseBean: ResponseBean<HomeListViewBeanInterface> = await Api.get().getWendaList(this.currentPage)
-    if (responseBean.errorCode === 0) {
-      //获取成功
-      logger.error(`nihai :${JSON.stringify(responseBean.data)}`)
-      responseBean.getDataOrThrow().datas.forEach((homeBean: HomeBean) => {
-        let bean = new HomeListViewBean()
-        bean.author = homeBean.author
-        bean.chapterName = homeBean.chapterName
-        bean.id = homeBean.id
-        bean.link = homeBean.link
-        bean.niceDate = homeBean.niceDate
-        bean.desc = homeBean.desc
-        bean.collect = homeBean.collect
-        bean.superChapterName = homeBean.superChapterName
-        bean.isTop = false
-
-        if (homeBean.tags !== undefined && homeBean.tags.length !== 0) {
-          let tag = new TagBean()
-          tag.name = homeBean.tags[0].name
-          tag.url = homeBean.tags[0].url
-          bean.tags = [tag]
-        }
-
-        bean.title = homeBean.title
-        this.intiData.push(bean)
-      })
-    }
-    //显示
-    this.isLoading = false
-    this.refreshDataSource.initData(this.intiData)
-  }
-
-  private async loadMoreData() {
-    let responseBean: ResponseBean<HomeListViewBeanInterface> = await Api.get().getWendaList(this.currentPage)
-    let dataArr: Array<HomeListViewBean> = []
-    if (responseBean.errorCode === 0) {
-      //获取成功
-      logger.error(`nihai :${JSON.stringify(responseBean.data)}`)
-      responseBean.getDataOrThrow().datas.forEach((homeBean: HomeBean) => {
-        let bean = new HomeListViewBean()
-        bean.author = homeBean.author
-        bean.chapterName = homeBean.chapterName
-        bean.id = homeBean.id
-        bean.link = homeBean.link
-        bean.niceDate = homeBean.niceDate
-        bean.desc = homeBean.desc
-        bean.collect = homeBean.collect
-        bean.superChapterName = homeBean.superChapterName
-        bean.isTop = false
-
-        if (homeBean.tags !== undefined && homeBean.tags.length !== 0) {
-          let tag = new TagBean()
-          tag.name = homeBean.tags[0].name
-          tag.url = homeBean.tags[0].url
-          bean.tags = [tag]
-        }
-
-        bean.title = homeBean.title
-        this.intiData.push(bean)
-      })
-    }
-    //显示
-    this.refreshDataSource.pushDataArray(dataArr)
-  }
-
-  build() {
-    Stack({ alignContent: Alignment.Center }) {
-      if (this.isLoading) {
-        //显示loading动画
-        LoadingProgress()
-          .color($r('app.color.color_0000FF'))
-          .width(SizeConstant.SIZE_40)
-          .height(SizeConstant.SIZE_40)
+  /**
+   * 加载数据
+   */
+  loadData() {
+    this.loadState = LoadState.LOADING
+    this.loadPageData(1).then((data) => {
+      if (data.length > 0) {
+        this.loadState = LoadState.SUCCESS
+        this.data = data
+        console.info(`AnsTabContentView data:${JSON.stringify(data)}`)
       } else {
-        ListView({
-          lazyDataSource: this.refreshDataSource,
-          controller: this.refreshController,
-          itemLayout: (item, index) => this.itemLayout(item as HomeListViewBean, index),
-          onRefresh: () => {
-            //下拉刷新
-            //重置currentIndex
-            this.intiData = []
-            this.currentPage = 1
-            this.loadInitData()
-            this.refreshController.finishRefresh()
-          },
-          onLoadMore: () => {
-            this.currentPage++
-            this.loadMoreData()
-            this.refreshController.finishLoadMore()
-          },
-          listAttribute: (listAttr: ListAttr) => {
-            listAttr.divider = {
-              strokeWidth: SizeConstant.SIZE_1,
-              color: $r('app.color.color_969696')
-            }
-            listAttr.scrollBar = BarState.Off
-          }
-        }).width(SizeConstant.FULL_SIZE)
-          .height(SizeConstant.FULL_SIZE)
+        this.loadState = LoadState.EMPTY
       }
-    }.width(SizeConstant.FULL_SIZE)
-    .height(SizeConstant.FULL_SIZE)
+    }, () => {
+      this.loadState = LoadState.FAILURE
+    })
+  }
+
+  /**
+   * 加载页面数据
+   * @param page
+   * @returns
+   */
+  private async loadPageData(page: number): Promise<ArticleBean[]> {
+    let responseBean: ResponseBean<ArticleListBean> = await Api.get().getWendaList(page)
+    if (responseBean.isSuccessWithData()) {
+      let bean = responseBean.getDataOrThrow()
+      let artArr: ArticleBean[] = []
+      if (bean.datas.length > 0) {
+        artArr.push(...bean.datas)
+        return Promise.resolve(artArr)
+      } else {
+        return Promise.resolve(artArr)
+      }
+    } else {
+      //空数据
+      return Promise.reject()
+    }
   }
 
   @Builder
-  itemLayout(item: HomeListViewBean, index: number) {
-    //ItemLayout
-    Column() {
-      Row() {
-        //头像
-        Image($r('app.media.icon_person'))
-          .width(SizeConstant.SIZE_30)
-          .height(SizeConstant.SIZE_30)
+  listItemBuilder() {
+    List({ scroller: this.scroller }) {
+      ForEach(this.data, (data: ArticleBean, index: number) => {
+        ListItem() {
+          ArticleContentComponent({
+            item: data,
+            onCollectClick: (item: ArticleBean) => {
 
-        Column() {
-          Text(item.author === undefined || item.author === "" ? "匿名" : item.author)
-            .fontSize($r('app.float.font_10'))
-            .fontColor($r('app.color.color_666666'))
-            .margin({ bottom: SizeConstant.SIZE_2 })
-          Text(item.niceDate).fontSize($r('app.float.font_10'))
-            .fontColor($r('app.color.color_999999'))
-        }.layoutWeight(1)
-        .alignItems(HorizontalAlign.Start)
-        .margin({ left: SizeConstant.SIZE_10 })
-
-        if (item.tags !== undefined && item.tags.length !== 0) {
-          //存在tag
-          Text(item.tags[0].name)
-            .padding(SizeConstant.SIZE_2)
-            .fontSize($r('app.float.font_10'))
-            .margin({ right: SizeConstant.SIZE_5 })
-            .fontColor($r('app.color.color_228B22'))
-            .border({
-              width: SizeConstant.SIZE_1,
-              color: $r('app.color.color_228B22'),
-              radius: SizeConstant.SIZE_2,
-              style: BorderStyle.Solid
-            })
-            .onClick(() => {
-              //跳转tab专栏
-            })
-        }
-      }.width(SizeConstant.FULL_SIZE)
-      .alignItems(VerticalAlign.Center)
-
-      //标题
-      Text(item.title)
-        .fontSize($r('app.float.font_15'))
-        .fontColor($r('app.color.color_333333'))
-        .margin({ top: SizeConstant.SIZE_10 })
-        .maxLines(1)
-        .width(SizeConstant.FULL_SIZE)
-        .ellipsisMode(EllipsisMode.END)
-
-      //标题
-      if (item.desc !== undefined) {
-        Text(item.desc)
-          .fontSize($r('app.float.font_10'))
-          .fontColor($r('app.color.color_666666'))
-          .margin({ top: SizeConstant.SIZE_10 })
-          .maxLines(3)
-          .width(SizeConstant.FULL_SIZE)
-          .ellipsisMode(EllipsisMode.END)
-      }
-
-      Row() {
-        //来源
-        Text(`${item.superChapterName}·${item.chapterName}`)
-          .fontSize($r('app.float.font_10'))
-          .fontColor($r('app.color.color_999999'))
-          .layoutWeight(1)
-
-        Image(item.collect ? $r('app.media.shixin_love') : $r('app.media.kongxin_love'))
-          .width(SizeConstant.SIZE_20)
-          .height(SizeConstant.SIZE_20)
-          .margin({ right: SizeConstant.SIZE_5 })
-          .onClick(async () => {
-            //收藏
-            let collTmp = item.collect
-            item.collect = !item.collect
-            if (collTmp) {
-              //取消收藏
-              let coll: ResponseBean<undefined> = await Api.get().unCollectArticle(item.id)
-              console.info(`collect ${JSON.stringify(coll)}}`)
-              if (!coll.isSuccess()) {
-                //更新失败
-                item.collect = collTmp
-                this.getUIContext().getPromptAction().showToast({
-                  message: $r('app.string.opt_fail')
-                })
-              }
-            } else {
-              //收藏
-              let coll: ResponseBean<undefined> = await Api.get().collectArticle(item.id)
-              console.info(`collect ${JSON.stringify(coll)}}`)
-              if (!coll.isSuccess()) {
-                //更新失败
-                item.collect = collTmp
-                this.getUIContext().getPromptAction().showToast({
-                  message: $r('app.string.opt_fail')
-                })
-              }
             }
           })
-      }.width(SizeConstant.FULL_SIZE)
-      .margin({ top: SizeConstant.SIZE_10 })
-      .alignItems(VerticalAlign.Center)
-
+        }
+      }, (data: ArticleBean, index: number) => JSON.stringify(data) + index)
     }.width(SizeConstant.FULL_SIZE)
-    .stateStyles({
-      pressed: {
-        .backgroundColor($r('app.color.color_F5F5F5'))
-      },
-      normal: {
-        .backgroundColor($r('app.color.color_FFFFFF'))
+    .height(SizeConstant.FULL_SIZE)
+    .edgeEffect(EdgeEffect.None)
+    .divider({
+      strokeWidth: SizeConstant.SIZE_1,
+      color: $r('app.color.color_969696')
+    })
+  }
+
+  build() {
+    PageLoadingComponent({
+      loadState: this.loadState,
+      onReload: () => {
+        this.loadData()
       }
-    })
-    .padding({
-      top: SizeConstant.SIZE_10,
-      bottom: SizeConstant.SIZE_10,
-      left: SizeConstant.SIZE_10,
-      right: SizeConstant.SIZE_10
-    })
-    .onClick(() => {
-      //点击跳转webView
-      this.getUIContext().getRouter().pushUrl({
-        url: "pages/WebPage",
-        params: {
-          webUrl: item.link
+    }) {
+      PullToRefresh({
+        data: $data,
+        scroller: this.scroller,
+        customList: this.listItemBuilder,
+        onRefresh: () => {
+          return new Promise<string>((resolve, reject) => {
+            this.loadPageData(1).then((data) => {
+              this.nextPage = 2
+              this.data = data
+              resolve("刷新成功")
+            }, () => {
+              resolve("刷新失败")
+
+            })
+          })
+        },
+        onLoadMore: () => {
+          return new Promise<string>((resolve, reject) => {
+            this.loadPageData(this.nextPage).then((data) => {
+              this.nextPage++
+              this.data = this.data.concat(data)
+              resolve("刷新成功")
+            }, () => {
+              resolve("刷新失败")
+            })
+          })
         }
       })
-    })
+    }
   }
 }

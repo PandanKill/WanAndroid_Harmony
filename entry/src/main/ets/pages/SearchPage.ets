@@ -4,26 +4,24 @@
  */
 import { HotKeyBean } from '../bean/HotKeyBean'
 import { common } from '@kit.AbilityKit'
-import { preferences } from '@kit.ArkData'
-import { PreferenceKey } from '../constants/PreferenceKey'
-import { promptAction, router } from '@kit.ArkUI'
 import { JSON } from '@kit.ArkTS'
-import { http } from '@kit.NetworkKit'
 import SizeConstant from '../constants/SizeConstant'
 import Preference from '../utils/Preference'
 import Api from '../utils/net/Api'
-import { HomeBean, HomeListViewBeanInterface } from '../bean/HomeListViewBeanInterface'
 import { ResponseBean } from '../bean/ResponseBean'
-import { ListAttr, ListView, RefreshController, RefreshDataSource } from '@abner/refresh'
-import { HomeListViewBean, TagBean } from '../bean/HomeListViewBean'
-import { TagRouterBean } from '../bean/TagRouterBean'
+import { ArticleBean, ArticleListBean, ArticleTagBean } from '../bean/ArticleBean'
+import { LoadState } from '../bean/LoadState'
+import { PageLoadingComponent } from '../component/PageLoadingComponent'
+import { PullToRefresh } from '@ohos/pulltorefresh'
+import { ArticleContentComponent } from '../component/ArticleContentComponent'
 
 @Entry
 @Component
 struct SearchPage {
   @StorageProp('hotKey') hotKeys: HotKeyBean[] = []
   @State historySearchData: string[] = []
-  private currentHotData: string = (this.getUIContext().getRouter().getParams() as Record<string, string>).currentHotKey as string
+  private currentHotData: string =
+    (this.getUIContext().getRouter().getParams() as Record<string, string>).currentHotKey as string
   private context: common.UIAbilityContext = this.getUIContext().getHostContext() as common.UIAbilityContext
   @State isSearchView: boolean = false
   //搜索词
@@ -32,15 +30,12 @@ struct SearchPage {
   //搜索页面正在加载
   @State isLoadingView: boolean = false
   //当前索引
-  private currentIndex: number = 0
-  initData: HomeListViewBean[] = []
-  //数据刷新
-  dataSource: RefreshDataSource = new RefreshDataSource()
-  //刷新 controller
-  refreshController: RefreshController = new RefreshController()
+  private nextPage: number = 1
+  @State data: ArticleBean[] = []
+  @State loadState: LoadState = LoadState.LOADING
+  private scroller: Scroller = new Scroller()
 
   onPageShow(): void {
-    let options: preferences.Options = { name: PreferenceKey.FILE_WANANDROID_STORE }
     let historyString: string = Preference.get(this.context).getSearchHistory()
     if (historyString !== "" && historyString.length > 0) {
       this.historySearchData = JSON.parse(historyString) as string[]
@@ -48,90 +43,57 @@ struct SearchPage {
   }
 
   /**
-   * 搜索数据
+   * 搜索
    */
-  async searchData() {
-    //初始化索引
-    this.currentIndex = 0
-    this.initData = []
-    let responseBean: ResponseBean<HomeListViewBeanInterface> =
-      await Api.get().search(this.searchStr, this.currentIndex)
-    this.isLoadingView = false
-    if (responseBean.isSuccessWithData()) {
-      let data = responseBean.getDataOrThrow()
-      if (data.datas && data.datas.length !== 0) {
-        data.datas.forEach((homeBean: HomeBean) => {
-          let bean = new HomeListViewBean()
-          bean.author = homeBean.author
-          bean.chapterName = homeBean.chapterName
-          bean.id = homeBean.id
-          bean.link = homeBean.link
-          bean.niceDate = homeBean.niceDate
-          bean.superChapterId = homeBean.superChapterId
-          bean.collect = homeBean.collect
-          bean.superChapterName = homeBean.superChapterName
-          bean.isTop = false
-
-          if (homeBean.tags !== undefined && homeBean.tags.length !== 0) {
-            let tag = new TagBean()
-            tag.name = homeBean.tags[0].name
-            tag.url = homeBean.tags[0].url
-            tag.charptId = this.getChartpId(homeBean.tags[0].url)
-            bean.tags = [tag]
-          }
-
-          bean.title = homeBean.title
-          this.initData.push(bean)
-        })
-        this.dataSource.initData(this.initData)
+  private searchData() {
+    this.loadState = LoadState.LOADING
+    this.searchPageData(this.searchStr, 0).then((data) => {
+      if (data.length > 0) {
+        this.data = data
+        this.loadState = LoadState.SUCCESS
+      } else {
+        this.loadState = LoadState.EMPTY
       }
+    }, () => {
+      this.loadState = LoadState.FAILURE
+    })
+  }
+
+  /**
+   * 页面数据
+   * @param page
+   * @returns
+   */
+  private async searchPageData(searchData: string, page: number): Promise<ArticleBean[]> {
+    let responseBean: ResponseBean<ArticleListBean> =
+      await Api.get().search(searchData, page)
+    if (responseBean.isSuccessWithData()) {
+      let da = responseBean.getDataOrThrow()
+      let artArr: ArticleBean[] = []
+      if (da.datas.length > 0) {
+        da.datas.forEach((data: ArticleBean) => {
+          if (data.tags !== undefined && data.tags.length !== 0) {
+            let tag = new ArticleTagBean()
+            tag.name = data.tags[0].name
+            tag.url = data.tags[0].url
+            tag.charptId = this.getChartpId(data.tags[0].url)
+            data.tags = [tag]
+          }
+        })
+        artArr.push(...da.datas)
+        return Promise.resolve(artArr)
+      } else {
+        return Promise.resolve(artArr)
+      }
+    } else {
+      //异常数据
+      return Promise.reject()
     }
-    this.refreshController.finishRefresh()
   }
 
   getChartpId(url: string | undefined): number | undefined {
     let idStr = url?.substring("/wxarticle/list/".length, url!!.length - 2)
     return parseInt(idStr!!)
-  }
-
-  /**
-   * 加载更多
-   */
-  async loadMore() {
-    this.currentIndex++
-    let responseBean: ResponseBean<HomeListViewBeanInterface> =
-      await Api.get().search(this.searchStr, this.currentIndex)
-    if (responseBean.isSuccessWithData()) {
-      let dataArr: HomeListViewBean[] = []
-      let data = responseBean.getDataOrThrow()
-      if (data.datas && data.datas.length !== 0) {
-        data.datas.forEach((homeBean: HomeBean) => {
-          let bean = new HomeListViewBean()
-          bean.author = homeBean.author
-          bean.chapterName = homeBean.chapterName
-          bean.id = homeBean.id
-          bean.link = homeBean.link
-          bean.niceDate = homeBean.niceDate
-          bean.superChapterId = homeBean.superChapterId
-          bean.collect = homeBean.collect
-          bean.superChapterName = homeBean.superChapterName
-          bean.isTop = false
-
-          if (homeBean.tags !== undefined && homeBean.tags.length !== 0) {
-            let tag = new TagBean()
-            tag.name = homeBean.tags[0].name
-            tag.url = homeBean.tags[0].url
-            tag.charptId = this.getChartpId(homeBean.tags[0].url)
-            bean.tags = [tag]
-          }
-
-          bean.title = homeBean.title
-          dataArr.push(bean)
-        })
-        this.dataSource.pushDataArray(dataArr)
-      }
-    }
-    this.refreshController.finishLoadMore()
   }
 
   /**
@@ -150,167 +112,63 @@ struct SearchPage {
   }
 
   @Builder
-  searchView(): void {
-    Stack({ alignContent: Alignment.Center }) {
-      if (this.isLoadingView) {
-        LoadingProgress()
-          .color($r('app.color.color_0000FF'))
-          .width(SizeConstant.SIZE_40)
-          .height(SizeConstant.SIZE_40)
-      } else {
-        //显示listView
-        ListView({
-          lazyDataSource: this.dataSource,
-          itemLayout: (item, index) => this.itemLayout(item as HomeListViewBean, index),
-          controller: this.refreshController,
-          onRefresh: () => {
-            //下拉刷新
-            //重置currentIndex
-            this.searchData()
-          },
-          onLoadMore: () => {
-            //上划加载
-            this.loadMore()
-          },
-          listAttribute: (listAttr: ListAttr) => {
-            listAttr.divider = {
-              strokeWidth: SizeConstant.SIZE_1,
-              color: $r('app.color.color_969696')
-            }
-            listAttr.scrollBar = BarState.Off
-          }
-        }).width(SizeConstant.FULL_SIZE)
-          .height(SizeConstant.FULL_SIZE)
-      }
-    }.width("100%")
-    .height("100%")
+  listViewBuilder() {
+    List({
+      scroller: this.scroller
+    }) {
+      ForEach(this.data, (data: ArticleBean, index: number) => {
+        ListItem() {
+          ArticleContentComponent({
+            item: data,
+          })
+        }
+      }, (data: ArticleBean, index: number) => JSON.stringify(data) + index)
+    }.width(SizeConstant.FULL_SIZE)
+    .height(SizeConstant.FULL_SIZE)
+    .divider({
+      strokeWidth: SizeConstant.SIZE_1,
+      color: $r('app.color.color_969696')
+    })
+    .edgeEffect(EdgeEffect.None)
   }
 
   @Builder
-  itemLayout(item: HomeListViewBean, index: number) {
-    //ItemLayout
-    Column() {
-      Row() {
-        //头像
-        Image($r('app.media.icon_person'))
-          .width(SizeConstant.SIZE_30)
-          .height(SizeConstant.SIZE_30)
-
-        Column() {
-          Text(item.author === undefined || item.author === "" ? "匿名" : item.author)
-            .fontSize($r('app.float.font_10'))
-            .fontColor($r('app.color.color_666666'))
-            .margin({ bottom: SizeConstant.SIZE_2 })
-          Text(item.niceDate).fontSize($r('app.float.font_10'))
-            .fontColor($r('app.color.color_999999'))
-        }.layoutWeight(1)
-        .alignItems(HorizontalAlign.Start)
-        .margin({ left: SizeConstant.SIZE_10 })
-
-        if (item.tags !== undefined && item.tags.length !== 0) {
-          //存在tag
-          Text(item.tags[0].name)
-            .padding(SizeConstant.SIZE_2)
-            .fontSize($r('app.float.font_10'))
-            .margin({ right: SizeConstant.SIZE_5 })
-            .fontColor($r('app.color.color_228B22'))
-            .border({
-              width: SizeConstant.SIZE_1,
-              color: $r('app.color.color_228B22'),
-              radius: SizeConstant.SIZE_2,
-              style: BorderStyle.Solid
+  searchView(): void {
+    PageLoadingComponent({
+      loadState: this.loadState,
+      onReload: () => {
+        this.searchData()
+      }
+    }) {
+      PullToRefresh({
+        data: $data,
+        scroller: this.scroller,
+        customList: this.listViewBuilder,
+        onRefresh: () => {
+          return new Promise<string>((resolve, reject) => {
+            this.searchPageData(this.searchStr, 0).then((data) => {
+              this.nextPage = 1
+              this.data = data
+              resolve("刷新成功")
+            }, () => {
+              resolve("刷新失败")
             })
-            .onClick(() => {
-              let tagBean = new TagRouterBean()
-              tagBean.type = "Home"
-              tagBean.officialAcc = item.tags!![0].charptId!!
-
-              //跳转公众号
-              this.getUIContext().getRouter().pushUrl({
-                url: "pages/TagDetailPage",
-                params: tagBean
-              })
-            })
-        }
-      }.width(SizeConstant.FULL_SIZE)
-      .alignItems(VerticalAlign.Center)
-
-      //标题
-      Text(item.title)
-        .fontSize($r('app.float.font_15'))
-        .fontColor($r('app.color.color_000000'))
-        .margin({ top: SizeConstant.SIZE_10 })
-        .maxLines(2)
-        .width(SizeConstant.FULL_SIZE)
-        .ellipsisMode(EllipsisMode.END)
-
-      Row() {
-        //置顶
-        if (item.isTop) {
-          Text("置顶")
-            .fontSize($r('app.float.font_11'))
-            .fontColor(Color.Red)
-            .margin({ right: SizeConstant.SIZE_10 })
-        }
-
-        //来源
-        Text(`${item.superChapterName}·${item.chapterName}`)
-          .fontSize($r('app.float.font_10'))
-          .fontColor($r('app.color.color_999999'))
-          .layoutWeight(1)
-
-        Image(item.collect ? $r('app.media.shixin_love') : $r('app.media.kongxin_love'))
-          .width(SizeConstant.SIZE_20)
-          .height(SizeConstant.SIZE_20)
-          .margin({ right: SizeConstant.SIZE_5 })
-          .onClick(async () => {
-            //收藏
-            let collTmp = item.collect
-            item.collect = !item.collect
-            if (collTmp) {
-              //取消收藏
-              let coll: ResponseBean<undefined> = await Api.get().unCollectArticle(item.id)
-              console.info(`collect ${JSON.stringify(coll)}}`)
-              if (!coll.isSuccess()) {
-                //更新失败
-                item.collect = collTmp
-                this.getUIContext().getPromptAction().showToast({
-                  message: $r('app.string.opt_fail')
-                })
-              }
-            } else {
-              //收藏
-              let coll: ResponseBean<undefined> = await Api.get().collectArticle(item.id)
-              console.info(`collect ${JSON.stringify(coll)}}`)
-              if (!coll.isSuccess()) {
-                //更新失败
-                item.collect = collTmp
-                this.getUIContext().getPromptAction().showToast({
-                  message: $r('app.string.opt_fail')
-                })
-              }
-            }
           })
-      }.width(SizeConstant.FULL_SIZE)
-      .margin({ top: SizeConstant.SIZE_10 })
-      .alignItems(VerticalAlign.Center)
-
-    }.width(SizeConstant.FULL_SIZE)
-    .padding({
-      top: SizeConstant.SIZE_10,
-      bottom: SizeConstant.SIZE_10,
-      left: SizeConstant.SIZE_10,
-      right: SizeConstant.SIZE_10
-    })
-    .onClick(() => {
-      //点击跳转webView
-      this.getUIContext().getRouter().pushUrl({
-        url: "pages/WebPage",
-        params: {
-          webUrl: item.link
+        },
+        onLoadMore: () => {
+          return new Promise<string>((resolve, reject) => {
+            this.searchPageData(this.searchStr, this.nextPage).then((data) => {
+              this.nextPage++
+              this.data = this.data.concat(data)
+              resolve("刷新成功")
+            }, () => {
+              resolve("刷新失败")
+            })
+          })
         }
       })
-    })
+    }
+
   }
 
   @Builder

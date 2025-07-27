@@ -8,15 +8,13 @@ import { ResponseBean } from '../../bean/ResponseBean'
 import { requestPath } from 'utils'
 import CookieUtils from './cookie/CookieUtils'
 import { User } from '../../bean/LoginResponse'
-import { HomeListViewBeanInterface } from '../../bean/HomeListViewBeanInterface'
-import { TabDetailBean } from '../../bean/TabDetailBean'
-import { TopBean } from '../../bean/TopBean'
 import { ArticlesList } from '../../bean/NavContentBean'
 import { ProjectTabBean } from '../../bean/ProjectTabBean'
 import { BannerBean } from '../../bean/BannerBean'
 import { TreeListBean } from '../../bean/TreeContentBean'
 import { HotKeyBean } from '../../bean/HotKeyBean'
 import { CoinRankBean, MineCoinBean } from '../../bean/CoinBean'
+import { ArticleBean, ArticleListBean, TabDetailBean } from '../../bean/ArticleBean'
 
 const cookieJar: CookieJar = new PersistentCookieJar(EntryContext.getContext())
 
@@ -126,7 +124,7 @@ export default class Api {
    * 获取问答
    * @returns
    */
-  async getWendaList(pageNum: number): Promise<ResponseBean<HomeListViewBeanInterface>> {
+  async getWendaList(pageNum: number): Promise<ResponseBean<ArticleListBean>> {
     return requestSync(`/wenda/list/${pageNum}/json`, http.RequestMethod.GET)
   }
 
@@ -142,7 +140,7 @@ export default class Api {
    * 获取置顶
    * @returns
    */
-  async getTopArt(): Promise<ResponseBean<TopBean[]>> {
+  async getTopArt(): Promise<ResponseBean<ArticleBean[]>> {
     return requestSync(requestPath.PATH_TOP, http.RequestMethod.GET)
   }
 
@@ -150,7 +148,7 @@ export default class Api {
    * 获取文章
    * @returns
    */
-  async getArticleList(page: number): Promise<ResponseBean<HomeListViewBeanInterface>> {
+  async getArticleList(page: number): Promise<ResponseBean<ArticleListBean>> {
     return requestSync(`/article/list/${page}/json`, http.RequestMethod.GET)
   }
 
@@ -174,7 +172,7 @@ export default class Api {
    * 获取项目列表
    * @returns
    */
-  async getProjectList(currentIndex: number, contentId: number): Promise<ResponseBean<HomeListViewBeanInterface>> {
+  async getProjectList(currentIndex: number, contentId: number): Promise<ResponseBean<ArticleListBean>> {
     return requestSync(`/project/list/${currentIndex}/json?cid=${contentId}`,
       http.RequestMethod.GET)
   }
@@ -183,7 +181,7 @@ export default class Api {
    * 获取用户文章
    * @returns
    */
-  async getUserArticle(currentIndex: number): Promise<ResponseBean<HomeListViewBeanInterface>> {
+  async getUserArticle(currentIndex: number): Promise<ResponseBean<ArticleListBean>> {
     return requestSync(`/user_article/list/${currentIndex}/json`,
       http.RequestMethod.GET)
   }
@@ -201,7 +199,7 @@ export default class Api {
    * 获取用户文章
    * @returns
    */
-  async getCommonPath(path: string): Promise<ResponseBean<HomeListViewBeanInterface>> {
+  async getCommonPath(path: string): Promise<ResponseBean<ArticleListBean>> {
     return requestSync(path, http.RequestMethod.GET)
   }
 
@@ -241,7 +239,7 @@ export default class Api {
    * 获取积分排名
    * @returns
    */
-  async getMineCollect(page: number): Promise<ResponseBean<HomeListViewBeanInterface>> {
+  async getMineCollect(page: number): Promise<ResponseBean<ArticleListBean>> {
     return requestSync(`/lg/collect/list/${page}/json`, http.RequestMethod.GET)
   }
 
@@ -250,7 +248,7 @@ export default class Api {
    * @param searchData
    * @param page
    */
-  async search(searchData: string, page: number): Promise<ResponseBean<HomeListViewBeanInterface>> {
+  async search(searchData: string, page: number): Promise<ResponseBean<ArticleListBean>> {
     return requestSync(`/article/query/${page}/json?k=${encodeURIComponent(searchData)}`, http.RequestMethod.POST)
   }
 

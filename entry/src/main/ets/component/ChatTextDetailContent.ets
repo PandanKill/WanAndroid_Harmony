@@ -1,5 +1,4 @@
 import SizeConstant from "../constants/SizeConstant";
-import { Message } from "../pages/ChatPage";
 import { LengthMetrics } from "@kit.ArkUI";
 
 @Component

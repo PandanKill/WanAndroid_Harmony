@@ -2,7 +2,6 @@
  * 搜索行
  */
 import SizeConstant from '../constants/SizeConstant'
-import { router } from '@kit.ArkUI'
 import { HotKeyBean } from '../bean/HotKeyBean'
 import { JSON } from '@kit.ArkTS'
 

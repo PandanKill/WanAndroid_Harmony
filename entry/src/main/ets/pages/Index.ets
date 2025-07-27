@@ -6,16 +6,9 @@ import { ProjectContentView } from '../component/ProjectContentView';
 import { SearchView } from '../component/SearchView';
 import SizeConstant from '../constants/SizeConstant';
 import { FooterTab, FooterTabViewModel } from '../viewModel/FooterTabViewModel';
-import systemTime from '@ohos.systemTime';
 import systemDateTime from '@ohos.systemDateTime';
-import { promptAction, router } from '@kit.ArkUI';
-import { rcp } from '@kit.RemoteCommunicationKit';
-import { JSON } from '@kit.ArkTS';
 import { ResponseBean } from '../bean/ResponseBean';
 import { HotKeyBean } from '../bean/HotKeyBean';
-import { common } from '@kit.AbilityKit';
-import { BusinessError } from '@kit.BasicServicesKit';
-import http from '@ohos.net.http';
 import Api from '../utils/net/Api';
 
 @Entry

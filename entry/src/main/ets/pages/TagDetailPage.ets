@@ -1,15 +1,10 @@
-import { requestPath } from 'utils/src/main/ets/http/RequestPath'
-import { rcp } from '@kit.RemoteCommunicationKit'
-import { BusinessError } from '@kit.BasicServicesKit'
 import { logger } from 'utils'
 import { JSON } from '@kit.ArkTS'
-import { TabDetailBean } from '../bean/TabDetailBean'
 import { ResponseBean } from '../bean/ResponseBean'
 import SizeConstant from '../constants/SizeConstant'
-import { router } from '@kit.ArkUI'
 import { TabContentView } from '../component/TabContentView'
-import { TagRouterBean } from '../bean/TagRouterBean'
 import Api from '../utils/net/Api'
+import { TabDetailBean, TagRouterBean } from '../bean/ArticleBean'
 
 @Entry
 @Component
@@ -35,8 +30,8 @@ struct TagDetailPage {
       })
     } else if (this.tagBean.type === "TiXi") {
       //体系
-      this.tabs = this.tagBean.tags
-      this.tagBean.tags.forEach((item: TabDetailBean, index: number) => {
+      this.tabs = this.tagBean.tags!
+      this.tagBean.tags!.forEach((item: TabDetailBean, index: number) => {
         if (item.id === this.tagBean.officialAcc) {
           this.currentIndex = index
         }
@@ -62,7 +57,7 @@ struct TagDetailPage {
               TabContentView({ contentId: item.id, type: this.tagBean.type })
                 .width(SizeConstant.FULL_SIZE)
                 .height(SizeConstant.FULL_SIZE)
-            }.tabBar(this.tabBuilder(item.name, index))
+            }.tabBar(this.tabBuilder(item.name!, index))
           }, (item: TabDetailBean, index: number) => JSON.stringify(item) + index)
         }
         .vertical(false)
