@@ -15,7 +15,6 @@ import Api from '../utils/net/Api';
 @Component
 struct Index {
   @State message: string = 'Hello World';
-  @StorageLink('isLogin') isLogin: boolean = false
   @StorageProp('navHeight') navHeight: number = 0
   //tab
   private tabList: FooterTab[] = new FooterTabViewModel().getTabList()

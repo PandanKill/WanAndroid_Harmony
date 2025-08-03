@@ -4,10 +4,10 @@
 import SizeConstant from '../constants/SizeConstant'
 import { HotKeyBean } from '../bean/HotKeyBean'
 import { JSON } from '@kit.ArkTS'
+import { UserService } from '../service/UserService'
 
 @Component
 export struct SearchView {
-  @StorageLink('isLogin') isLogin: boolean = false
   //热词
   @Prop hotKeys: HotKeyBean[] = []
   @StorageProp('topRectHeight') topRectHeight: number = 0
@@ -76,9 +76,11 @@ export struct SearchView {
           .height(SizeConstant.SIZE_20)
           .margin({ right: SizeConstant.SIZE_15 })
           .onClick(() => {
-            if (this.isLogin) {
+            if (UserService.get().isLogin()) {
               //跳转文章编辑界面
-
+              this.getUIContext().getRouter().pushUrl({
+                url: "pages/EditArticlePage"
+              })
             } else {
               //跳转登录界面
               this.getUIContext().getRouter().pushUrl({

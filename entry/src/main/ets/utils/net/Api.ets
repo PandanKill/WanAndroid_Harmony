@@ -14,7 +14,7 @@ import { BannerBean } from '../../bean/BannerBean'
 import { TreeListBean } from '../../bean/TreeContentBean'
 import { HotKeyBean } from '../../bean/HotKeyBean'
 import { CoinRankBean, MineCoinBean } from '../../bean/CoinBean'
-import { ArticleBean, ArticleListBean, TabDetailBean } from '../../bean/ArticleBean'
+import { ArticleBean, ArticleListBean, ShareArticleListBean, TabDetailBean } from '../../bean/ArticleBean'
 
 const cookieJar: CookieJar = new PersistentCookieJar(EntryContext.getContext())
 
@@ -268,6 +268,24 @@ export default class Api {
    */
   async unCollectArticle(id: number): Promise<ResponseBean<undefined>> {
     return requestSync(`/lg/uncollect_originId/${id}/json`, http.RequestMethod.POST)
+  }
+
+  /**
+   * 获取分享文章列表
+   * @param page
+   * @returns
+   */
+  async getShareArticle(page: number): Promise<ResponseBean<ShareArticleListBean>> {
+    return requestSync(`/user/lg/private_articles/${page}/json`, http.RequestMethod.GET)
+  }
+
+  /**
+   * 获取分享文章列表
+   * @param page
+   * @returns
+   */
+  async deleteShareArticle(id: number): Promise<ResponseBean<undefined>> {
+    return requestSync(`/lg/user_article/delete/${id}/json`, http.RequestMethod.POST)
   }
 }
 

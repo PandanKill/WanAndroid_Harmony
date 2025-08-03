@@ -192,7 +192,7 @@ export struct MimeView {
         //to 分享
         UserService.get().checkLogin(() => {
           this.getUIContext().getRouter().pushUrl({
-            url: "pages/SharePage"
+            url: "pages/TODOPage"
           })
         })
       })

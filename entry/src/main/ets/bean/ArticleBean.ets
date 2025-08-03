@@ -42,3 +42,10 @@ export class TabDetailBean {
   id?: number
   name?: string
 }
+
+/**
+ * 分享
+ */
+export class ShareArticleListBean {
+  shareArticles?: ArticleListBean
+}

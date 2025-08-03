@@ -129,7 +129,7 @@ export struct ArticleContentComponent {
       left: SizeConstant.SIZE_10,
       right: SizeConstant.SIZE_10
     })
-    .onClick(() => {
+    .gesture(GestureGroup(GestureMode.Exclusive, TapGesture().onAction((event: GestureEvent) => {
       //点击跳转webView
       this.getUIContext().getRouter().pushUrl({
         url: "pages/WebPage",
@@ -137,6 +137,6 @@ export struct ArticleContentComponent {
           webUrl: this.item.link
         }
       })
-    })
+    })))
   }
 }

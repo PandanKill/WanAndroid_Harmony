@@ -13,6 +13,8 @@
     "pages/ChatPage",
     "pages/PhotoPickerComponentPage",
     "pages/PicEditPage",
-    "pages/SharePage"
+    "pages/SharePage",
+    "pages/TODOPage",
+    "pages/EditArticlePage"
   ]
 }
