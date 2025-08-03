@@ -13,6 +13,7 @@ export class ArticleBean {
   author?: string
   chapterName?: string
   id: number = 0
+  originId: number = 0
   link?: string
   niceDate?: string
   shareUser?: string
@@ -38,6 +39,6 @@ export class TagRouterBean {
 }
 
 export class TabDetailBean {
-  id?:number
-  name?:string
+  id?: number
+  name?: string
 }

@@ -23,6 +23,7 @@ import { AudioCaptureManager, RecordFile } from '../utils/AudioCaptureManager';
 import AudioRendererManager from '../utils/AudioRendererManager';
 import SpeechRecognizerManager from '../utils/SpeechRecognizerManager';
 import { speechRecognizer } from '@kit.CoreSpeechKit';
+import { EmojiView } from '../component/EmojiView';
 
 @Observed
 export class Message {
@@ -537,9 +538,11 @@ struct AIChatPage {
                               }
                             })
                             .onSubmit((eventType: EnterKeyType) => {
-                              //发送
-                              this.toGetAi(this.editValue)
-                              this.editValue = ''
+                              if (this.editValue && this.editValue.trim().length > 0) {
+                                //发送
+                                this.toGetAi(this.editValue)
+                                this.editValue = ''
+                              }
                             })
                             .onChange((value: string) => {
                               //获取输入框内容
@@ -664,57 +667,14 @@ struct AIChatPage {
 
                   //显示表情包
                   if (this.isEmoji) {
-                    Stack() {
-                      EmojiListView({
-                        emojiClick: (item: string) => {
-                          this.editValue = this.editValue + item
-                        }
-                      })
-
-                      Row() {
-                        Stack() {
-                          Image(this.editValue.length === 0 ? $r('app.media.icon_recall_normal') :
-                          $r('app.media.icon_recall_clickable'))
-                            .width(SizeConstant.SIZE_20)
-                            .height(SizeConstant.SIZE_15)
-                        }
-                        .width(SizeConstant.SIZE_45)
-                        .height(SizeConstant.SIZE_35)
-                        .align(Alignment.Center)
-                        .backgroundColor($r('app.color.color_E0E0E0'))
-                        .borderRadius(SizeConstant.SIZE_5)
-                        .onClick(() => {
-                          //todo 删除字符、表情包字符
-                          if (this.editValue.length > 0) {
-                            hilog.info(0x01, "lgwww", `lgwww ${this.editValue}}`)
-                            hilog.info(0x01, "lgwww", `lgwww ${this.editValue.length}}`)
-                            this.editValue = this.editValue.substring(0, this.editValue.length - 1)
-                            hilog.info(0x01, "lgwww", `lgwww ${this.editValue}}`)
-                            hilog.info(0x01, "lgwww", `lgwww ${this.editValue.length}}`)
-                          }
-                        })
-
-                        Text($r('app.string.send'))
-                          .width(SizeConstant.SIZE_45)
-                          .height(SizeConstant.SIZE_35)
-                          .textAlign(TextAlign.Center)
-                          .backgroundColor(this.editValue.length === 0 ? $r('app.color.color_E0E0E0') :
-                          $r('app.color.color_09C060'))
-                          .fontSize($r('app.float.font_15'))
-                          .fontColor(this.editValue.length === 0 ? $r('app.color.color_BEBEBE') :
-                          $r('app.color.color_FFFFFF'))
-                          .borderRadius(SizeConstant.SIZE_5)
-                          .margin({ left: SizeConstant.SIZE_10 })
-                          .onClick(() => {
-                            //发送
-                            this.toGetAi(this.editValue)
-                            this.editValue = ''
-                          })
+                    EmojiView({
+                      editValue: this.editValue,
+                      onSend: () => {
+                        this.toGetAi(this.editValue)
+                        this.editValue = ''
                       }
-                      .margin({ right: SizeConstant.SIZE_20 })
-                    }.width(SizeConstant.FULL_SIZE)
-                    .height(SizeConstant.SIZE_PERCENT_25)
-                    .align(Alignment.BottomEnd)
+                    }).width(SizeConstant.FULL_SIZE)
+                      .height(SizeConstant.SIZE_PERCENT_40)
                   } else if (this.isPhoto) {
                     //相机、相册
                     ChatOtherFunView()

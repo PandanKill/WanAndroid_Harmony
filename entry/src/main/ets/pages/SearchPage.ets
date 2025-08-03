@@ -120,6 +120,26 @@ struct SearchPage {
         ListItem() {
           ArticleContentComponent({
             item: data,
+            onCollectClick: async (article: ArticleBean) => {
+              //收藏
+              if (article.collect) {
+                //取消收藏
+                let coll: ResponseBean<undefined> = await Api.get().unCollectArticle(article.id)
+                console.info(`collect ${JSON.stringify(coll)}}`)
+                if (coll.isSuccess()) {
+                  article.collect = !article.collect
+                  this.data = this.data.map(data => data)
+                }
+              } else {
+                //收藏
+                let coll: ResponseBean<undefined> = await Api.get().collectArticle(article.id)
+                console.info(`collect ${JSON.stringify(coll)}}`)
+                if (coll.isSuccess()) {
+                  article.collect = !article.collect
+                  this.data = this.data.map(data => data)
+                }
+              }
+            }
           })
         }
       }, (data: ArticleBean, index: number) => JSON.stringify(data) + index)

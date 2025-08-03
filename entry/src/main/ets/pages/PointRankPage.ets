@@ -6,6 +6,8 @@ import { ResponseBean } from '../bean/ResponseBean'
 import { PageLoadingComponent } from '../component/PageLoadingComponent'
 import { PullToRefresh } from '@ohos/pulltorefresh'
 import { LoadState } from '../bean/LoadState'
+import { animatorNumber } from '../utils/AnimatorUtil'
+import { PointRankItemComponent } from '../component/PointRankItemComponent'
 
 @Entry
 @Component
@@ -57,6 +59,8 @@ struct PointRankPage {
     this.loadState = LoadState.LOADING
     this.loadPageData(1).then((data) => {
       if (data.length > 0) {
+        this.setBeforeTData(data)
+
         this.data = data
         this.loadState = LoadState.SUCCESS
       } else {
@@ -65,6 +69,26 @@ struct PointRankPage {
     }, () => {
       this.loadState = LoadState.FAILURE
 
+    })
+  }
+
+  private setBeforeTData(data: CoinRankContentBean[]) {
+    //金牌
+    this.firstRank = data.shift()!
+    animatorNumber(this.firstRankNum, this.firstRank.coinCount, (cu: number) => {
+      this.firstRankNum = cu
+    })
+
+    //银牌
+    this.secondRank = data.shift()!
+    animatorNumber(this.secondRankNum, this.secondRank.coinCount, (cu: number) => {
+      this.secondRankNum = cu
+    })
+
+    //铜牌
+    this.thirdRank = data.shift()!
+    animatorNumber(this.thirdRankNum, this.thirdRank.coinCount, (cu: number) => {
+      this.thirdRankNum = cu
     })
   }
 
@@ -180,93 +204,63 @@ struct PointRankPage {
         loadState: this.loadState,
         onReload: () => {
           this.loadData()
+        },
+        content: () => {
+          this.refreshLayout()
         }
-      }) {
-        PullToRefresh({
-          scroller: this.scroller,
-          data: $data,
-          customList: this.listViewBuilder,
-          onRefresh: () => {
-            return new Promise<string>((resolve, reject) => {
-              this.loadPageData(1).then((data) => {
-                this.nextPage = 2
-                this.data = data
-                resolve("刷新成功")
-
-              }, () => {
-                resolve("刷新失败")
-              })
-            })
-          },
-          onLoadMore: () => {
-            return new Promise<string>((resolve, reject) => {
-              this.loadPageData(this.nextPage).then((data) => {
-                this.nextPage++
-                this.data = this.data.concat(data)
-                resolve("刷新成功")
-              }, () => {
-                resolve("刷新失败")
-              })
-            })
-          }
-        })
-      }
+      }).layoutWeight(1)
 
     }.width(SizeConstant.FULL_SIZE)
     .height(SizeConstant.FULL_SIZE)
   }
 
   @Builder
+  refreshLayout() {
+    PullToRefresh({
+      scroller: this.scroller,
+      data: $data,
+      customList: this.listViewBuilder,
+      onRefresh: () => {
+        return new Promise<string>((resolve, reject) => {
+          this.loadPageData(1).then((data) => {
+            this.nextPage = 2
+            this.setBeforeTData(data)
+            this.data = data
+            resolve("刷新成功")
+
+          }, () => {
+            resolve("刷新失败")
+          })
+        })
+      },
+      onLoadMore: () => {
+        return new Promise<string>((resolve, reject) => {
+          this.loadPageData(this.nextPage).then((data) => {
+            this.nextPage++
+            this.data = this.data.concat(data)
+            resolve("刷新成功")
+          }, () => {
+            resolve("刷新失败")
+          })
+        })
+      }
+    })
+  }
+
+  @Builder
   listViewBuilder() {
-    List() {
+    List({ scroller: this.scroller }) {
       ForEach(this.data, (data: CoinRankContentBean, index: number) => {
         ListItem() {
-          this.itemLayout(data, index)
+          PointRankItemComponent({
+            item: data,
+            index: index
+          })
         }
       }, (data: CoinRankContentBean, index: number) => JSON.stringify(data) + index)
     }.width(SizeConstant.FULL_SIZE)
     .layoutWeight(1)
+    .edgeEffect(EdgeEffect.None)
 
-  }
-
-  @Builder
-  itemLayout(item: CoinRankContentBean, index: number) {
-    Column() {
-      Column() {
-        Row() {
-          Stack() {
-            Text((index + 4).toString())
-              .fontSize($r('app.float.font_15'))
-              .fontColor(Color.Black)
-              .margin(SizeConstant.SIZE_2)
-          }.backgroundColor(Color.Orange)
-          .borderRadius(SizeConstant.SIZE_10)
-          .align(Alignment.Center)
-          .margin({ left: SizeConstant.SIZE_15 })
-
-          //姓名
-          Text(`${item.username}`)
-            .fontSize($r('app.float.font_12'))
-            .fontColor($r('app.color.color_666666'))
-            .margin({ left: SizeConstant.SIZE_15 })
-
-          Blank()
-
-          //积分
-          Text(item.coinCount.toString())
-            .fontColor($r('app.color.color_FF7800'))
-            .fontSize($r('app.float.font_12'))
-            .margin({ right: SizeConstant.SIZE_15 })
-
-        }.width(SizeConstant.FULL_SIZE)
-        .height(SizeConstant.SIZE_60)
-        .alignItems(VerticalAlign.Center)
-
-        Line()
-          .width(SizeConstant.FULL_SIZE)
-          .height(1)
-          .backgroundColor($r('app.color.color_F0F0F0'))
-      }
-    }.width(SizeConstant.FULL_SIZE)
   }
 }

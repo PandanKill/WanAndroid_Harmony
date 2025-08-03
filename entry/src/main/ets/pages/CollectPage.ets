@@ -8,6 +8,7 @@ import { ArticleBean, ArticleListBean } from '../bean/ArticleBean'
 import { PageLoadingComponent } from '../component/PageLoadingComponent'
 import { PullToRefresh } from '@ohos/pulltorefresh'
 import { ArticleContentComponent } from '../component/ArticleContentComponent'
+import { JSON } from '@kit.ArkTS'
 
 @Entry
 @Component
@@ -48,6 +49,10 @@ struct CollectPage {
       if (data.datas && data.datas!.length > 0) {
         daArr.push(...data.datas)
       }
+      //所有都是收藏的
+      daArr.forEach((data: ArticleBean, index: number) => {
+        data.collect = true
+      })
       return Promise.resolve(daArr)
     } else {
       return Promise.reject()
@@ -64,39 +69,45 @@ struct CollectPage {
         loadState: this.loadState,
         onReload: () => {
           this.loadData()
+        },
+        content: () => {
+          this.refreshLayout()
         }
-      }) {
-        PullToRefresh({
-          scroller: this.scroller,
-          data: $data,
-          customList: this.listViewBuilder,
-          onRefresh: () => {
-            return new Promise<string>((resolve, reject) => {
-              this.loadPageData(0).then((data) => {
-                this.nextPage = 1
-                this.data = data
-                resolve("刷新成功")
-
-              }, () => {
-                resolve("刷新失败")
-              })
-            })
-          },
-          onLoadMore: () => {
-            return new Promise<string>((resolve, reject) => {
-              this.loadPageData(this.nextPage).then((data) => {
-                this.nextPage++
-                this.data = this.data.concat(data)
-                resolve("刷新成功")
-              }, () => {
-                resolve("刷新失败")
-              })
-            })
-          }
-        })
-      }
+      }).layoutWeight(1)
     }.width(SizeConstant.FULL_SIZE)
     .height(SizeConstant.FULL_SIZE)
+  }
+
+  @Builder
+  refreshLayout() {
+    PullToRefresh({
+      scroller: this.scroller,
+      data: $data,
+      customList: this.listViewBuilder,
+      onRefresh: () => {
+        return new Promise<string>((resolve, reject) => {
+          this.loadPageData(0).then((data) => {
+            this.nextPage = 1
+            this.data = data
+            resolve("刷新成功")
+
+          }, () => {
+            resolve("刷新失败")
+          })
+        })
+      },
+      onLoadMore: () => {
+        return new Promise<string>((resolve, reject) => {
+          this.loadPageData(this.nextPage).then((data) => {
+            this.nextPage++
+            this.data = this.data.concat(data)
+            resolve("刷新成功")
+          }, () => {
+            resolve("刷新失败")
+          })
+        })
+      }
+    })
   }
 
   @Builder
@@ -108,23 +119,11 @@ struct CollectPage {
           ArticleContentComponent({
             item: data as ArticleBean,
             onCollectClick: async (article: ArticleBean) => {
-              //收藏
-              if (article.collect) {
-                //取消收藏
-                let coll: ResponseBean<undefined> = await Api.get().unCollectArticle(article.id)
-                console.info(`collect ${JSON.stringify(coll)}}`)
-                if (coll.isSuccess()) {
-                  article.collect = !article.collect
-                  this.data = this.data.map(data => data)
-                }
-              } else {
-                //收藏
-                let coll: ResponseBean<undefined> = await Api.get().collectArticle(article.id)
-                console.info(`collect ${JSON.stringify(coll)}}`)
-                if (coll.isSuccess()) {
-                  article.collect = !article.collect
-                  this.data = this.data.map(data => data)
-                }
+              //取消收藏
+              let coll: ResponseBean<undefined> = await Api.get().unCollectArticle(article.originId)
+              if (coll.isSuccess()) {
+                article.collect = !article.collect
+                this.data.splice(index, 1)
               }
             }
           })

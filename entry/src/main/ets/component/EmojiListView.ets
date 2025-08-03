@@ -24,7 +24,7 @@ export struct EmojiListView {
               })
           }
         })
-      }.columnsTemplate('1fr 1fr 1fr 1fr 1fr 1fr 1fr')
+      }.columnsTemplate('1fr 1fr 1fr 1fr 1fr 1fr')
       .layoutDirection(GridDirection.Row)
     }.width(SizeConstant.FULL_SIZE)
     .height(SizeConstant.FULL_SIZE)
