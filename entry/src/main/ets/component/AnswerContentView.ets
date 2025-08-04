@@ -1,5 +1,6 @@
 import SizeConstant from '../constants/SizeConstant'
 import { AnsTabContentView } from './AnsTabContentView'
+import { HarmonyTabContentView } from './HarmonyTabContentView'
 import { SpareTabContentView } from './SpareTabContentView'
 
 @Component
@@ -10,7 +11,7 @@ export struct AnswerContentView {
   @State private indicatorWidth: number = 0
   //间距
   @State private indicatorLeftMargin: number = 0
-  private tabNames: string[] = ["问答", "广场"]
+  private tabNames: string[] = ["问答", "广场", "鸿蒙"]
 
   @Builder
   tabBuilder(tabName: string, index: number) {
@@ -30,6 +31,7 @@ export struct AnswerContentView {
     Stack({ alignContent: Alignment.TopStart }) {
       Tabs() {
         TabContent() {
+          //问答
           AnsTabContentView()
             .width(SizeConstant.FULL_SIZE)
             .height(SizeConstant.FULL_SIZE)
@@ -37,11 +39,20 @@ export struct AnswerContentView {
         }.tabBar(this.tabBuilder(this.tabNames[0], 0))
 
         TabContent() {
+          //广场
           SpareTabContentView()
             .width(SizeConstant.FULL_SIZE)
             .height(SizeConstant.FULL_SIZE)
             .backgroundColor($r('app.color.color_FFFFFF'))
         }.tabBar(this.tabBuilder(this.tabNames[1], 1))
+
+        TabContent() {
+          //鸿蒙专栏
+          HarmonyTabContentView()
+            .width(SizeConstant.FULL_SIZE)
+            .height(SizeConstant.FULL_SIZE)
+            .backgroundColor($r('app.color.color_FFFFFF'))
+        }.tabBar(this.tabBuilder(this.tabNames[2], 2))
       }
       .onAreaChange((oldValue: Area, newValue: Area) => {
         //区域响应变化

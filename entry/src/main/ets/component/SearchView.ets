@@ -11,6 +11,7 @@ export struct SearchView {
   //热词
   @Prop hotKeys: HotKeyBean[] = []
   @StorageProp('topRectHeight') topRectHeight: number = 0
+  @Prop showMessage: boolean = false
   //点击搜索
   onClicked: () => void = () => {
   }
@@ -58,8 +59,8 @@ export struct SearchView {
         }
         .geometryTransition("search")
         .transition(TransitionEffect.OPACITY.animation({ duration: 350, curve: Curve.Friction }))
-        .width(SizeConstant.SIZE_PERCENT_85)
         .alignItems(VerticalAlign.Center)
+        .layoutWeight(1)
         .height(SizeConstant.SIZE_30)
         .backgroundColor($r('app.color.color_474954'))
         .borderRadius(20)
@@ -69,12 +70,10 @@ export struct SearchView {
           this.onClicked()
         })
 
-        Blank()
-
         Image($r('app.media.login'))
           .width(SizeConstant.SIZE_20)
           .height(SizeConstant.SIZE_20)
-          .margin({ right: SizeConstant.SIZE_15 })
+          .margin({ left: SizeConstant.SIZE_40, right: SizeConstant.SIZE_15 })
           .onClick(() => {
             if (UserService.get().isLogin()) {
               //跳转文章编辑界面
@@ -89,6 +88,25 @@ export struct SearchView {
             }
           })
 
+        if (this.showMessage) {
+          Image($r('app.media.icon_message'))
+            .width(SizeConstant.SIZE_20)
+            .height(SizeConstant.SIZE_20)
+            .margin({ right: SizeConstant.SIZE_15 })
+            .onClick(() => {
+              if (UserService.get().isLogin()) {
+                //跳转文章编辑界面
+                this.getUIContext().getRouter().pushUrl({
+                  url: "pages/MessagePage"
+                })
+              } else {
+                //跳转登录界面
+                this.getUIContext().getRouter().pushUrl({
+                  url: "pages/LoginPage"
+                })
+              }
+            })
+        }
       }
       .width(SizeConstant.FULL_SIZE)
       .backgroundColor($r('app.color.color_272A36'))

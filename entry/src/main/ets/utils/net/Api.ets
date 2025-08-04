@@ -15,6 +15,7 @@ import { TreeListBean } from '../../bean/TreeContentBean'
 import { HotKeyBean } from '../../bean/HotKeyBean'
 import { CoinRankBean, MineCoinBean } from '../../bean/CoinBean'
 import { ArticleBean, ArticleListBean, ShareArticleListBean, TabDetailBean } from '../../bean/ArticleBean'
+import { HarmonyListArticle } from '../../bean/HarmonyListArticle'
 
 const cookieJar: CookieJar = new PersistentCookieJar(EntryContext.getContext())
 
@@ -286,6 +287,52 @@ export default class Api {
    */
   async deleteShareArticle(id: number): Promise<ResponseBean<undefined>> {
     return requestSync(`/lg/user_article/delete/${id}/json`, http.RequestMethod.POST)
+  }
+
+  /**
+   * 分享文章
+   * @param page
+   * @returns
+   */
+  async shareArticle(title: string, link: string): Promise<ResponseBean<undefined>> {
+    return requestSync(`/lg/user_article/add/json?title=${encodeURIComponent(title)}&link=${encodeURIComponent(link)}`,
+      http.RequestMethod.POST)
+  }
+
+  /**
+   * 获取鸿蒙文章
+   * @param page
+   * @returns
+   */
+  async getHarmonyArticle(): Promise<ResponseBean<HarmonyListArticle>> {
+    return requestSync(`/harmony/index/json`, http.RequestMethod.GET)
+  }
+
+  /**
+   * 未读消息数量
+   * @param page
+   * @returns
+   */
+  async getUnreadCount(): Promise<ResponseBean<HarmonyListArticle>> {
+    return requestSync(`/lg/count_unread/json`, http.RequestMethod.GET)
+  }
+
+  /**
+   * 未读消息数量
+   * @param page
+   * @returns
+   */
+  async getUnreadArticle(page: number): Promise<ResponseBean<HarmonyListArticle>> {
+    return requestSync(`/lg/unread_list/${page}/json`, http.RequestMethod.GET)
+  }
+
+  /**
+   * 未读消息数量
+   * @param page
+   * @returns
+   */
+  async getReadArticle(page: number): Promise<ResponseBean<HarmonyListArticle>> {
+    return requestSync(`/lg/readed_list/${page}/json`, http.RequestMethod.GET)
   }
 }
 

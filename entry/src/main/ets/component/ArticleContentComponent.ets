@@ -65,7 +65,7 @@ export struct ArticleContentComponent {
             .width(SizeConstant.FULL_SIZE)
             .ellipsisMode(EllipsisMode.END)
 
-          //标题
+          //描述
           if (this.item.desc !== undefined && this.item.desc != null) {
             Text(this.item.desc)
               .fontSize($r('app.float.font_10'))

@@ -1,10 +1,14 @@
+import { ResponseBean } from '../bean/ResponseBean'
 import { NavHeaderView } from '../component/NavHeaderView'
 import SizeConstant from '../constants/SizeConstant'
+import Api from '../utils/net/Api'
 
 @Entry
 @Component
 struct EditArticlePage {
   @StorageProp("navHeight") navHeight: number = 0
+  @State titleEd: string = ""
+  @State linkEd: string = ""
 
   build() {
     Column() {
@@ -13,7 +17,7 @@ struct EditArticlePage {
         isShowMenu: true,
         menu: $r('app.media.icon_share'),
         onMenuClick: () => {
-          //分享
+          //校验格式
         }
       })
 
@@ -33,7 +37,8 @@ struct EditArticlePage {
         .margin({ top: SizeConstant.SIZE_20 })
 
       TextArea({
-        placeholder: "100字以内"
+        placeholder: "100字以内",
+        text: $$this.titleEd
       })
         .width(SizeConstant.FULL_SIZE)
         .placeholderFont({
@@ -57,7 +62,8 @@ struct EditArticlePage {
         .margin({ top: SizeConstant.SIZE_10 })
 
       TextArea({
-        placeholder: "记得点击右上角按钮检查链接哦"
+        placeholder: "记得点击右上角按钮检查链接哦",
+        text: $$this.linkEd
       })
         .width(SizeConstant.FULL_SIZE)
         .placeholderColor($r('app.color.color_CCCCCC'))
@@ -83,8 +89,12 @@ struct EditArticlePage {
         .fontColor(Color.White)
         .width(SizeConstant.SIZE_PERCENT_50)
         .backgroundColor($r('app.color.color_272A36'))
-        .onClick(() => {
+        .onClick(async () => {
+          let responseBean: ResponseBean<undefined> = await Api.get().shareArticle(this.titleEd, this.linkEd)
+          if (responseBean.isSuccess()) {
+            //分享成功
 
+          }
         })
 
       Blank()

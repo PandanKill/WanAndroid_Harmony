@@ -32,6 +32,8 @@ struct Index {
   @State private isSearchShow: boolean = false
   //轮播位置
   @State private nowSwiperIndex: number = 0
+  //是否显示我的消息
+  @State showMessage: boolean = false
 
   @Builder
   tabBuilder(item: FooterTab, index: number) {
@@ -91,12 +93,15 @@ struct Index {
     Column() {
       //搜索栏
       SearchView({
-        hotKeys: this.hotKeys, onClicked: () => {
+        hotKeys: this.hotKeys,
+        onClicked: () => {
           //进入搜索模态
           this.showSearch()
-        }, onSwiper: (index: number) => {
+        },
+        onSwiper: (index: number) => {
           this.nowSwiperIndex = index
-        }
+        },
+        showMessage: this.showMessage
       })
         .width(SizeConstant.FULL_SIZE)
       Tabs({
@@ -153,6 +158,7 @@ struct Index {
       .scrollable(false)
       .animationMode(AnimationMode.NO_ANIMATION)
       .onChange((index) => {
+        this.showMessage = index === 4
         this.selectIndex = index
       })
       .barMode(BarMode.Fixed,

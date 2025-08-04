@@ -15,6 +15,7 @@
     "pages/PicEditPage",
     "pages/SharePage",
     "pages/TODOPage",
-    "pages/EditArticlePage"
+    "pages/EditArticlePage",
+    "pages/MessagePage"
   ]
 }
