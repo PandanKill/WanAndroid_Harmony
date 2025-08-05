@@ -21,6 +21,7 @@ import AudioRendererManager from '../utils/AudioRendererManager'
 import { CommonAiRequestUtil } from '../utils/CommonAiRequestUtil'
 import { AISpeakBean } from '../bean/AIResponseBean'
 import { common } from '@kit.AbilityKit'
+import { RichTextComponent, RichTextRepresentation } from 'rich_text_vista'
 
 /**
  * 聊天内容 View
@@ -108,7 +109,8 @@ export struct ChatItemView {
       }
 
       //获取缩略图
-      getFetchFrameByTime(0, this.item.videoUri, this.getUIContext().vp2px(this.picWidth), this.getUIContext().vp2px(this.picHeight))
+      getFetchFrameByTime(0, this.item.videoUri, this.getUIContext().vp2px(this.picWidth),
+        this.getUIContext().vp2px(this.picHeight))
         .then((pix: image.PixelMap) => {
           this.bgPixel = pix
         })
@@ -518,29 +520,28 @@ export struct ChatItemView {
             .copyOption(CopyOptions.InApp)
         } else if (this.item.messageStatus == 1) {
           //加载成功
-          Text(this.item.text)
+          RichTextComponent({
+            richText: this.createRichTextFromMD(),
+            fontColor: (Color.Black),
+            fontSize: 15,
+            textAlign: TextAlign.Start,
+            canCopyMessage: false,
+            onAnchorClick: (url?: string) => {
+
+            }
+          })
             .backgroundColor($r('app.color.color_FFFFFF'))
             .constraintSize({ maxWidth: SizeConstant.SIZE_PERCENT_60 })
             .borderRadius(SizeConstant.SIZE_5)
-            .fontColor(Color.Black)
             .padding(SizeConstant.SIZE_10)
             .margin({ top: SizeConstant.SIZE_5 })
             .height('auto')
-            .fontSize($r('app.float.font_15'))
-            .textAlign(TextAlign.Start)
-            .copyOption(CopyOptions.None)// .onAreaChange((oldVal, newVal) => {
-            //   this.itemSizeChange = oldVal.height !== newVal.height
-            //   console.info(`onAreaChange oldVal height: ${oldVal.height}, newVal: ${newVal.height}`)
-            // })
             .onSizeChange((oldVal, newVal) => {
               let changeVal = oldVal.height?.valueOf() !== newVal.height?.valueOf()
               if (changeVal) {
                 this.itemSizeChange = !this.itemSizeChange
               }
               console.info(`onSizeChange oldVal height: ${oldVal.height}, newVal: ${newVal.height}`)
-            })
-            .onTextSelectionChange((start, end) => {
-
             })
             .gesture(
               TapGesture({ count: 2 }).onAction((event) => {
@@ -552,6 +553,41 @@ export struct ChatItemView {
                 this.showTextContent = false
               }
             })
+
+          // Text(this.item.text)
+          //   .backgroundColor($r('app.color.color_FFFFFF'))
+          //   .constraintSize({ maxWidth: SizeConstant.SIZE_PERCENT_60 })
+          //   .borderRadius(SizeConstant.SIZE_5)
+          //   .fontColor(Color.Black)
+          //   .padding(SizeConstant.SIZE_10)
+          //   .margin({ top: SizeConstant.SIZE_5 })
+          //   .height('auto')
+          //   .fontSize($r('app.float.font_15'))
+          //   .textAlign(TextAlign.Start)
+          //   .copyOption(CopyOptions.None)// .onAreaChange((oldVal, newVal) => {
+          //   //   this.itemSizeChange = oldVal.height !== newVal.height
+          //   //   console.info(`onAreaChange oldVal height: ${oldVal.height}, newVal: ${newVal.height}`)
+          //   // })
+          //   .onSizeChange((oldVal, newVal) => {
+          //     let changeVal = oldVal.height?.valueOf() !== newVal.height?.valueOf()
+          //     if (changeVal) {
+          //       this.itemSizeChange = !this.itemSizeChange
+          //     }
+          //     console.info(`onSizeChange oldVal height: ${oldVal.height}, newVal: ${newVal.height}`)
+          //   })
+          //   .onTextSelectionChange((start, end) => {
+          //
+          //   })
+          //   .gesture(
+          //     TapGesture({ count: 2 }).onAction((event) => {
+          //       this.showTextContent = true
+          //     })
+          //   )
+          //   .bindContentCover(this.showTextContent, this.contentTextCover(this.item.text), {
+          //     onDisappear: () => {
+          //       this.showTextContent = false
+          //     }
+          //   })
         } else {
           //加载失败
           Text(this.item.errorMessage)
@@ -751,5 +787,11 @@ export struct ChatItemView {
       chatVideoDetailContent: this.showVideoContent
     }).width(SizeConstant.FULL_SIZE)
       .height(SizeConstant.FULL_SIZE)
+  }
+
+  private createRichTextFromMD() {
+    const richTextRepresentation = new RichTextRepresentation()
+    richTextRepresentation.markdownString = this.item.text
+    return richTextRepresentation
   }
 }

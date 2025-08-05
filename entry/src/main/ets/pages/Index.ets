@@ -189,7 +189,7 @@ struct Index {
     Column() {
       Row() {
         //返回
-        Image($r('app.media.login'))
+        Image($r("app.media.icon_public"))
           .width(SizeConstant.SIZE_20)
           .height(SizeConstant.SIZE_20)
           .margin({ left: SizeConstant.SIZE_15 })

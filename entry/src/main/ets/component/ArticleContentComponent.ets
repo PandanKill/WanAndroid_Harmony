@@ -1,3 +1,4 @@
+import { RichTextComponent, RichTextRepresentation } from 'rich_text_vista'
 import { ArticleBean, TagRouterBean } from '../bean/ArticleBean'
 import SizeConstant from '../constants/SizeConstant'
 
@@ -67,13 +68,15 @@ export struct ArticleContentComponent {
 
           //描述
           if (this.item.desc !== undefined && this.item.desc != null) {
-            Text(this.item.desc)
-              .fontSize($r('app.float.font_10'))
-              .fontColor($r('app.color.color_666666'))
+            RichTextComponent({
+              richText: this.createRichTextFromMD(),
+              fontSize: 10,
+              fontColor: ($r('app.color.color_666666')),
+              ellipsisMode: EllipsisMode.END,
+              maxLines: 3
+            })
               .margin({ top: SizeConstant.SIZE_10 })
-              .maxLines(3)
               .width(SizeConstant.FULL_SIZE)
-              .ellipsisMode(EllipsisMode.END)
           }
         }.layoutWeight(1)
 
@@ -138,5 +141,11 @@ export struct ArticleContentComponent {
         }
       })
     })))
+  }
+
+  private createRichTextFromMD() {
+    const richTextRepresentation = new RichTextRepresentation()
+    richTextRepresentation.htmlString = this.item.desc
+    return richTextRepresentation
   }
 }

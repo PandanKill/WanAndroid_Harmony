@@ -6,7 +6,7 @@ export struct NavHeaderView {
   //标题
   title: string | Resource = ''
   //菜单
-  menu: Resource | string = $r('app.media.login')
+  menu: Resource | string = $r("app.media.icon_public")
   @StorageProp('topRectHeight') topRectHeight: number = 0
   //是否显示返回按键
   private isShowBack: boolean = true

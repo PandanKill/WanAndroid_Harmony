@@ -70,10 +70,10 @@ export struct SearchView {
           this.onClicked()
         })
 
-        Image($r('app.media.login'))
+        Image($r("app.media.icon_public"))
           .width(SizeConstant.SIZE_20)
           .height(SizeConstant.SIZE_20)
-          .margin({ left: SizeConstant.SIZE_40, right: SizeConstant.SIZE_15 })
+          .margin({ left: SizeConstant.SIZE_20, right: SizeConstant.SIZE_15 })
           .onClick(() => {
             if (UserService.get().isLogin()) {
               //跳转文章编辑界面
@@ -89,6 +89,7 @@ export struct SearchView {
           })
 
         if (this.showMessage) {
+          //todo 未读消息
           Image($r('app.media.icon_message'))
             .width(SizeConstant.SIZE_20)
             .height(SizeConstant.SIZE_20)

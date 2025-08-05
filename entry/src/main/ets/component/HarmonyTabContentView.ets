@@ -1,4 +1,4 @@
-import { PullToRefresh } from "@ohos/pulltorefresh";
+import { PullToRefresh, PullToRefreshConfigurator } from "@ohos/pulltorefresh";
 import { ArticleBean } from "../bean/ArticleBean";
 import { HarmonyListArticle } from "../bean/HarmonyListArticle";
 import { LoadState } from "../bean/LoadState";
@@ -12,10 +12,13 @@ import { PageLoadingComponent } from "./PageLoadingComponent";
 export struct HarmonyTabContentView {
   @State loadState: LoadState = LoadState.LOADING
   @State data: ArticleBean[] = []
-  private scroll: Scroller = new Scroller()
+  private scroller: Scroller = new Scroller()
+  private refreshConfigurator: PullToRefreshConfigurator = new PullToRefreshConfigurator()
   private nextPage = 1
 
   aboutToAppear(): void {
+    this.refreshConfigurator.setHasRefresh(true)
+    this.refreshConfigurator.setHasLoadMore(false)
     this.initData()
   }
 
@@ -54,9 +57,11 @@ export struct HarmonyTabContentView {
     PageLoadingComponent({
       loadState: this.loadState,
       onReload: () => {
-
+        this.initData()
       },
-      content: this.refreshLayout
+      content: () => {
+        this.refreshLayout()
+      }
     })
   }
 
@@ -67,8 +72,9 @@ export struct HarmonyTabContentView {
   refreshLayout() {
     PullToRefresh({
       data: $data,
-      scroller: this.scroll,
+      scroller: this.scroller,
       customList: this.listItemBuilder,
+      refreshConfigurator: this.refreshConfigurator,
       onRefresh: () => {
         return new Promise<string>((resolve, reject) => {
           this.loadPageData(0).then((data) => {
@@ -96,7 +102,7 @@ export struct HarmonyTabContentView {
 
   @Builder
   listItemBuilder() {
-    List({ scroller: this.scroll }) {
+    List({ scroller: this.scroller }) {
       ForEach(this.data, (data: ArticleBean, index: number) => {
         ListItem() {
           ArticleContentComponent({
