@@ -3,11 +3,13 @@ import { webview } from '@kit.ArkWeb'
 import SizeConstant from '../constants/SizeConstant'
 import { logger } from "utils"
 import { common, Want } from '@kit.AbilityKit'
+import ShareModel from '../model/ShareModel'
 
 @Entry
 @Component
 struct WebPage {
   pageSrc: string = (this.getUIContext().getRouter().getParams() as Record<string, string>).webUrl as string
+  content: string = (this.getUIContext().getRouter().getParams() as Record<string, string>).content as string
   // pageSrc:string = "https://mp.weixin.qq.com/s/m38HWBzxInUf_hgAZ---bw"
   // pageSrc: string = "https://juejin.cn/post/7294638699417288714"
   private webController: webview.WebviewController = new webview.WebviewController()
@@ -98,6 +100,15 @@ struct WebPage {
             //拉起浏览器
             this.startBrownerAbility()
           })
+
+
+        Image($r('app.media.icon_web_share'))
+          .width(SizeConstant.SIZE_20)
+          .height(SizeConstant.SIZE_20)
+          .onClick(() => {
+            //拉起浏览器
+            this.showShareSheet()
+          })
       }
       .justifyContent(FlexAlign.SpaceAround)
       .alignItems(VerticalAlign.Center)
@@ -111,6 +122,13 @@ struct WebPage {
     }.width(SizeConstant.FULL_SIZE)
     .height(SizeConstant.FULL_SIZE)
     .padding({ top: this.getUIContext().px2vp(this.topRectHeight), bottom: this.getUIContext().px2vp(this.navHeight) })
+  }
+
+  /**
+   * 分享页面
+   */
+  showShareSheet() {
+    ShareModel.shareLink(this.content, this.pageSrc, this.getUIContext())
   }
 
   /**

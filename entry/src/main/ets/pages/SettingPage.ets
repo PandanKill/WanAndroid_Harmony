@@ -187,7 +187,8 @@ struct SettingPage {
         this.getUIContext().getRouter().pushUrl({
           url: "pages/WebPage",
           params: {
-            webUrl: Constants.WAN_ANDROID
+            webUrl: Constants.WAN_ANDROID,
+            content: "WanAndroid"
           }
         })
       })
@@ -207,7 +208,8 @@ struct SettingPage {
         this.getUIContext().getRouter().pushUrl({
           url: "pages/WebPage",
           params: {
-            webUrl: Constants.QUESTION_WEB
+            webUrl: Constants.QUESTION_WEB,
+            content: "WanAndroid"
           }
         })
       })
@@ -227,7 +229,8 @@ struct SettingPage {
         this.getUIContext().getRouter().pushUrl({
           url: "pages/WebPage",
           params: {
-            webUrl: Constants.WAN_ANDROID
+            webUrl: Constants.WAN_ANDROID,
+            content: "WanAndroid"
           }
         })
       })

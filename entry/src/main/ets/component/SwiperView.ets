@@ -35,7 +35,8 @@ export struct SwiperView {
             this.getUIContext().getRouter().pushUrl({
               url: "pages/WebPage",
               params: {
-                webUrl: item.url
+                webUrl: item.url,
+                content: item.title
               }
             })
           })

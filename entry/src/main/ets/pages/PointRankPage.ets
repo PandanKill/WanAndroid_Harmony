@@ -120,7 +120,8 @@ struct PointRankPage {
           //跳转积分说明
           this.getUIContext().getRouter().pushUrl({
             url: "pages/WebPage", params: {
-              "webUrl": "https://www.wanandroid.com/blog/show/2653"
+              "webUrl": "https://www.wanandroid.com/blog/show/2653",
+              "content": "积分说明"
             }
           })
         }

@@ -59,12 +59,12 @@ export struct ArticleContentComponent {
         Column() {
           //标题
           RichTextComponent({
-            richText:this.createRichTextTitleFromMD(),
-            fontSize:15,
-            fontColor:$r('app.color.color_000000'),
-            maxLines:2,
-            ellipsisMode:EllipsisMode.END
-          }).margin({top: SizeConstant.SIZE_10 })
+            richText: this.createRichTextTitleFromMD(),
+            fontSize: 15,
+            fontColor: $r('app.color.color_000000'),
+            maxLines: 2,
+            ellipsisMode: EllipsisMode.END
+          }).margin({ top: SizeConstant.SIZE_10 })
             .width(SizeConstant.FULL_SIZE)
 
           //描述
@@ -138,7 +138,8 @@ export struct ArticleContentComponent {
       this.getUIContext().getRouter().pushUrl({
         url: "pages/WebPage",
         params: {
-          webUrl: this.item.link
+          webUrl: this.item.link,
+          content: this.item.title
         }
       })
     })))

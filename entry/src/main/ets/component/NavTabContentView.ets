@@ -25,7 +25,8 @@ export struct NavTabContentView {
             this.getUIContext().getRouter().pushUrl({
               url: 'pages/WebPage',
               params: {
-                webUrl: item.link
+                webUrl: item.link,
+                content: item.title
               }
             })
           })
