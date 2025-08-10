@@ -281,9 +281,6 @@ export struct MimeView {
       .backgroundColor($r('app.color.color_FFFFFF'))
       .onClick(() => {
         //to AI 聊天
-        this.getUIContext().getRouter().pushUrl({
-          url: "pages/ChatPage"
-        })
       })
 
       //线

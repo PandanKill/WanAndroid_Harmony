@@ -14,6 +14,16 @@
     "routerMap": "$profile:route_map",
     "requestPermissions": [
       {
+        "name": "ohos.permission.ACCESS_BIOMETRIC",
+        "reason": "$string:access_biometric_reason",
+        "usedScene": {
+          "abilities": [
+            "EntryAbility"
+          ],
+          "when": "inuse"
+        }
+      },
+      {
         "name": "ohos.permission.INTERNET",
         "reason": "$string:internet_permission_reason",
         "usedScene": {

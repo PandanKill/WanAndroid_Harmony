@@ -5,6 +5,8 @@ import SizeConstant from '../constants/SizeConstant'
 import { HotKeyBean } from '../bean/HotKeyBean'
 import { JSON } from '@kit.ArkTS'
 import { UserService } from '../service/UserService'
+import Api from '../utils/net/Api'
+import { ResponseBean } from '../bean/ResponseBean'
 
 @Component
 export struct SearchView {
@@ -17,6 +19,21 @@ export struct SearchView {
   }
   //轮播
   onSwiper: (index: number) => void = (index: number) => {
+  }
+  @State unreadCount: number = 0
+
+  aboutToAppear(): void {
+
+    this.loadData()
+  }
+
+  async loadData() {
+    //获取未读消息
+    let responseBean: ResponseBean<number> = await Api.get().getUnreadCount()
+    if (responseBean.isSuccessWithData()) {
+      //访问成功
+      this.unreadCount = responseBean.getDataOrThrow() + 1
+    }
   }
 
   build() {
@@ -71,8 +88,8 @@ export struct SearchView {
         })
 
         Image($r("app.media.icon_public"))
-          .width(SizeConstant.SIZE_20)
-          .height(SizeConstant.SIZE_20)
+          .width(SizeConstant.SIZE_25)
+          .height(SizeConstant.SIZE_25)
           .margin({ left: SizeConstant.SIZE_20, right: SizeConstant.SIZE_15 })
           .onClick(() => {
             if (UserService.get().isLogin()) {
@@ -89,24 +106,34 @@ export struct SearchView {
           })
 
         if (this.showMessage) {
-          //todo 未读消息
-          Image($r('app.media.icon_message'))
-            .width(SizeConstant.SIZE_20)
-            .height(SizeConstant.SIZE_20)
-            .margin({ right: SizeConstant.SIZE_15 })
-            .onClick(() => {
-              if (UserService.get().isLogin()) {
-                //跳转文章编辑界面
-                this.getUIContext().getRouter().pushUrl({
-                  url: "pages/MessagePage"
-                })
-              } else {
-                //跳转登录界面
-                this.getUIContext().getRouter().pushUrl({
-                  url: "pages/LoginPage"
-                })
-              }
-            })
+          Badge({
+            count: this.unreadCount,
+            style: {
+              badgeSize: 10,
+              badgeColor: $r('app.color.color_FA2A2D')
+            },
+            position: BadgePosition.RightTop
+          }) {
+            Image($r('app.media.icon_message'))
+              .width(SizeConstant.SIZE_25)
+              .height(SizeConstant.SIZE_25)
+              .onClick(() => {
+                if (UserService.get().isLogin()) {
+                  //跳转文章编辑界面
+                  this.getUIContext().getRouter().pushUrl({
+                    url: "pages/MessagePage"
+                  })
+                } else {
+                  //跳转登录界面
+                  this.getUIContext().getRouter().pushUrl({
+                    url: "pages/LoginPage"
+                  })
+                }
+              })
+          }.width(SizeConstant.SIZE_25)
+          .height(SizeConstant.SIZE_25)
+          .margin({ right: SizeConstant.SIZE_15 })
+
         }
       }
       .width(SizeConstant.FULL_SIZE)

@@ -1,5 +1,7 @@
+import { LoadState } from '../bean/LoadState'
 import { ResponseBean } from '../bean/ResponseBean'
 import { NavHeaderView } from '../component/NavHeaderView'
+import { TextAreaComponent } from '../component/TextAreaComponent'
 import SizeConstant from '../constants/SizeConstant'
 import Api from '../utils/net/Api'
 
@@ -36,24 +38,11 @@ struct EditArticlePage {
         .alignSelf(ItemAlign.Start)
         .margin({ top: SizeConstant.SIZE_20 })
 
-      TextArea({
+      TextAreaComponent({
         placeholder: "100字以内",
-        text: $$this.titleEd
+        inputText: this.titleEd
       })
-        .width(SizeConstant.FULL_SIZE)
-        .placeholderFont({
-          size: $r('app.float.font_13')
-        })
-        .backgroundColor(Color.Transparent)
-        .placeholderColor($r('app.color.color_CCCCCC'))
-        .fontColor($r('app.color.color_000000'))
-        .padding({ top: SizeConstant.SIZE_10 })
-        .fontSize($r('app.float.font_13'))
-
-      Line()
-        .width(SizeConstant.FULL_SIZE)
-        .height(SizeConstant.SIZE_1)
-        .backgroundColor($r('app.color.color_F0F0F0'))
+        .margin({ top: SizeConstant.SIZE_10 })
 
       Text("文章链接")
         .fontColor($r('app.color.color_666666'))
@@ -61,24 +50,11 @@ struct EditArticlePage {
         .fontSize($r('app.float.font_12'))
         .margin({ top: SizeConstant.SIZE_10 })
 
-      TextArea({
+      TextAreaComponent({
         placeholder: "记得点击右上角按钮检查链接哦",
-        text: $$this.linkEd
+        inputText: this.linkEd
       })
-        .width(SizeConstant.FULL_SIZE)
-        .placeholderColor($r('app.color.color_CCCCCC'))
-        .placeholderFont({
-          size: $r('app.float.font_13')
-        })
-        .backgroundColor(Color.Transparent)
-        .fontColor($r('app.color.color_000000'))
         .margin({ top: SizeConstant.SIZE_10 })
-        .fontSize($r('app.float.font_13'))
-
-      Line()
-        .width(SizeConstant.FULL_SIZE)
-        .height(SizeConstant.SIZE_1)
-        .backgroundColor($r('app.color.color_F0F0F0'))
 
       Button("分享", {
         type: ButtonType.Normal,
@@ -90,10 +66,25 @@ struct EditArticlePage {
         .width(SizeConstant.SIZE_PERCENT_50)
         .backgroundColor($r('app.color.color_272A36'))
         .onClick(async () => {
+          if (this.titleEd === '' || this.linkEd === '') {
+            this.getUIContext().getPromptAction().showToast({
+              message: "参数为空"
+            })
+            return
+          }
+
           let responseBean: ResponseBean<undefined> = await Api.get().shareArticle(this.titleEd, this.linkEd)
           if (responseBean.isSuccess()) {
             //分享成功
-
+            this.getUIContext().getPromptAction().showToast({
+              message: "分享成功"
+            })
+            this.getUIContext().getRouter().back()
+          } else {
+            //分享失败
+            this.getUIContext().getPromptAction().showToast({
+              message: `分享失败:${responseBean.getErrorMsg()}`
+            })
           }
         })
 

@@ -8,6 +8,8 @@ import { User } from '../bean/LoginResponse'
 import { promptAction, router } from '@kit.ArkUI'
 import { Constants } from '../constants/Constants'
 import Preference from '../utils/Preference'
+import UserAuthModel from '../model/UserAuthModel'
+import { userAuth } from '@kit.UserAuthenticationKit'
 
 @Entry
 @Component
@@ -18,6 +20,7 @@ struct SettingPage {
   @StorageProp('screenRecord') isScreenRecord: boolean = false
   //是否指纹登录
   @State fingureLogin: boolean = false
+  @State fingerAvaiable: boolean = false
   @State isLogin: boolean = false
   //应用版本
   @State versionName: string = ""
@@ -33,6 +36,7 @@ struct SettingPage {
       this.versionName = info.versionName
     })
 
+    this.fingerAvaiable = UserAuthModel.isFingerprintAvailable()
     this.fingureLogin = Preference.get(this.context).getFingureLogin()
   }
 
@@ -134,31 +138,39 @@ struct SettingPage {
       .backgroundColor($r('app.color.color_FFFFFF'))
 
       //指纹登录
-      Row() {
-        Text($r('app.string.figure_login'))
-          .leftTextStyle()
+      if (this.fingerAvaiable) {
+        Row() {
+          Text($r('app.string.figure_login'))
+            .leftTextStyle()
 
-        Toggle({
-          type: ToggleType.Switch,
-          isOn: this.fingureLogin
-        })
-          .selectedColor($r('app.color.color_52D367'))
-          .switchPointColor($r('app.color.color_FFFFFF'))
-          .width(SizeConstant.SIZE_40)
-          .height(SizeConstant.SIZE_25)
-          .margin({ right: SizeConstant.SIZE_15 })
-          .onChange((isOn) => {
-            //指纹认证
-            
-            this.isScreenRecord = isOn
+          Toggle({
+            type: ToggleType.Switch,
+            isOn: $$this.fingureLogin
           })
+            .selectedColor($r('app.color.color_52D367'))
+            .switchPointColor($r('app.color.color_FFFFFF'))
+            .width(SizeConstant.SIZE_40)
+            .height(SizeConstant.SIZE_25)
+            .margin({ right: SizeConstant.SIZE_15 })
+            .onChange((isOn) => {
+              //指纹认证
+              UserAuthModel.getFingerprintAuth((isSuccess: boolean) => {
+                //验证通过
+                if (isSuccess) {
+                  Preference.get(this.context).setFingureLogin(isOn)
+                }
+              })
+              UserAuthModel.start()
+            })
+        }
+        .alignItems(VerticalAlign.Center)
+        .justifyContent(FlexAlign.SpaceBetween)
+        .width(SizeConstant.FULL_SIZE)
+        .height(SizeConstant.SIZE_50)
+        .margin({ top: SizeConstant.SIZE_1 })
+        .backgroundColor($r('app.color.color_FFFFFF'))
+
       }
-      .alignItems(VerticalAlign.Center)
-      .justifyContent(FlexAlign.SpaceBetween)
-      .width(SizeConstant.FULL_SIZE)
-      .height(SizeConstant.SIZE_50)
-      .margin({ top: SizeConstant.SIZE_1 })
-      .backgroundColor($r('app.color.color_FFFFFF'))
 
       //隐私政策
       Row() {
@@ -254,11 +266,15 @@ struct SettingPage {
 
       //退出登录
       if (this.isLogin) {
-        Button($r('app.string.logout'))
+        Button($r('app.string.logout'), {
+          type: ButtonType.Normal,
+          stateEffect: true
+        })
           .width('60%')
           .height(SizeConstant.SIZE_50)
           .margin({ top: SizeConstant.SIZE_10 })
           .backgroundColor($r('app.color.color_FFFFFF'))
+          .fontColor(Color.Black)
           .borderWidth(2)
           .borderRadius(15)
           .onClick(() => {

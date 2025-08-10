@@ -58,13 +58,14 @@ export struct ArticleContentComponent {
       Row() {
         Column() {
           //标题
-          Text(this.item.title)
-            .fontSize($r('app.float.font_15'))
-            .fontColor($r('app.color.color_000000'))
-            .margin({ top: SizeConstant.SIZE_10 })
-            .maxLines(2)
+          RichTextComponent({
+            richText:this.createRichTextTitleFromMD(),
+            fontSize:15,
+            fontColor:$r('app.color.color_000000'),
+            maxLines:2,
+            ellipsisMode:EllipsisMode.END
+          }).margin({top: SizeConstant.SIZE_10 })
             .width(SizeConstant.FULL_SIZE)
-            .ellipsisMode(EllipsisMode.END)
 
           //描述
           if (this.item.desc !== undefined && this.item.desc != null) {
@@ -146,6 +147,12 @@ export struct ArticleContentComponent {
   private createRichTextFromMD() {
     const richTextRepresentation = new RichTextRepresentation()
     richTextRepresentation.htmlString = this.item.desc
+    return richTextRepresentation
+  }
+
+  private createRichTextTitleFromMD() {
+    const richTextRepresentation = new RichTextRepresentation()
+    richTextRepresentation.htmlString = this.item.title
     return richTextRepresentation
   }
 }

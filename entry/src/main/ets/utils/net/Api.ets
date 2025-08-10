@@ -313,8 +313,8 @@ export default class Api {
    * @param page
    * @returns
    */
-  async getUnreadCount(): Promise<ResponseBean<HarmonyListArticle>> {
-    return requestSync(`/lg/count_unread/json`, http.RequestMethod.GET)
+  async getUnreadCount(): Promise<ResponseBean<number>> {
+    return requestSync(`/message/lg/count_unread/json`, http.RequestMethod.GET)
   }
 
   /**

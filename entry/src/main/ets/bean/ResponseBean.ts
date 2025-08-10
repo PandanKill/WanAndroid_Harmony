@@ -14,4 +14,8 @@ export class ResponseBean<T> {
   getDataOrThrow(): T {
     return this.data!!
   }
+
+  getErrorMsg(): string {
+    return this.errorMsg
+  }
 }
