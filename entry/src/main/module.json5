@@ -61,9 +61,9 @@
         "name": "EntryAbility",
         "srcEntry": "./ets/entryability/EntryAbility.ets",
         "description": "$string:EntryAbility_desc",
-        "icon": "$media:layered_image",
+        "icon": "$media:icon_wan_android",
         "label": "$string:app_name",
-        "startWindowIcon": "$media:startIcon",
+        "startWindowIcon": "$media:icon_wan_android",
         "startWindowBackground": "$color:start_window_background",
         "exported": true,
         "skills": [

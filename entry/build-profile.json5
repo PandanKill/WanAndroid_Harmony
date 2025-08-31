@@ -14,12 +14,15 @@
             ]
           }
         }
-      }
+      },
     },
   ],
   "targets": [
     {
-      "name": "default"
+      "name": "default",
+      "output": {
+        "artifactName": "WanAndroid-entry"
+      }
     },
     {
       "name": "ohosTest",

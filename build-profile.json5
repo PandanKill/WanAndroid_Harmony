@@ -13,6 +13,32 @@
           "profile": "/Applications/harmonyKey/WanandroidDebug.p7b",
           "certpath": "/Applications/harmonyKey/wanandroid.cer"
         }
+      },
+      {
+        "name": "release",
+        "type": "HarmonyOS",
+        "material": {
+          "storeFile": "/Users/nihao/Desktop/WanAndroid-Release.p12",
+          "storePassword": "0000001A173752493CD3B3233437DB2B5D74EA18F9203220FA77AA6849D239EEC4BB9BFDC2CD146FE1CE",
+          "keyAlias": "WanAndroid-Release",
+          "keyPassword": "0000001A987BD062583AA8F44117912CBC2DF43B67101D4A1D0731E80B78C5999A0CE0B72A9C68FC8C85",
+          "signAlg": "SHA256withECDSA",
+          "profile": "/Users/nihao/Desktop/WanAndroid-ReleaseRelease.p7b",
+          "certpath": "/Users/nihao/Desktop/WanAndroid-Release.cer"
+        }
+      },
+      {
+        "name": "releasetest",
+        "type": "HarmonyOS",
+        "material": {
+          "storeFile": "/Users/nihao/Desktop/WanAndroid-Release.p12",
+          "storePassword": "0000001AE254C440327F35A0987B0471570E911A11DF7673776635D108BAAC36F7EDF853E7528E9E0A95",
+          "keyAlias": "WanAndroid-Release",
+          "keyPassword": "0000001A37E74BC908AB58042D442D3402B16983E5633B4D174F059987CD630A60766BD18D3DA6FEDB6F",
+          "signAlg": "SHA256withECDSA",
+          "profile": "/Users/nihao/Desktop/release-testRelease.p7b",
+          "certpath": "/Users/nihao/Desktop/WanAndroid-Release.cer"
+        }
       }
     ],
     "products": [
@@ -20,7 +46,29 @@
         "name": "default",
         "signingConfig": "default",
         "compatibleSdkVersion": "5.0.3(15)",
-        "runtimeOS": "HarmonyOS"
+        "runtimeOS": "HarmonyOS",
+        "output": {
+          "artifactName": "WanAndroid-App"
+        }
+      },
+      {
+        "name": "release",
+        "signingConfig": "release",
+        "compatibleSdkVersion": "5.0.3(15)",
+        "runtimeOS": "HarmonyOS",
+        "output": {
+          "artifactName": "WanAndroid-Release-App"
+        }
+      },
+      {
+        "name": "releasetest",
+        "signingConfig": "releasetest",
+        "compatibleSdkVersion": "5.0.3(15)",
+        "runtimeOS": "HarmonyOS",
+        "output": {
+//          https://blog.csdn.net/yohuo2019/article/details/146296158
+          "artifactName": "WanAndroid-ReleaseTest-App"
+        }
       }
     ],
     "buildModeSet": [
@@ -40,7 +88,9 @@
         {
           "name": "default",
           "applyToProducts": [
-            "default"
+            "default",
+            "release",
+            "releasetest"
           ]
         }
       ]
@@ -52,7 +102,9 @@
         {
           "name": "default",
           "applyToProducts": [
-            "default"
+            "default",
+            "release",
+            "releasetest"
           ]
         }
       ]
