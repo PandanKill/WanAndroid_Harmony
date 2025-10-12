@@ -16,6 +16,7 @@
     "pages/SharePage",
     "pages/TODOPage",
     "pages/EditArticlePage",
-    "pages/MessagePage"
+    "pages/MessagePage",
+    "pages/ImageGenerationPage"
   ]
 }

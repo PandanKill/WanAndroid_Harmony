@@ -33,6 +33,16 @@
           "when": "inuse"
         }
       },
+//      {
+//        "name": "ohos.permission.WRITE_IMAGEVIDEO",
+//        "reason": "$string:internet_permission_reason",
+//        "usedScene": {
+//          "abilities": [
+//            "EntryAbility"
+//          ],
+//          "when": "inuse"
+//        }
+//      },
       {
         "name": "ohos.permission.VIBRATE"
       },
@@ -42,7 +52,18 @@
         "usedScene": {
           "abilities": [
             'EntryAbility'
-          ]
+          ],
+          "when": "inuse"
+        }
+      },
+      {
+        "name": "ohos.permission.WRITE_MEDIA",
+        "reason": "$string:app_name",
+        "usedScene": {
+          "abilities": [
+            'EntryAbility'
+          ],
+          "when": "inuse"
         }
       },
       {

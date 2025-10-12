@@ -98,4 +98,14 @@ export class GeneralPopupItemConstant {
       itemId: 15
     }
   ]
+  /**
+   * 图片下载
+   */
+  static readonly ImagePopupItem: ChatPopupItem[] = [
+    {
+      icon: $r('app.media.icon_download'),
+      text: '下载',
+      itemId: 16
+    }
+  ]
 }

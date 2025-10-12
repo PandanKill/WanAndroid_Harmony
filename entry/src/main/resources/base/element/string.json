@@ -183,6 +183,18 @@
     {
       "name": "access_biometric_reason",
       "value": "Used for login verification using biometric recognition capabilities."
+    },
+    {
+      "name": "ai_create",
+      "value": "AI 生图"
+    },
+    {
+      "name": "save_success",
+      "value": "保存成功"
+    },
+    {
+      "name": "save_fail",
+      "value": "保存失败"
     }
   ]
 }

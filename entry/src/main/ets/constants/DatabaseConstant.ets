@@ -55,4 +55,13 @@ export class DatabaseConstant {
    * 消息表名
    */
   static readonly CHAT_TABLE = 'CHAT_MESSAGE'
+  /**
+   * AI生图
+   */
+  static readonly CREATE_IMAGE_SQL = 'CREATE TABLE IF NOT EXISTS CHAT_IMAGE_MESSAGE' +
+    '(ID INTEGER PRIMARY KEY AUTOINCREMENT, ' +
+    'MESSAGECONTENT TEXT, ' +
+    'MESSAGEOWNER INTEGER, ' +
+    'MESSAGETYPE INTEGER)'
+  static readonly CHAT_IMAGE_TABLE = 'CHAT_IMAGE_MESSAGE'
 }

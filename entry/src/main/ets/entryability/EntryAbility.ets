@@ -1,6 +1,6 @@
 import { abilityAccessCtrl, AbilityConstant, common, ConfigurationConstant, UIAbility, Want } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
-import { display, KeyboardAvoidMode, window } from '@kit.ArkUI';
+import { AppStorageV2, display, KeyboardAvoidMode, window } from '@kit.ArkUI';
 import { BreakpointConstants } from '../constants/BreakpointConstants';
 import { StorageKey } from '../constants/StorageKey';
 import { BusinessError } from '@kit.BasicServicesKit';
@@ -53,6 +53,7 @@ export default class EntryAbility extends UIAbility {
       let navAvoid = window1.getWindowAvoidArea(window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR)
       let navHeight = navAvoid.bottomRect.height
       AppStorage.setOrCreate("navHeight", navHeight)
+      AppStorageV2.connect(Number, "navHeight", () => new Number(navHeight))
       WindowUtils.navigationIndicatorHeight_px = navAvoid.topRect.height;
 
       let winRect = window1.getWindowProperties().windowRect

@@ -53,7 +53,7 @@ export struct ChatOtherFunView {
       .height(SizeConstant.FULL_SIZE)
     }.width(SizeConstant.FULL_SIZE)
     .backgroundColor($r('app.color.color_F6F6F6'))
-    .height(SizeConstant.SIZE_PERCENT_20)
+    .height(SizeConstant.SIZE_100)
   }
 
   clickFun(id: string) {

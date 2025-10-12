@@ -7,6 +7,7 @@ import { Message } from "../pages/ChatPage"
 import { BusinessError } from "@kit.BasicServicesKit"
 import { DatabaseConstant } from "../constants/DatabaseConstant"
 import { JSON, taskpool } from "@kit.ArkTS"
+import ImageGenerationChatModel from "../model/ImageGenerationChatModel"
 
 const CONFIG: relationalStore.StoreConfig = {
   name: "wanandroid.db",
@@ -24,13 +25,18 @@ async function initDatabaseStore(context: Context, config: relationalStore.Store
   console.info(`Create Store.db successfully!`);
 
   //数据库升级
-  if (store.version === 0) {
+  if (store.version <= 0) {
     //创建数据库
     store.executeSql(DatabaseConstant.CREATE_SQL)
     store.version = 1
-    console.info(`createStore success`)
+    console.info(`createStore message success`)
   }
 
+  if (store.version <= 1) {
+    store.executeSql(DatabaseConstant.CREATE_IMAGE_SQL)
+    store.version = 2
+    console.info(`createStore image message success`)
+  }
 }
 
 /**
@@ -208,6 +214,46 @@ async function queryMessageData(context: Context, config: relationalStore.StoreC
     messageArr.push(message)
   }
   return messageArr
+}
+
+/**
+ * 插入图片表数据
+ * @param context
+ * @param message
+ * @param config
+ */
+@Concurrent
+async function insertImageGenMessageData(context: Context, message: relationalStore.ValuesBucket,
+  config: relationalStore.StoreConfig) {
+  let store: relationalStore.RdbStore = await relationalStore.getRdbStore(context, config)
+  store.insert(DatabaseConstant.CHAT_IMAGE_TABLE, message)
+}
+
+/**
+ * 查询图片表数据
+ * @param context
+ * @param message
+ * @param config
+ */
+@Concurrent
+async function queryImageGenMessageData(context: Context, config: relationalStore.StoreConfig) {
+  let store: relationalStore.RdbStore = await relationalStore.getRdbStore(context, config)
+  let pre = new relationalStore.RdbPredicates(DatabaseConstant.CHAT_IMAGE_TABLE)
+    .orderByAsc('ID')
+
+  let imageMsgArr: ImageGenerationChatModel[] = []
+
+  let resultSet = await store.query(pre)
+
+  while (resultSet.goToNextRow()) {
+    let model = new ImageGenerationChatModel()
+    model.messageOwner = resultSet.getLong(resultSet.getColumnIndex('MESSAGEOWNER'))
+    model.messageType = resultSet.getLong(resultSet.getColumnIndex('MESSAGETYPE'))
+    model.messageContent = resultSet.getString(resultSet.getColumnIndex('MESSAGECONTENT'))
+    imageMsgArr.push(model)
+  }
+
+  return imageMsgArr
 }
 
 class DatabaseUtil {
@@ -418,6 +464,32 @@ class DatabaseUtil {
   async initData(context: Context): Promise<void> {
     await taskpool.execute(initDatabaseStore, context, CONFIG)
     return
+  }
+
+  /**
+   * 插入数据
+   * @param model
+   */
+  async insertImageGenMessage(model: ImageGenerationChatModel, context: Context) {
+    let valueBundle: relationalStore.ValuesBucket = {
+      'MESSAGECONTENT': model.messageContent,
+      'MESSAGEOWNER': model.messageOwner,
+      'MESSAGETYPE': model.messageType
+    }
+    await taskpool.execute(insertImageGenMessageData, context, valueBundle, CONFIG)
+  }
+
+  /**
+   * 插入数据
+   * @param model
+   */
+  async queryImageGenMessage(context: Context): Promise<ImageGenerationChatModel[]> {
+    let mArr = await taskpool.execute(queryImageGenMessageData, context, CONFIG) as ImageGenerationChatModel[]
+    for (let index = 0; index < mArr.length; index++) {
+      const element = mArr[index];
+      console.info(`nihao message: ${JSON.stringify(element)}`)
+    }
+    return mArr
   }
 }
 

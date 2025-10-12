@@ -61,9 +61,11 @@ export struct NavHeaderView {
           })
       }
 
-    }.width(SizeConstant.FULL_SIZE)
+    }
+    .width(SizeConstant.FULL_SIZE)
     .padding({ top: this.getUIContext().px2vp(this.topRectHeight) })
     .height(SizeConstant.SIZE_80)
+    .zIndex(999)
     .expandSafeArea([SafeAreaType.KEYBOARD])
     .backgroundColor($r('app.color.color_272A36'))
   }
