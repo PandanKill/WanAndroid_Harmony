@@ -1,5 +1,5 @@
 import { abilityAccessCtrl, AbilityConstant, common, ConfigurationConstant, UIAbility, Want } from '@kit.AbilityKit';
-import { hilog } from '@kit.PerformanceAnalysisKit';
+import { hiAppEvent, hilog } from '@kit.PerformanceAnalysisKit';
 import { AppStorageV2, display, KeyboardAvoidMode, window } from '@kit.ArkUI';
 import { BreakpointConstants } from '../constants/BreakpointConstants';
 import { StorageKey } from '../constants/StorageKey';
@@ -8,6 +8,7 @@ import { WindowUtils } from '../utils/WindowUtils';
 import databaseUtil from '../utils/DatabaseUtil';
 import { taskpool } from '@kit.ArkTS';
 import EntryContext from '../constants/EntryContext';
+import { eventCrashSubscription } from '../model/EventSubscription';
 
 export default class EntryAbility extends UIAbility {
   private window?: window.Window
@@ -23,6 +24,8 @@ export default class EntryAbility extends UIAbility {
     } catch (err) {
       console.error('权限申请失败:', err);
     }
+
+    eventCrashSubscription()
   }
 
   onDestroy(): void {

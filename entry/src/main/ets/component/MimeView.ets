@@ -3,6 +3,9 @@ import { router } from '@kit.ArkUI'
 import { CommonListItemView } from 'utils'
 import { UserService } from '../service/UserService'
 import { User } from '../bean/LoginResponse'
+import hiAppEvent from '@ohos.hiviewdfx.hiAppEvent'
+import hilog from '@ohos.hilog'
+import { BusinessError } from '@kit.BasicServicesKit'
 
 class UserInfo {
   name: string = ""
@@ -250,6 +253,19 @@ export struct MimeView {
       .alignItems(VerticalAlign.Center)
       .backgroundColor($r('app.color.color_FFFFFF'))
       .onClick(() => {
+        //打点
+        // let eventParams: Record<string, number> = { 'clickTime': 100 };
+        // let eventInfo: hiAppEvent.AppEventInfo = {
+        //   domain: "MimeView",
+        //   name: "AI",
+        //   eventType: hiAppEvent.EventType.BEHAVIOR,
+        //   params: eventParams,
+        // };
+        // hiAppEvent.write(eventInfo).then(() => {
+        //   hilog.info(0x0000, 'testTag', `HiAppEvent success to write event`)
+        // }).catch((err: BusinessError) => {
+        //   hilog.error(0x0000, 'testTag', `HiAppEvent err.code: ${err.code}, err.message: ${err.message}`)
+        // });
         //to AI 聊天
         this.getUIContext().getRouter().pushUrl({
           url: "pages/ChatPage"

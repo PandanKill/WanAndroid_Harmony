@@ -33,6 +33,8 @@ struct WebPage {
       })
         .cacheMode(CacheMode.Default)
         .darkMode(WebDarkMode.Auto)
+        //部分网页需要开启 dom storage
+        .domStorageAccess(true)
         .overScrollMode(OverScrollMode.ALWAYS)
         .onProgressChange((newProgressEvent) => {
           this.progress = newProgressEvent.newProgress
@@ -46,14 +48,14 @@ struct WebPage {
           this.isLoading = false
         })
         .onErrorReceive((err) => {
-          logger.info(`${err.request.getRequestUrl()} : ${err.error}`)
+          logger.error(`WebPage onErrorReceive ${err.request.getRequestUrl()} : ${err.error}`)
         })
         .onHttpErrorReceive((err) => {
-          logger.info(`${err.request.getRequestUrl()} : ${err.response.getResponseCode()}`)
+          logger.error(`WebPage onHttpErrorReceive ${err.request.getRequestUrl()} : ${err.response.getResponseCode()}`)
 
         })
         .onSslErrorEventReceive((err) => {
-          logger.info(err.error)
+          logger.error("WebPage onSslErrorEventReceive" + err.error)
         })
         .width(SizeConstant.FULL_SIZE)
         .layoutWeight(1)
