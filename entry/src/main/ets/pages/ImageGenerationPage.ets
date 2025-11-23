@@ -6,6 +6,7 @@ import { BottomChatView } from '../component/BottomChatView'
 import { GeneralPopupItemConstant } from '../constants/GeneralPopupItemConstant'
 import { ChatPopupItem } from '../bean/ChatPopupItem'
 import { ImageChatItem } from '../component/ImageChatItem'
+import { window } from '@kit.ArkUI'
 
 @Entry
 @ComponentV2
@@ -13,6 +14,49 @@ struct ImageGenerationPage {
   viewModel: ImageGenerationChatListViewModel = new ImageGenerationChatListViewModel()
   scroller: Scroller = new Scroller()
   @Local imageShowSheet: boolean = false
+  @Local keyboardHeight: number = 0
+  // @Local isPhoto: boolean = false
+
+  // @Monitor('isPhoto')
+  // isPhotoChange(monitor: IMonitor) {
+  //   let isPhoto = monitor.value('isPhoto')?.now as boolean
+  //   console.info(`isPhotoChange isPhoto = ${isPhoto}`)
+  //   // if (isPhoto) {
+  //   //   this.keyboardHeight = 100
+  //   // } else {
+  //   //   this.keyboardHeight = 0
+  //   // }
+  // }
+
+  onPageShow(): void {
+    window.getLastWindow(this.getUIContext().getHostContext()).then((windows) => {
+      try {
+        windows.getUIContext().setKeyboardAvoidMode(4)
+        windows.on('keyboardHeightChange', (height) => {
+          console.info(`keyboardHeightChange height = ${height}`)
+          if (height > 0) {
+            //软键盘弹出
+            this.getUIContext().animateTo({
+              duration: 200,
+              curve: Curve.Smooth
+            }, () => {
+              this.keyboardHeight = this.getUIContext().px2vp(height)
+            })
+          } else {
+            //隐藏软键盘
+            this.getUIContext().animateTo({
+              duration: 200,
+              curve: Curve.Smooth
+            }, () => {
+              this.keyboardHeight = 0
+            })
+          }
+        })
+      } catch (exception) {
+        console.error(`Failed to enable the listener for keyboard height changes. Cause code: ${exception.code}, message: ${exception.message}`);
+      }
+    })
+  }
 
   aboutToAppear(): void {
     this.viewModel.loadAllContent()
@@ -62,10 +106,14 @@ struct ImageGenerationPage {
           onSendListener: (value) => {
             this.viewModel.toGetImageAi(value)
             this.scroller.scrollToIndex(this.viewModel.chatViewModelList.length - 1, true, ScrollAlign.END)
-          }
+          },
+          // isPhoto: this.isPhoto!!
         })
       }.layoutWeight(1)
       .width(SizeConstant.FULL_SIZE)
+      .offset({
+        bottom: this.keyboardHeight
+      })
     }.width(SizeConstant.FULL_SIZE)
     .height(SizeConstant.FULL_SIZE)
     .backgroundColor($r('app.color.color_EDEDED'))

@@ -10,6 +10,8 @@ export struct BottomChatView {
   }
   @Local editValue: string = ''
   @Local isPhoto: boolean = false
+  // @Event $isPhoto: (val: boolean) => void = (val: boolean) => {
+  // }
   private textAreaController: TextAreaController = new TextAreaController()
   navHeight: number = AppStorage.get('navHeight') as number
 
